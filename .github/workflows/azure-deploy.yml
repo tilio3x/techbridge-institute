@@ -1,0 +1,105 @@
+name: Build & Deploy to Azure App Service
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20.x'
+  APP_NAME: 'techbridge-institute'   # ← Change to your Azure App Service name
+
+jobs:
+  # ── 1. Build ──────────────────────────────────────────────────────────────
+  build:
+    name: Build React App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production bundle
+        run: npm run build
+        env:
+          # Add any public env vars your app needs at build time here
+          # VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          NODE_ENV: production
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-build
+          path: dist/
+          retention-days: 1
+
+  # ── 2. Deploy (only on push to main) ──────────────────────────────────────
+  deploy:
+    name: Deploy to Azure App Service
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+
+    environment:
+      name: production
+      url: https://${{ env.APP_NAME }}.azurewebsites.net
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: react-build
+          path: dist/
+
+      # Azure App Service serves a Node.js app; we add a minimal server.js
+      # so the App Service can serve the static React SPA.
+      - name: Create Express static server
+        run: |
+          cat > server.js << 'EOF'
+          const express = require('express');
+          const path    = require('path');
+          const app     = express();
+          const PORT    = process.env.PORT || 8080;
+
+          // Serve static files from the React build
+          app.use(express.static(path.join(__dirname, 'dist')));
+
+          // Always return index.html for client-side routing
+          app.get('*', (_req, res) => {
+            res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+          });
+
+          app.listen(PORT, () => {
+            console.log(`TechBridge Institute running on port ${PORT}`);
+          });
+          EOF
+
+          cat > package.json << 'EOF'
+          {
+            "name": "techbridge-institute-server",
+            "version": "1.0.0",
+            "main": "server.js",
+            "scripts": { "start": "node server.js" },
+            "dependencies": { "express": "^4.19.2" }
+          }
+          EOF
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.APP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: .
