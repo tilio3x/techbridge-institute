@@ -11,7 +11,7 @@ on:
 
 env:
   NODE_VERSION: '20.x'
-  APP_NAME: 'techbridge-institute'   # ← Change to your Azure App Service name
+  APP_NAME: 'techbridge'   # ← Change to your Azure App Service name
 
 jobs:
   # ── 1. Build ──────────────────────────────────────────────────────────────
