@@ -12,6 +12,7 @@ on:
 env:
   NODE_VERSION: '24.x'
   APP_NAME: 'techbridge'   # ← Change to your Azure App Service name
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   # ── 1. Build ──────────────────────────────────────────────────────────────
