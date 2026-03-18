@@ -1,37 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 
-// ─── DATA ────────────────────────────────────────────────────────────────────
-
-const VENDORS = [
-  { id: "comptia", name: "CompTIA", color: "#e8320a", logo: "🔴" },
-  { id: "microsoft", name: "Microsoft", color: "#00a4ef", logo: "🔷" },
-  { id: "fortinet", name: "Fortinet", color: "#ee3124", logo: "🛡️" },
-  { id: "ubiquiti", name: "Ubiquiti", color: "#0559c9", logo: "📡" },
-  { id: "cisco", name: "Cisco", color: "#1ba0d7", logo: "🌐" },
-];
-
-const COURSES = [
-  { id: 1, vendor: "comptia", code: "CompTIA A+", title: "IT Fundamentals & Hardware", level: "Beginner", duration: "10 weeks", price: 1200, seats: 20, enrolled: 14, delivery: "Hybrid", nextStart: "2026-04-07", description: "Master PC hardware, software, networking and troubleshooting. The industry-standard entry-level IT certification.", badge: "Core" },
-  { id: 2, vendor: "comptia", code: "CompTIA Network+", title: "Networking Fundamentals", level: "Intermediate", duration: "8 weeks", price: 1100, seats: 18, enrolled: 11, delivery: "Online", nextStart: "2026-04-14", description: "Network architecture, protocols, security and troubleshooting for IT professionals.", badge: "Core" },
-  { id: 3, vendor: "comptia", code: "CompTIA Security+", title: "Cybersecurity Essentials", level: "Intermediate", duration: "10 weeks", price: 1300, seats: 20, enrolled: 18, delivery: "Hybrid", nextStart: "2026-05-05", description: "Threat management, cryptography, identity management and risk mitigation skills.", badge: "Hot" },
-  { id: 4, vendor: "microsoft", code: "AZ-900", title: "Azure Cloud Fundamentals", level: "Beginner", duration: "6 weeks", price: 950, seats: 24, enrolled: 9, delivery: "Online", nextStart: "2026-04-07", description: "Cloud concepts, Azure core services, pricing and support fundamentals.", badge: "New" },
-  { id: 5, vendor: "microsoft", code: "MS-900", title: "Microsoft 365 Fundamentals", level: "Beginner", duration: "4 weeks", price: 750, seats: 24, enrolled: 20, delivery: "Hybrid", nextStart: "2026-03-31", description: "M365 productivity services, security, compliance and licensing options.", badge: "" },
-  { id: 6, vendor: "microsoft", code: "SC-900", title: "Security, Compliance & Identity", level: "Beginner", duration: "5 weeks", price: 850, seats: 20, enrolled: 7, delivery: "Online", nextStart: "2026-04-21", description: "Fundamentals of security, compliance and identity with Microsoft services.", badge: "" },
-  { id: 7, vendor: "fortinet", code: "NSE 1-3", title: "Network Security Awareness", level: "Beginner", duration: "4 weeks", price: 800, seats: 20, enrolled: 12, delivery: "Online", nextStart: "2026-04-07", description: "Cybersecurity awareness, network infrastructure and firewall fundamentals.", badge: "" },
-  { id: 8, vendor: "fortinet", code: "NSE 4", title: "FortiGate Firewall Administration", level: "Intermediate", duration: "8 weeks", price: 1400, seats: 16, enrolled: 8, delivery: "Hybrid", nextStart: "2026-05-12", description: "FortiGate security gateway configuration, monitoring and management.", badge: "Hot" },
-  { id: 9, vendor: "ubiquiti", code: "UEWA", title: "Enterprise Wireless Admin", level: "Intermediate", duration: "6 weeks", price: 1100, seats: 16, enrolled: 6, delivery: "In-Person", nextStart: "2026-04-28", description: "UniFi wireless network design, deployment and enterprise management.", badge: "New" },
-  { id: 10, vendor: "cisco", code: "CCNA", title: "Cisco Networking Associate", level: "Intermediate", duration: "12 weeks", price: 1600, seats: 18, enrolled: 15, delivery: "Hybrid", nextStart: "2026-04-14", description: "Routing, switching, security fundamentals and network automation with Cisco.", badge: "Hot" },
-  { id: 11, vendor: "cisco", code: "CCST", title: "Cisco Cybersecurity Technician", level: "Beginner", duration: "8 weeks", price: 1200, seats: 20, enrolled: 10, delivery: "Online", nextStart: "2026-05-05", description: "Entry-level cybersecurity skills including network defense and threat analysis.", badge: "" },
-];
-
-const SCHEDULE = [
-  { courseId: 1, day: "Mon/Wed", time: "09:00 – 12:00", instructor: "Marcus Williams", room: "Lab A + Teams", type: "Hybrid" },
-  { courseId: 2, day: "Tue/Thu", time: "14:00 – 17:00", instructor: "Sandra Lee", room: "MS Teams", type: "Online" },
-  { courseId: 3, day: "Mon/Wed/Fri", time: "13:00 – 15:30", instructor: "Darnell Jackson", room: "Lab B + Teams", type: "Hybrid" },
-  { courseId: 4, day: "Tue/Thu", time: "09:00 – 11:30", instructor: "Priya Nair", room: "MS Teams", type: "Online" },
-  { courseId: 5, day: "Mon/Wed", time: "18:00 – 20:30", instructor: "Chris Okafor", room: "Lab A + Teams", type: "Hybrid" },
-  { courseId: 10, day: "Mon/Wed/Fri", time: "09:00 – 11:00", instructor: "Elena Vasquez", room: "Lab B + Teams", type: "Hybrid" },
-];
+// ─── STATIC DATA ─────────────────────────────────────────────────────────────
 
 const INTEGRATIONS = [
   { name: "MS Teams", icon: "💬", desc: "Live sessions & collaboration" },
@@ -42,18 +11,41 @@ const INTEGRATIONS = [
   { name: "M365", icon: "☁️", desc: "Student accounts & email" },
 ];
 
-const MOCK_STUDENTS = [
-  { id: "STU-001", name: "Alex Thompson", email: "a.thompson@traineeid.edu", courses: [1, 2], progress: { 1: 72, 2: 45 }, certs: [], joined: "2026-01-15" },
-  { id: "STU-002", name: "Maria Santos", email: "m.santos@traineeid.edu", courses: [3, 4], progress: { 3: 100, 4: 88 }, certs: [3], joined: "2026-01-15" },
-  { id: "STU-003", name: "James Obi", email: "j.obi@traineeid.edu", courses: [10], progress: { 10: 55 }, certs: [], joined: "2026-02-01" },
-];
-
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
-const vendorOf = (id) => VENDORS.find((v) => v.id === id) || VENDORS[0];
-const courseById = (id) => COURSES.find((c) => c.id === id);
-
 const levelColor = { Beginner: "#22c55e", Intermediate: "#f59e0b", Advanced: "#ef4444" };
+
+function normalizeCourse(c) {
+  return {
+    id: c.id,
+    vendor: c.vendor_id,
+    code: c.code,
+    title: c.title,
+    level: c.level,
+    duration: c.duration,
+    price: Number(c.price),
+    seats: c.seats,
+    enrolled: c.enrolled,
+    delivery: c.delivery,
+    nextStart: c.next_start,
+    description: c.description,
+    badge: c.badge || "",
+    vendorName: c.vendor_name,
+    vendorColor: c.vendor_color,
+    vendorLogo: c.vendor_logo,
+  };
+}
+
+function normalizeSchedule(s) {
+  return {
+    courseId: s.course_id,
+    day: s.day,
+    time: s.time,
+    instructor: s.instructor,
+    room: s.room,
+    type: s.type,
+  };
+}
 
 // ─── COMPONENTS ──────────────────────────────────────────────────────────────
 
@@ -69,7 +61,7 @@ function Badge({ text, color = "#0ea5e9" }) {
 }
 
 function CourseCard({ course, onEnroll, isEnrolled }) {
-  const vendor = vendorOf(course.vendor);
+  const vendor = { name: course.vendorName, color: course.vendorColor, logo: course.vendorLogo };
   const seatsLeft = course.seats - course.enrolled;
   return (
     <div className="course-card" style={{
@@ -135,7 +127,7 @@ function Chip({ text, color }) {
 
 // ─── VIEWS ───────────────────────────────────────────────────────────────────
 
-function HomeView({ onNav }) {
+function HomeView({ onNav, vendors, courses }) {
   return (
     <div>
       {/* Hero */}
@@ -173,7 +165,7 @@ function HomeView({ onNav }) {
         </h1>
 
         <p style={{ fontSize: 20, color: "#94a3b8", maxWidth: 680, lineHeight: 1.7, marginBottom: 48 }}>
-          Industry-recognized certifications from CompTIA, Microsoft, Cisco, Fortinet & Ubiquiti. 
+          Industry-recognized certifications from CompTIA, Microsoft, Cisco, Fortinet & Ubiquiti.
           Hybrid delivery, real-world labs, and job-ready skills from day one.
         </p>
 
@@ -188,7 +180,7 @@ function HomeView({ onNav }) {
 
         {/* Stats */}
         <div style={{ display: "flex", gap: 48, marginTop: 80, flexWrap: "wrap", justifyContent: "center" }}>
-          {[["11+", "Courses Available"], ["5", "Vendor Partners"], ["Hybrid", "Delivery Model"], ["M365", "Student Accounts"]].map(([val, lbl]) => (
+          {[[`${courses.length}+`, "Courses Available"], [`${vendors.length}`, "Vendor Partners"], ["Hybrid", "Delivery Model"], ["M365", "Student Accounts"]].map(([val, lbl]) => (
             <div key={lbl} style={{ textAlign: "center" }}>
               <div style={{ fontSize: 32, fontWeight: 900, fontFamily: "Georgia, serif", color: "#0ea5e9" }}>{val}</div>
               <div style={{ fontSize: 13, color: "#64748b", fontWeight: 600, marginTop: 4 }}>{lbl}</div>
@@ -204,8 +196,8 @@ function HomeView({ onNav }) {
           <p style={{ color: "#64748b", fontSize: 16 }}>World-class vendor partnerships for recognized credentials</p>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16 }}>
-          {VENDORS.map((v) => {
-            const count = COURSES.filter(c => c.vendor === v.id).length;
+          {vendors.map((v) => {
+            const count = courses.filter(c => c.vendor === v.id).length;
             return (
               <div key={v.id} onClick={() => onNav("courses")} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${v.color}33`, borderRadius: 16, padding: 28, textAlign: "center", cursor: "pointer", transition: "all 0.2s" }}>
                 <div style={{ fontSize: 36, marginBottom: 12 }}>{v.logo}</div>
@@ -239,12 +231,12 @@ function HomeView({ onNav }) {
   );
 }
 
-function CoursesView({ enrolledCourses, onEnroll }) {
+function CoursesView({ enrolledCourses, onEnroll, vendors, courses }) {
   const [filter, setFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
   const [deliveryFilter, setDeliveryFilter] = useState("all");
 
-  const filtered = COURSES.filter(c => {
+  const filtered = courses.filter(c => {
     if (filter !== "all" && c.vendor !== filter) return false;
     if (levelFilter !== "all" && c.level !== levelFilter) return false;
     if (deliveryFilter !== "all" && c.delivery !== deliveryFilter) return false;
@@ -254,12 +246,12 @@ function CoursesView({ enrolledCourses, onEnroll }) {
   return (
     <div style={{ padding: "40px 24px", maxWidth: 1200, margin: "0 auto" }}>
       <h2 style={{ fontSize: 36, fontWeight: 900, color: "#f1f5f9", marginBottom: 8, fontFamily: "Georgia, serif" }}>Course Catalog</h2>
-      <p style={{ color: "#64748b", marginBottom: 32 }}>{COURSES.length} courses across 5 certification tracks</p>
+      <p style={{ color: "#64748b", marginBottom: 32 }}>{courses.length} courses across {vendors.length} certification tracks</p>
 
       {/* Filters */}
       <div style={{ display: "flex", gap: 12, marginBottom: 32, flexWrap: "wrap" }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {[{ id: "all", name: "All Vendors" }, ...VENDORS].map(v => (
+          {[{ id: "all", name: "All Vendors" }, ...vendors].map(v => (
             <button key={v.id} onClick={() => setFilter(v.id)} style={{
               background: filter === v.id ? "rgba(14,165,233,0.2)" : "rgba(255,255,255,0.03)",
               color: filter === v.id ? "#0ea5e9" : "#94a3b8",
@@ -299,7 +291,9 @@ function CoursesView({ enrolledCourses, onEnroll }) {
   );
 }
 
-function ScheduleView() {
+function ScheduleView({ schedule, courses }) {
+  const courseById = (id) => courses.find(c => c.id === id);
+
   return (
     <div style={{ padding: "40px 24px", maxWidth: 1100, margin: "0 auto" }}>
       <h2 style={{ fontSize: 36, fontWeight: 900, color: "#f1f5f9", marginBottom: 8, fontFamily: "Georgia, serif" }}>Class Schedule</h2>
@@ -315,16 +309,16 @@ function ScheduleView() {
             </tr>
           </thead>
           <tbody>
-            {SCHEDULE.map((s, i) => {
+            {schedule.map((s, i) => {
               const course = courseById(s.courseId);
-              const vendor = vendorOf(course.vendor);
+              if (!course) return null;
               return (
                 <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", background: i % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent" }}>
                   <td style={{ padding: "16px", color: "#f1f5f9", fontWeight: 600 }}>
                     <div>{course.title}</div>
                     <div style={{ fontFamily: "monospace", fontSize: 11, color: "#64748b" }}>{course.code}</div>
                   </td>
-                  <td style={{ padding: "16px" }}><span style={{ color: vendor.color, fontWeight: 700, fontSize: 12 }}>{vendor.name}</span></td>
+                  <td style={{ padding: "16px" }}><span style={{ color: course.vendorColor, fontWeight: 700, fontSize: 12 }}>{course.vendorName}</span></td>
                   <td style={{ padding: "16px", color: "#94a3b8", fontFamily: "monospace", fontSize: 13 }}>{s.day}</td>
                   <td style={{ padding: "16px", color: "#94a3b8", fontFamily: "monospace", fontSize: 13 }}>{s.time}</td>
                   <td style={{ padding: "16px", color: "#e2e8f0" }}>{s.instructor}</td>
@@ -369,10 +363,12 @@ function ScheduleView() {
   );
 }
 
-function RegisterView({ enrolledCourses, onEnroll }) {
+function RegisterView({ enrolledCourses, onEnroll, courses }) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", dob: "", education: "", goals: "", selectedCourses: [] });
   const [submitted, setSubmitted] = useState(false);
+
+  const courseById = (id) => courses.find(c => c.id === id);
 
   const toggle = (id) => {
     setForm(f => ({
@@ -480,8 +476,7 @@ function RegisterView({ enrolledCourses, onEnroll }) {
         <div>
           <p style={{ color: "#94a3b8", marginBottom: 24 }}>Select one or more courses to enroll in this cohort.</p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12, marginBottom: 32 }}>
-            {COURSES.map(course => {
-              const vendor = vendorOf(course.vendor);
+            {courses.map(course => {
               const sel = form.selectedCourses.includes(course.id);
               return (
                 <div key={course.id} onClick={() => toggle(course.id)} style={{
@@ -494,7 +489,7 @@ function RegisterView({ enrolledCourses, onEnroll }) {
                     {sel && <span style={{ color: "#fff", fontSize: 14, fontWeight: 700 }}>✓</span>}
                   </div>
                   <div>
-                    <div style={{ fontSize: 11, color: vendor.color, fontWeight: 700, marginBottom: 2 }}>{vendor.name} · {course.code}</div>
+                    <div style={{ fontSize: 11, color: course.vendorColor, fontWeight: 700, marginBottom: 2 }}>{course.vendorName} · {course.code}</div>
                     <div style={{ color: "#f1f5f9", fontWeight: 600, fontSize: 14 }}>{course.title}</div>
                     <div style={{ color: "#64748b", fontSize: 12, marginTop: 4 }}>{course.duration} · {course.delivery} · ${course.price.toLocaleString()}</div>
                   </div>
@@ -528,17 +523,17 @@ function RegisterView({ enrolledCourses, onEnroll }) {
               <div style={{ fontSize: 11, color: "#64748b", fontWeight: 700, textTransform: "uppercase", marginBottom: 12 }}>Enrolled Courses</div>
               {form.selectedCourses.map(id => {
                 const c = courseById(id);
-                const v = vendorOf(c.vendor);
+                if (!c) return null;
                 return (
                   <div key={id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, color: "#e2e8f0", fontSize: 14 }}>
-                    <span><span style={{ color: v.color, fontWeight: 700 }}>{v.name}</span> · {c.title}</span>
+                    <span><span style={{ color: c.vendorColor, fontWeight: 700 }}>{c.vendorName}</span> · {c.title}</span>
                     <span style={{ color: "#f1f5f9", fontWeight: 700 }}>${c.price.toLocaleString()}</span>
                   </div>
                 );
               })}
               <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 12, display: "flex", justifyContent: "space-between", fontWeight: 800, fontSize: 18 }}>
                 <span style={{ color: "#f1f5f9" }}>Total</span>
-                <span style={{ color: "#0ea5e9" }}>${form.selectedCourses.reduce((s, id) => s + courseById(id).price, 0).toLocaleString()}</span>
+                <span style={{ color: "#0ea5e9" }}>${form.selectedCourses.reduce((s, id) => s + (courseById(id)?.price || 0), 0).toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -557,17 +552,18 @@ function RegisterView({ enrolledCourses, onEnroll }) {
   );
 }
 
-function DashboardView({ enrolledCourses }) {
-  const student = { ...MOCK_STUDENTS[0], courses: enrolledCourses.length > 0 ? enrolledCourses : MOCK_STUDENTS[1].courses };
+function DashboardView({ enrolledCourses, courses }) {
+  const courseById = (id) => courses.find(c => c.id === id);
   const [activeCourse, setActiveCourse] = useState(null);
   const [showCert, setShowCert] = useState(null);
+
+  const DEMO_COURSE_IDS = [3, 4];
+  const coursesToShow = enrolledCourses.length > 0 ? enrolledCourses : DEMO_COURSE_IDS;
 
   const mockProgress = enrolledCourses.reduce((acc, id) => {
     acc[id] = Math.floor(Math.random() * 80) + 10;
     return acc;
-  }, { ...MOCK_STUDENTS[0].progress, ...MOCK_STUDENTS[1].progress });
-
-  const coursesToShow = enrolledCourses.length > 0 ? enrolledCourses : MOCK_STUDENTS[1].courses;
+  }, { 3: 100, 4: 88 });
 
   return (
     <div style={{ padding: "40px 24px", maxWidth: 1100, margin: "0 auto" }}>
@@ -599,15 +595,14 @@ function DashboardView({ enrolledCourses }) {
         {coursesToShow.map(id => {
           const course = courseById(id);
           if (!course) return null;
-          const vendor = vendorOf(course.vendor);
           const progress = mockProgress[id] || 55;
           const completed = progress === 100;
           return (
             <div key={id} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 24, position: "relative", overflow: "hidden" }}>
-              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: vendor.color }} />
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: course.vendorColor }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                 <div>
-                  <div style={{ fontSize: 11, color: vendor.color, fontWeight: 700, marginBottom: 4 }}>{vendor.name} · {course.code}</div>
+                  <div style={{ fontSize: 11, color: course.vendorColor, fontWeight: 700, marginBottom: 4 }}>{course.vendorName} · {course.code}</div>
                   <div style={{ color: "#f1f5f9", fontWeight: 700, fontSize: 16 }}>{course.title}</div>
                 </div>
                 {completed && <span style={{ fontSize: 24 }}>🏆</span>}
@@ -696,8 +691,10 @@ function DashboardView({ enrolledCourses }) {
   );
 }
 
-function AdminView() {
+function AdminView({ courses, vendors, schedule, students }) {
   const [tab, setTab] = useState("overview");
+  const courseById = (id) => courses.find(c => c.id === id);
+  const vendorOf = (id) => vendors.find(v => v.id === id) || {};
 
   const adminTabs = ["overview", "students", "courses", "schedule", "integrations"];
 
@@ -726,11 +723,11 @@ function AdminView() {
             <h2 style={{ fontSize: 28, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", marginBottom: 32 }}>Platform Overview</h2>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, marginBottom: 40 }}>
               {[
-                { label: "Total Students", value: 47, change: "+8 this month", color: "#0ea5e9" },
-                { label: "Active Courses", value: 11, change: "2 starting soon", color: "#6366f1" },
+                { label: "Total Students", value: students.length || 47, change: "+8 this month", color: "#0ea5e9" },
+                { label: "Active Courses", value: courses.length || 11, change: "2 starting soon", color: "#6366f1" },
                 { label: "Completions", value: 23, change: "+5 this week", color: "#22c55e" },
                 { label: "Certs Issued", value: 19, change: "+3 this week", color: "#fbbf24" },
-                { label: "M365 Accounts", value: 47, change: "All synced ✓", color: "#0ea5e9" },
+                { label: "M365 Accounts", value: students.length || 47, change: "All synced ✓", color: "#0ea5e9" },
                 { label: "Avg Completion", value: "71%", change: "↑ from 64%", color: "#22c55e" },
               ].map(stat => (
                 <div key={stat.label} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: 20 }}>
@@ -742,8 +739,8 @@ function AdminView() {
             </div>
             <h3 style={{ color: "#e2e8f0", fontWeight: 700, marginBottom: 16 }}>Recent Registrations</h3>
             <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12 }}>
-              {MOCK_STUDENTS.map((s, i) => (
-                <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 16, padding: "16px 20px", borderBottom: i < MOCK_STUDENTS.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+              {students.map((s, i) => (
+                <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 16, padding: "16px 20px", borderBottom: i < students.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
                   <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>
                     {s.name.split(" ").map(n => n[0]).join("")}
                   </div>
@@ -751,7 +748,7 @@ function AdminView() {
                     <div style={{ color: "#f1f5f9", fontWeight: 600, fontSize: 14 }}>{s.name}</div>
                     <div style={{ color: "#64748b", fontSize: 12 }}>{s.email}</div>
                   </div>
-                  <div style={{ color: "#94a3b8", fontSize: 12 }}>{s.courses.length} course{s.courses.length !== 1 ? "s" : ""}</div>
+                  <div style={{ color: "#94a3b8", fontSize: 12 }}>{s.course_count} course{s.course_count !== 1 ? "s" : ""}</div>
                   <div style={{ color: "#64748b", fontSize: 11, fontFamily: "monospace" }}>{s.joined}</div>
                 </div>
               ))}
@@ -765,7 +762,7 @@ function AdminView() {
               <h2 style={{ fontSize: 28, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", margin: 0 }}>Students</h2>
               <button style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ Add Student</button>
             </div>
-            {MOCK_STUDENTS.map(s => (
+            {students.map(s => (
               <div key={s.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: 24, marginBottom: 16 }}>
                 <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
                   <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 18, flexShrink: 0 }}>
@@ -776,28 +773,12 @@ function AdminView() {
                       <div>
                         <div style={{ color: "#f1f5f9", fontWeight: 700, fontSize: 16 }}>{s.name}</div>
                         <div style={{ color: "#0ea5e9", fontSize: 13, fontFamily: "monospace" }}>{s.email}</div>
-                        <div style={{ color: "#64748b", fontSize: 12, marginTop: 4 }}>ID: {s.id} · Joined: {s.joined}</div>
+                        <div style={{ color: "#64748b", fontSize: 12, marginTop: 4 }}>ID: {s.id} · Joined: {s.joined} · {s.course_count} course{s.course_count !== 1 ? "s" : ""}</div>
                       </div>
                       <div style={{ display: "flex", gap: 8 }}>
                         <button style={{ background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Edit</button>
                         <button style={{ background: "rgba(99,102,241,0.1)", color: "#818cf8", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>M365</button>
                       </div>
-                    </div>
-                    <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {s.courses.map(id => {
-                        const c = courseById(id);
-                        if (!c) return null;
-                        const prog = s.progress[id] || 0;
-                        return (
-                          <div key={id} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: "8px 14px", display: "flex", alignItems: "center", gap: 10 }}>
-                            <span style={{ color: "#e2e8f0", fontSize: 13 }}>{c.code}</span>
-                            <div style={{ width: 60, height: 4, background: "rgba(255,255,255,0.1)", borderRadius: 2, overflow: "hidden" }}>
-                              <div style={{ height: "100%", width: `${prog}%`, background: prog === 100 ? "#22c55e" : "#0ea5e9", borderRadius: 2 }} />
-                            </div>
-                            <span style={{ fontSize: 12, color: prog === 100 ? "#22c55e" : "#94a3b8", fontWeight: 700 }}>{prog}%</span>
-                          </div>
-                        );
-                      })}
                     </div>
                   </div>
                 </div>
@@ -822,36 +803,33 @@ function AdminView() {
                   </tr>
                 </thead>
                 <tbody>
-                  {COURSES.map((c, i) => {
-                    const v = vendorOf(c.vendor);
-                    return (
-                      <tr key={c.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                        <td style={{ padding: "14px" }}>
-                          <div style={{ color: "#f1f5f9", fontWeight: 600 }}>{c.title}</div>
-                          <div style={{ color: "#64748b", fontFamily: "monospace", fontSize: 11 }}>{c.code}</div>
-                        </td>
-                        <td style={{ padding: "14px" }}><span style={{ color: v.color, fontWeight: 700 }}>{v.name}</span></td>
-                        <td style={{ padding: "14px" }}><Chip text={c.level} color={levelColor[c.level]} /></td>
-                        <td style={{ padding: "14px" }}><Chip text={c.delivery} color="#0ea5e9" /></td>
-                        <td style={{ padding: "14px" }}>
-                          <div>
-                            <span style={{ color: "#22c55e", fontWeight: 700 }}>{c.enrolled}</span>
-                            <span style={{ color: "#64748b" }}> / {c.seats}</span>
-                          </div>
-                          <div style={{ width: 60, height: 3, background: "rgba(255,255,255,0.1)", borderRadius: 2, marginTop: 4, overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${(c.enrolled / c.seats) * 100}%`, background: "#0ea5e9" }} />
-                          </div>
-                        </td>
-                        <td style={{ padding: "14px", color: "#94a3b8", fontFamily: "monospace", fontSize: 12 }}>{c.nextStart}</td>
-                        <td style={{ padding: "14px" }}>
-                          <div style={{ display: "flex", gap: 6 }}>
-                            <button style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer" }}>Edit</button>
-                            <button style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer" }}>Delete</button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {courses.map((c) => (
+                    <tr key={c.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                      <td style={{ padding: "14px" }}>
+                        <div style={{ color: "#f1f5f9", fontWeight: 600 }}>{c.title}</div>
+                        <div style={{ color: "#64748b", fontFamily: "monospace", fontSize: 11 }}>{c.code}</div>
+                      </td>
+                      <td style={{ padding: "14px" }}><span style={{ color: c.vendorColor, fontWeight: 700 }}>{c.vendorName}</span></td>
+                      <td style={{ padding: "14px" }}><Chip text={c.level} color={levelColor[c.level]} /></td>
+                      <td style={{ padding: "14px" }}><Chip text={c.delivery} color="#0ea5e9" /></td>
+                      <td style={{ padding: "14px" }}>
+                        <div>
+                          <span style={{ color: "#22c55e", fontWeight: 700 }}>{c.enrolled}</span>
+                          <span style={{ color: "#64748b" }}> / {c.seats}</span>
+                        </div>
+                        <div style={{ width: 60, height: 3, background: "rgba(255,255,255,0.1)", borderRadius: 2, marginTop: 4, overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: `${(c.enrolled / c.seats) * 100}%`, background: "#0ea5e9" }} />
+                        </div>
+                      </td>
+                      <td style={{ padding: "14px", color: "#94a3b8", fontFamily: "monospace", fontSize: 12 }}>{c.nextStart}</td>
+                      <td style={{ padding: "14px" }}>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <button style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer" }}>Edit</button>
+                          <button style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer" }}>Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -903,14 +881,14 @@ function AdminView() {
                   </tr>
                 </thead>
                 <tbody>
-                  {SCHEDULE.map((s, i) => {
+                  {schedule.map((s, i) => {
                     const c = courseById(s.courseId);
-                    const v = vendorOf(c.vendor);
+                    if (!c) return null;
                     return (
                       <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
                         <td style={{ padding: "14px 16px" }}>
                           <div style={{ color: "#f1f5f9", fontWeight: 600 }}>{c.title}</div>
-                          <div style={{ color: v.color, fontSize: 11, fontWeight: 700 }}>{c.code}</div>
+                          <div style={{ color: c.vendorColor, fontSize: 11, fontWeight: 700 }}>{c.code}</div>
                         </td>
                         <td style={{ padding: "14px 16px", color: "#94a3b8", fontFamily: "monospace" }}>{s.day}</td>
                         <td style={{ padding: "14px 16px", color: "#94a3b8", fontFamily: "monospace" }}>{s.time}</td>
@@ -936,6 +914,26 @@ export default function App() {
   const [view, setView] = useState("home");
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [vendors, setVendors] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [schedule, setSchedule] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/vendors").then(r => r.json()),
+      fetch("/api/courses").then(r => r.json()),
+      fetch("/api/schedule").then(r => r.json()),
+      fetch("/api/students").then(r => r.json()),
+    ]).then(([v, c, s, st]) => {
+      setVendors(v);
+      setCourses(c.map(normalizeCourse));
+      setSchedule(s.map(normalizeSchedule));
+      setStudents(st);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
 
   const handleEnroll = (course) => {
     if (!enrolledCourses.includes(course.id)) {
@@ -951,6 +949,12 @@ export default function App() {
     { id: "dashboard", label: "My Learning" },
     { id: "admin", label: "Admin ⚙️" },
   ];
+
+  if (loading) return (
+    <div style={{ minHeight: "100vh", background: "#0a0f1e", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", fontSize: 16 }}>
+      Loading...
+    </div>
+  );
 
   return (
     <div style={{ minHeight: "100vh", background: "#0a0f1e", color: "#f1f5f9", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
@@ -1004,12 +1008,12 @@ export default function App() {
 
       {/* Views */}
       <main>
-        {view === "home" && <HomeView onNav={setView} />}
-        {view === "courses" && <CoursesView enrolledCourses={enrolledCourses} onEnroll={handleEnroll} />}
-        {view === "schedule" && <ScheduleView />}
-        {view === "register" && <RegisterView enrolledCourses={enrolledCourses} onEnroll={handleEnroll} />}
-        {view === "dashboard" && <DashboardView enrolledCourses={enrolledCourses} />}
-        {view === "admin" && <AdminView />}
+        {view === "home" && <HomeView onNav={setView} vendors={vendors} courses={courses} />}
+        {view === "courses" && <CoursesView enrolledCourses={enrolledCourses} onEnroll={handleEnroll} vendors={vendors} courses={courses} />}
+        {view === "schedule" && <ScheduleView schedule={schedule} courses={courses} />}
+        {view === "register" && <RegisterView enrolledCourses={enrolledCourses} onEnroll={handleEnroll} courses={courses} />}
+        {view === "dashboard" && <DashboardView enrolledCourses={enrolledCourses} courses={courses} />}
+        {view === "admin" && <AdminView courses={courses} vendors={vendors} schedule={schedule} students={students} />}
       </main>
 
       {/* Footer */}
@@ -1025,7 +1029,7 @@ export default function App() {
             </div>
             <div>
               <div style={{ color: "#e2e8f0", fontWeight: 700, marginBottom: 12, fontSize: 14 }}>Certifications</div>
-              {VENDORS.map(v => <div key={v.id} style={{ color: "#64748b", fontSize: 13, marginBottom: 6 }}>{v.name}</div>)}
+              {vendors.map(v => <div key={v.id} style={{ color: "#64748b", fontSize: 13, marginBottom: 6 }}>{v.name}</div>)}
             </div>
             <div>
               <div style={{ color: "#e2e8f0", fontWeight: 700, marginBottom: 12, fontSize: 14 }}>Platform</div>
