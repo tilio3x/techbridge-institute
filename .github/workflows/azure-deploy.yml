@@ -63,7 +63,7 @@ jobs:
 
     environment:
       name: production
-      url: https://${{ env.APP_NAME }}.azurewebsites.net
+      url: https://${{ env.APP_NAME }}-dcadfwggdsckfebs.canadacentral-01.azurewebsites.net
 
     steps:
       - name: Download deployment artifact
