@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '20.x'
+  NODE_VERSION: '24.x'
   APP_NAME: 'techbridge'   # ← Change to your Azure App Service name
 
 jobs:
@@ -55,7 +55,7 @@ jobs:
 
     environment:
       name: production
-      url: https://${{ env.APP_NAME }}.azurewebsites.net
+      url: https://${{ env.APP_NAME }}.canadacentral-01.azurewebsites.net
 
     steps:
       - name: Download build artifact
