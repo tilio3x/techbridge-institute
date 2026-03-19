@@ -96,6 +96,11 @@ jobs:
                 DATABASE_URL="${{ secrets.DATABASE_URL }}" \
                 NODE_ENV="production"
 
+            az webapp config set \
+              --name ${{ env.APP_NAME }} \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --startup-file "node server/index.js"
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
