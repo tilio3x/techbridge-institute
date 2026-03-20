@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useMsal, useIsAuthenticated } from "@azure/msal-react";
 import { loginRequest } from "./auth/msalConfig.js";
+import { Country, City } from "country-state-city";
 
 // ─── STATIC DATA ─────────────────────────────────────────────────────────────
 
@@ -923,6 +924,251 @@ function AdminView({ courses, vendors, schedule, students }) {
   );
 }
 
+function ProfileSetupView({ user, onSaved }) {
+  const [form, setForm] = useState({
+    first_name: "", last_name: "", country_code: "", country_name: "", city: "", phone: "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const countries = Country.getAllCountries();
+  const cities = form.country_code ? City.getCitiesOfCountry(form.country_code) : [];
+
+  const inputStyle = {
+    background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: 10, padding: "12px 16px", color: "#f1f5f9", fontSize: 15,
+    width: "100%", outline: "none", boxSizing: "border-box",
+  };
+  const labelStyle = { color: "#94a3b8", fontSize: 13, fontWeight: 600, marginBottom: 6, display: "block" };
+
+  const handleCountry = (e) => {
+    const code = e.target.value;
+    const name = countries.find(c => c.isoCode === code)?.name || "";
+    setForm(f => ({ ...f, country_code: code, country_name: name, city: "" }));
+  };
+
+  const handleSubmit = async () => {
+    if (!form.first_name || !form.last_name || !form.country_code || !form.city) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entra_oid: user.localAccountId,
+          first_name: form.first_name,
+          last_name: form.last_name,
+          email: user.username,
+          country_code: form.country_code,
+          country_name: form.country_name,
+          city: form.city,
+          phone: form.phone || null,
+        }),
+      });
+      const saved = await res.json();
+      onSaved(saved);
+    } catch {
+      setError("Failed to save profile. Please try again.");
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 40, maxWidth: 560, width: "100%" }}>
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{ fontSize: 48, marginBottom: 12 }}>👋</div>
+          <h2 style={{ fontSize: 28, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", margin: "0 0 8px" }}>Complete Your Profile</h2>
+          <p style={{ color: "#64748b", fontSize: 14 }}>Before you continue, please tell us a little about yourself.</p>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          <div>
+            <label style={labelStyle}>First Name <span style={{ color: "#ef4444" }}>*</span></label>
+            <input value={form.first_name} onChange={e => setForm(f => ({ ...f, first_name: e.target.value }))} style={inputStyle} placeholder="First name" />
+          </div>
+          <div>
+            <label style={labelStyle}>Last Name <span style={{ color: "#ef4444" }}>*</span></label>
+            <input value={form.last_name} onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))} style={inputStyle} placeholder="Last name" />
+          </div>
+          <div style={{ gridColumn: "span 2" }}>
+            <label style={labelStyle}>Country <span style={{ color: "#ef4444" }}>*</span></label>
+            <select value={form.country_code} onChange={handleCountry} style={inputStyle}>
+              <option value="">Select country...</option>
+              {countries.map(c => <option key={c.isoCode} value={c.isoCode}>{c.name}</option>)}
+            </select>
+          </div>
+          <div style={{ gridColumn: "span 2" }}>
+            <label style={labelStyle}>City <span style={{ color: "#ef4444" }}>*</span></label>
+            {cities.length > 0 ? (
+              <select value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} style={inputStyle}>
+                <option value="">Select city...</option>
+                {cities.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+              </select>
+            ) : (
+              <input value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} style={inputStyle} placeholder={form.country_code ? "Enter your city" : "Select a country first"} disabled={!form.country_code} />
+            )}
+          </div>
+          <div style={{ gridColumn: "span 2" }}>
+            <label style={labelStyle}>Phone Number</label>
+            <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} style={inputStyle} placeholder="+1 234 567 8900" type="tel" />
+          </div>
+        </div>
+
+        {error && <p style={{ color: "#f87171", fontSize: 13, marginTop: 16, textAlign: "center" }}>{error}</p>}
+
+        <button onClick={handleSubmit} disabled={saving} style={{ marginTop: 28, width: "100%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 12, padding: "14px 0", fontSize: 15, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}>
+          {saving ? "Saving..." : "Continue →"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ProfileEditView({ user, profile, onSaved }) {
+  const [form, setForm] = useState({
+    first_name: profile?.first_name || "",
+    last_name: profile?.last_name || "",
+    country_code: profile?.country_code || "",
+    country_name: profile?.country_name || "",
+    city: profile?.city || "",
+    phone: profile?.phone || "",
+    date_of_birth: profile?.date_of_birth ? profile.date_of_birth.split("T")[0] : "",
+    education: profile?.education || "",
+    goals: profile?.goals || "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+
+  const countries = Country.getAllCountries();
+  const cities = form.country_code ? City.getCitiesOfCountry(form.country_code) : [];
+
+  const inputStyle = {
+    background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: 10, padding: "12px 16px", color: "#f1f5f9", fontSize: 15,
+    width: "100%", outline: "none", boxSizing: "border-box",
+  };
+  const labelStyle = { color: "#94a3b8", fontSize: 13, fontWeight: 600, marginBottom: 6, display: "block" };
+
+  const handleCountry = (e) => {
+    const code = e.target.value;
+    const name = countries.find(c => c.isoCode === code)?.name || "";
+    setForm(f => ({ ...f, country_code: code, country_name: name, city: "" }));
+  };
+
+  const handleSubmit = async () => {
+    if (!form.first_name || !form.last_name || !form.country_code || !form.city) {
+      setError("First name, last name, country and city are required.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    setSaved(false);
+    try {
+      const res = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entra_oid: user.localAccountId,
+          first_name: form.first_name,
+          last_name: form.last_name,
+          email: user.username,
+          country_code: form.country_code,
+          country_name: form.country_name,
+          city: form.city,
+          phone: form.phone || null,
+          date_of_birth: form.date_of_birth || null,
+          education: form.education || null,
+          goals: form.goals || null,
+        }),
+      });
+      const updated = await res.json();
+      onSaved(updated);
+      setSaved(true);
+    } catch {
+      setError("Failed to save. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div style={{ padding: "40px 24px", maxWidth: 700, margin: "0 auto" }}>
+      <h2 style={{ fontSize: 32, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", marginBottom: 8 }}>My Profile</h2>
+      <p style={{ color: "#64748b", marginBottom: 36 }}>Update your contact details and learning goals.</p>
+
+      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 32 }}>
+        <h3 style={{ color: "#94a3b8", fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 20 }}>Personal Information</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
+          <div>
+            <label style={labelStyle}>First Name <span style={{ color: "#ef4444" }}>*</span></label>
+            <input value={form.first_name} onChange={e => setForm(f => ({ ...f, first_name: e.target.value }))} style={inputStyle} />
+          </div>
+          <div>
+            <label style={labelStyle}>Last Name <span style={{ color: "#ef4444" }}>*</span></label>
+            <input value={form.last_name} onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))} style={inputStyle} />
+          </div>
+          <div>
+            <label style={labelStyle}>Country <span style={{ color: "#ef4444" }}>*</span></label>
+            <select value={form.country_code} onChange={handleCountry} style={inputStyle}>
+              <option value="">Select country...</option>
+              {countries.map(c => <option key={c.isoCode} value={c.isoCode}>{c.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>City <span style={{ color: "#ef4444" }}>*</span></label>
+            {cities.length > 0 ? (
+              <select value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} style={inputStyle}>
+                <option value="">Select city...</option>
+                {cities.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+              </select>
+            ) : (
+              <input value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} style={inputStyle} placeholder="Enter your city" />
+            )}
+          </div>
+          <div>
+            <label style={labelStyle}>Phone Number</label>
+            <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} style={inputStyle} placeholder="+1 234 567 8900" type="tel" />
+          </div>
+          <div>
+            <label style={labelStyle}>Date of Birth</label>
+            <input value={form.date_of_birth} onChange={e => setForm(f => ({ ...f, date_of_birth: e.target.value }))} style={inputStyle} type="date" />
+          </div>
+        </div>
+
+        <h3 style={{ color: "#94a3b8", fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 20 }}>Academic Background</h3>
+        <div style={{ display: "grid", gap: 20 }}>
+          <div>
+            <label style={labelStyle}>Highest Education Level</label>
+            <select value={form.education} onChange={e => setForm(f => ({ ...f, education: e.target.value }))} style={inputStyle}>
+              <option value="">Select...</option>
+              {["High School Diploma / GED", "Some College", "Associate Degree", "Bachelor's Degree", "Master's or Higher", "Other"].map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Career Goals</label>
+            <textarea value={form.goals} onChange={e => setForm(f => ({ ...f, goals: e.target.value }))} style={{ ...inputStyle, height: 120, resize: "vertical" }} placeholder="Tell us about your career goals in IT..." />
+          </div>
+        </div>
+
+        {error && <p style={{ color: "#f87171", fontSize: 13, marginTop: 16 }}>{error}</p>}
+        {saved && <p style={{ color: "#22c55e", fontSize: 13, marginTop: 16 }}>Profile saved successfully.</p>}
+
+        <div style={{ marginTop: 28, display: "flex", justifyContent: "flex-end" }}>
+          <button onClick={handleSubmit} disabled={saving} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 12, padding: "13px 32px", fontSize: 14, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}>
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── APP ─────────────────────────────────────────────────────────────────────
 
 export default function App() {
@@ -939,8 +1185,27 @@ export default function App() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [profile, setProfile] = useState(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
   const handleLogin = () => instance.loginPopup(loginRequest).catch(() => {});
-  const handleLogout = () => instance.logoutPopup({ postLogoutRedirectUri: window.location.origin });
+  const handleLogout = () => {
+    setProfile(null);
+    setProfileLoaded(false);
+    instance.logoutPopup({ postLogoutRedirectUri: window.location.origin });
+  };
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetch(`/api/profile/${user.localAccountId}`)
+        .then(r => r.json())
+        .then(data => { setProfile(data); setProfileLoaded(true); })
+        .catch(() => setProfileLoaded(true));
+    } else {
+      setProfileLoaded(false);
+      setProfile(null);
+    }
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     Promise.all([
@@ -1023,8 +1288,8 @@ export default function App() {
             )}
             {isAuthenticated ? (
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "7px 14px", fontSize: 13, color: "#e2e8f0", fontWeight: 600 }}>
-                  👤 {user?.name ?? user?.username ?? "Student"}
+                <div onClick={() => setView("profile")} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "7px 14px", fontSize: 13, color: "#e2e8f0", fontWeight: 600, cursor: "pointer" }}>
+                  👤 {profile ? `${profile.first_name} ${profile.last_name}` : (user?.name ?? "Student")}
                 </div>
                 <button onClick={handleLogout} style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "9px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                   Sign Out
@@ -1041,21 +1306,32 @@ export default function App() {
 
       {/* Views */}
       <main>
-        {view === "home" && <HomeView onNav={setView} vendors={vendors} courses={courses} />}
-        {view === "courses" && <CoursesView enrolledCourses={enrolledCourses} onEnroll={handleEnroll} vendors={vendors} courses={courses} />}
-        {view === "schedule" && <ScheduleView schedule={schedule} courses={courses} />}
-        {view === "register" && (isAuthenticated
-          ? <RegisterView enrolledCourses={enrolledCourses} onEnroll={handleEnroll} courses={courses} />
-          : <AuthWall onLogin={handleLogin} message="Sign in to register for courses." />
+        {/* Profile setup gate: shown after login if no profile exists yet */}
+        {isAuthenticated && profileLoaded && !profile && view !== "profile" && (
+          <ProfileSetupView user={user} onSaved={(p) => { setProfile(p); setView("home"); }} />
         )}
-        {view === "dashboard" && (isAuthenticated
-          ? <DashboardView enrolledCourses={enrolledCourses} courses={courses} user={user} />
-          : <AuthWall onLogin={handleLogin} message="Sign in to access your dashboard." />
-        )}
-        {view === "admin" && (isAuthenticated
-          ? <AdminView courses={courses} vendors={vendors} schedule={schedule} students={students} />
-          : <AuthWall onLogin={handleLogin} message="Sign in to access the admin console." />
-        )}
+
+        {(!isAuthenticated || !profileLoaded || profile || view === "profile") && (<>
+          {view === "home" && <HomeView onNav={setView} vendors={vendors} courses={courses} />}
+          {view === "courses" && <CoursesView enrolledCourses={enrolledCourses} onEnroll={handleEnroll} vendors={vendors} courses={courses} />}
+          {view === "schedule" && <ScheduleView schedule={schedule} courses={courses} />}
+          {view === "register" && (isAuthenticated
+            ? <RegisterView enrolledCourses={enrolledCourses} onEnroll={handleEnroll} courses={courses} />
+            : <AuthWall onLogin={handleLogin} message="Sign in to register for courses." />
+          )}
+          {view === "dashboard" && (isAuthenticated
+            ? <DashboardView enrolledCourses={enrolledCourses} courses={courses} user={user} profile={profile} />
+            : <AuthWall onLogin={handleLogin} message="Sign in to access your dashboard." />
+          )}
+          {view === "admin" && (isAuthenticated
+            ? <AdminView courses={courses} vendors={vendors} schedule={schedule} students={students} />
+            : <AuthWall onLogin={handleLogin} message="Sign in to access the admin console." />
+          )}
+          {view === "profile" && (isAuthenticated
+            ? <ProfileEditView user={user} profile={profile} onSaved={setProfile} />
+            : <AuthWall onLogin={handleLogin} message="Sign in to view your profile." />
+          )}
+        </>)}
       </main>
 
       {/* Footer */}

@@ -62,6 +62,40 @@ app.get("/api/students/:id/enrollments", async (req, res) => {
   res.json(rows);
 });
 
+// Get student profile
+app.get("/api/profile/:oid", async (req, res) => {
+  const { rows } = await pool.query(
+    "SELECT * FROM student_profiles WHERE entra_oid = $1",
+    [req.params.oid]
+  );
+  res.json(rows[0] || null);
+});
+
+// Create or update student profile
+app.post("/api/profile", async (req, res) => {
+  const { entra_oid, first_name, last_name, email, country_code, country_name, city, phone, date_of_birth, education, goals } = req.body;
+  const { rows } = await pool.query(`
+    INSERT INTO student_profiles
+      (entra_oid, first_name, last_name, email, country_code, country_name, city, phone, date_of_birth, education, goals)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+    ON CONFLICT (entra_oid) DO UPDATE SET
+      first_name   = EXCLUDED.first_name,
+      last_name    = EXCLUDED.last_name,
+      email        = EXCLUDED.email,
+      country_code = EXCLUDED.country_code,
+      country_name = EXCLUDED.country_name,
+      city         = EXCLUDED.city,
+      phone        = COALESCE(EXCLUDED.phone, student_profiles.phone),
+      date_of_birth = COALESCE(EXCLUDED.date_of_birth, student_profiles.date_of_birth),
+      education    = COALESCE(EXCLUDED.education, student_profiles.education),
+      goals        = COALESCE(EXCLUDED.goals, student_profiles.goals),
+      updated_at   = NOW()
+    RETURNING *
+  `, [entra_oid, first_name, last_name, email, country_code, country_name, city,
+      phone || null, date_of_birth || null, education || null, goals || null]);
+  res.json(rows[0]);
+});
+
 // Enroll a student in a course
 app.post("/api/enrollments", async (req, res) => {
   const { student_id, course_id } = req.body;
