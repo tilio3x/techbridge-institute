@@ -38,6 +38,8 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
+          VITE_ENTRA_CLIENT_ID: ${{ secrets.VITE_ENTRA_CLIENT_ID }}
+          VITE_ENTRA_TENANT_SUBDOMAIN: ${{ secrets.VITE_ENTRA_TENANT_SUBDOMAIN }}
 
       - name: Prepare deployment package
         run: |

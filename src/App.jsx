@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { useMsal, useIsAuthenticated } from "@azure/msal-react";
+import { loginRequest } from "./auth/msalConfig.js";
 
 // ─── STATIC DATA ─────────────────────────────────────────────────────────────
 
@@ -122,6 +124,19 @@ function CourseCard({ course, onEnroll, isEnrolled }) {
 function Chip({ text, color }) {
   return (
     <span style={{ background: `${color}22`, color, border: `1px solid ${color}44`, borderRadius: 20, padding: "3px 10px", fontSize: 11, fontWeight: 600 }}>{text}</span>
+  );
+}
+
+function AuthWall({ onLogin, message }) {
+  return (
+    <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24, padding: 40, textAlign: "center" }}>
+      <div style={{ fontSize: 56 }}>🔒</div>
+      <h2 style={{ fontSize: 28, fontWeight: 800, color: "#f1f5f9", margin: 0 }}>Authentication Required</h2>
+      <p style={{ color: "#94a3b8", fontSize: 16, maxWidth: 400, margin: 0 }}>{message}</p>
+      <button onClick={onLogin} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 12, padding: "14px 36px", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+        Sign In / Register
+      </button>
+    </div>
   );
 }
 
@@ -552,7 +567,7 @@ function RegisterView({ enrolledCourses, onEnroll, courses }) {
   );
 }
 
-function DashboardView({ enrolledCourses, courses }) {
+function DashboardView({ enrolledCourses, courses, user }) {
   const courseById = (id) => courses.find(c => c.id === id);
   const [activeCourse, setActiveCourse] = useState(null);
   const [showCert, setShowCert] = useState(null);
@@ -571,7 +586,7 @@ function DashboardView({ enrolledCourses, courses }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 36, flexWrap: "wrap", gap: 16 }}>
         <div>
           <h2 style={{ fontSize: 32, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", marginBottom: 4 }}>Student Dashboard</h2>
-          <p style={{ color: "#64748b" }}>Welcome back, <span style={{ color: "#0ea5e9" }}>Maria Santos</span></p>
+          <p style={{ color: "#64748b" }}>Welcome back, <span style={{ color: "#0ea5e9" }}>{user?.name ?? user?.username ?? "Student"}</span></p>
         </div>
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "12px 20px", fontSize: 13, color: "#94a3b8" }}>
           <span style={{ color: "#64748b" }}>M365: </span>
@@ -911,6 +926,10 @@ function AdminView({ courses, vendors, schedule, students }) {
 // ─── APP ─────────────────────────────────────────────────────────────────────
 
 export default function App() {
+  const { instance, accounts } = useMsal();
+  const isAuthenticated = useIsAuthenticated();
+  const user = accounts[0] ?? null;
+
   const [view, setView] = useState("home");
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -919,6 +938,9 @@ export default function App() {
   const [schedule, setSchedule] = useState([]);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const handleLogin = () => instance.loginPopup(loginRequest).catch(() => {});
+  const handleLogout = () => instance.logoutPopup({ postLogoutRedirectUri: window.location.origin });
 
   useEffect(() => {
     Promise.all([
@@ -999,9 +1021,20 @@ export default function App() {
                 {enrolledCourses.length} enrolled
               </div>
             )}
-            <button onClick={() => setView("register")} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "9px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-              Get Started
-            </button>
+            {isAuthenticated ? (
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "7px 14px", fontSize: 13, color: "#e2e8f0", fontWeight: 600 }}>
+                  👤 {user?.name ?? user?.username ?? "Student"}
+                </div>
+                <button onClick={handleLogout} style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "9px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <button onClick={handleLogin} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "9px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                Sign In / Register
+              </button>
+            )}
           </div>
         </div>
       </nav>
@@ -1011,9 +1044,18 @@ export default function App() {
         {view === "home" && <HomeView onNav={setView} vendors={vendors} courses={courses} />}
         {view === "courses" && <CoursesView enrolledCourses={enrolledCourses} onEnroll={handleEnroll} vendors={vendors} courses={courses} />}
         {view === "schedule" && <ScheduleView schedule={schedule} courses={courses} />}
-        {view === "register" && <RegisterView enrolledCourses={enrolledCourses} onEnroll={handleEnroll} courses={courses} />}
-        {view === "dashboard" && <DashboardView enrolledCourses={enrolledCourses} courses={courses} />}
-        {view === "admin" && <AdminView courses={courses} vendors={vendors} schedule={schedule} students={students} />}
+        {view === "register" && (isAuthenticated
+          ? <RegisterView enrolledCourses={enrolledCourses} onEnroll={handleEnroll} courses={courses} />
+          : <AuthWall onLogin={handleLogin} message="Sign in to register for courses." />
+        )}
+        {view === "dashboard" && (isAuthenticated
+          ? <DashboardView enrolledCourses={enrolledCourses} courses={courses} user={user} />
+          : <AuthWall onLogin={handleLogin} message="Sign in to access your dashboard." />
+        )}
+        {view === "admin" && (isAuthenticated
+          ? <AdminView courses={courses} vendors={vendors} schedule={schedule} students={students} />
+          : <AuthWall onLogin={handleLogin} message="Sign in to access the admin console." />
+        )}
       </main>
 
       {/* Footer */}
