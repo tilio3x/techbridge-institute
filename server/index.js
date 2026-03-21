@@ -5,6 +5,45 @@ import { fileURLToPath } from "url";
 import path from "path";
 import pool from "./db.js";
 
+// ─── Graph API helper ─────────────────────────────────────────────────────────
+
+async function updateEntraDisplayName(oid, firstName, lastName) {
+  const tenantId = process.env.ENTRA_TENANT_ID;
+  const clientId = process.env.ENTRA_CLIENT_ID;
+  const clientSecret = process.env.ENTRA_CLIENT_SECRET;
+  if (!tenantId || !clientId || !clientSecret) return; // skip if not configured
+
+  // Get an app-only access token
+  const tokenRes = await fetch(
+    `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "client_credentials",
+        client_id: clientId,
+        client_secret: clientSecret,
+        scope: "https://graph.microsoft.com/.default",
+      }),
+    }
+  );
+  const { access_token } = await tokenRes.json();
+
+  // Patch the user's display name in Entra
+  await fetch(`https://graph.microsoft.com/v1.0/users/${oid}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${access_token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      displayName: `${firstName} ${lastName}`,
+      givenName: firstName,
+      surname: lastName,
+    }),
+  });
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
@@ -93,7 +132,10 @@ app.post("/api/profile", async (req, res) => {
     RETURNING *
   `, [entra_oid, first_name, last_name, email, country_code, country_name, city,
       phone || null, date_of_birth || null, education || null, goals || null]);
-  res.json(rows[0]);
+  const saved = rows[0];
+  // Fire-and-forget — don't block the response if Graph API is slow/unavailable
+  updateEntraDisplayName(entra_oid, first_name, last_name).catch(() => {});
+  res.json(saved);
 });
 
 // Enroll a student in a course
