@@ -4,6 +4,7 @@ export const msalConfig = {
   auth: {
     clientId: import.meta.env.VITE_ENTRA_CLIENT_ID,
     authority: `https://${tenantSubdomain}.ciamlogin.com/${tenantSubdomain}.onmicrosoft.com`,
+    knownAuthorities: [`${tenantSubdomain}.ciamlogin.com`],
     redirectUri: window.location.origin,
     postLogoutRedirectUri: window.location.origin,
   },
