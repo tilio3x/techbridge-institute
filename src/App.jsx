@@ -1189,7 +1189,17 @@ export default function App() {
   const [profile, setProfile] = useState(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
 
-  const handleLogin = () => instance.loginPopup(loginRequest).catch(() => {});
+  const handleLogin = async () => {
+    try {
+      await instance.loginPopup(loginRequest);
+    } catch (e) {
+      if (e?.errorCode === "interaction_in_progress") {
+        // Stale lock left by a page refresh mid-flow — clear it and retry
+        await instance.clearCache();
+        await instance.loginPopup(loginRequest).catch(() => {});
+      }
+    }
+  };
   const handleLogout = () => {
     setProfile(null);
     setProfileLoaded(false);
