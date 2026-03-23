@@ -707,10 +707,17 @@ function DashboardView({ enrolledCourses, courses, user }) {
   );
 }
 
-function AdminView({ courses, vendors, schedule, students }) {
+function AdminView({ courses, vendors, schedule, students, profiles, onDeleteProfile }) {
   const [tab, setTab] = useState("overview");
+  const [confirmDelete, setConfirmDelete] = useState(null); // holds profile to delete
   const courseById = (id) => courses.find(c => c.id === id);
   const vendorOf = (id) => vendors.find(v => v.id === id) || {};
+
+  const handleDelete = async (profile) => {
+    await fetch(`/api/profile/${profile.entra_oid}`, { method: "DELETE" });
+    onDeleteProfile(profile.entra_oid);
+    setConfirmDelete(null);
+  };
 
   const adminTabs = ["overview", "students", "courses", "schedule", "integrations"];
 
@@ -775,31 +782,62 @@ function AdminView({ courses, vendors, schedule, students }) {
         {tab === "students" && (
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-              <h2 style={{ fontSize: 28, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", margin: 0 }}>Students</h2>
-              <button style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ Add Student</button>
+              <div>
+                <h2 style={{ fontSize: 28, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", margin: "0 0 4px" }}>Registered Students</h2>
+                <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>{profiles.length} account{profiles.length !== 1 ? "s" : ""} registered via Entra External ID</p>
+              </div>
             </div>
-            {students.map(s => (
-              <div key={s.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: 24, marginBottom: 16 }}>
+            {profiles.length === 0 && (
+              <div style={{ color: "#64748b", fontSize: 14, padding: 24, textAlign: "center" }}>No registered students yet.</div>
+            )}
+            {profiles.map(p => (
+              <div key={p.entra_oid} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: 24, marginBottom: 16 }}>
                 <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
                   <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 18, flexShrink: 0 }}>
-                    {s.name.split(" ").map(n => n[0]).join("")}
+                    {p.first_name[0]}{p.last_name[0]}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                       <div>
-                        <div style={{ color: "#f1f5f9", fontWeight: 700, fontSize: 16 }}>{s.name}</div>
-                        <div style={{ color: "#0ea5e9", fontSize: 13, fontFamily: "monospace" }}>{s.email}</div>
-                        <div style={{ color: "#64748b", fontSize: 12, marginTop: 4 }}>ID: {s.id} · Joined: {s.joined} · {s.course_count} course{s.course_count !== 1 ? "s" : ""}</div>
+                        <div style={{ color: "#f1f5f9", fontWeight: 700, fontSize: 16 }}>{p.first_name} {p.last_name}</div>
+                        <div style={{ color: "#0ea5e9", fontSize: 13, fontFamily: "monospace" }}>{p.email}</div>
+                        <div style={{ color: "#64748b", fontSize: 12, marginTop: 4 }}>
+                          {p.city}, {p.country_name}
+                          {p.education && ` · ${p.education}`}
+                          {" · "}Joined {new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </div>
                       </div>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button style={{ background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Edit</button>
-                        <button style={{ background: "rgba(99,102,241,0.1)", color: "#818cf8", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>M365</button>
-                      </div>
+                      <button
+                        onClick={() => setConfirmDelete(p)}
+                        style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "6px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                        Delete
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
             ))}
+
+            {/* Confirm delete modal */}
+            {confirmDelete && (
+              <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 24 }}>
+                <div style={{ background: "#0f172a", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 20, padding: 36, maxWidth: 440, width: "100%", textAlign: "center" }}>
+                  <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
+                  <h3 style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 20, marginBottom: 12 }}>Delete Student Account?</h3>
+                  <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.6, marginBottom: 28 }}>
+                    This will permanently delete <strong style={{ color: "#f1f5f9" }}>{confirmDelete.first_name} {confirmDelete.last_name}</strong>'s profile from the database and their account from Entra External ID. This cannot be undone.
+                  </p>
+                  <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+                    <button onClick={() => setConfirmDelete(null)} style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>
+                      Cancel
+                    </button>
+                    <button onClick={() => handleDelete(confirmDelete)} style={{ background: "rgba(239,68,68,0.15)", color: "#f87171", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>
+                      Yes, Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -1184,6 +1222,7 @@ export default function App() {
   const [courses, setCourses] = useState([]);
   const [schedule, setSchedule] = useState([]);
   const [students, setStudents] = useState([]);
+  const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [profile, setProfile] = useState(null);
@@ -1224,11 +1263,13 @@ export default function App() {
       fetch("/api/courses").then(r => r.json()),
       fetch("/api/schedule").then(r => r.json()),
       fetch("/api/students").then(r => r.json()),
-    ]).then(([v, c, s, st]) => {
+      fetch("/api/profiles").then(r => r.json()),
+    ]).then(([v, c, s, st, p]) => {
       setVendors(v);
       setCourses(c.map(normalizeCourse));
       setSchedule(s.map(normalizeSchedule));
       setStudents(st);
+      setProfiles(p);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
@@ -1336,7 +1377,7 @@ export default function App() {
           )}
           {view === "admin" && (
             isAdmin
-              ? <AdminView courses={courses} vendors={vendors} schedule={schedule} students={students} />
+              ? <AdminView courses={courses} vendors={vendors} schedule={schedule} students={students} profiles={profiles} onDeleteProfile={(oid) => setProfiles(p => p.filter(x => x.entra_oid !== oid))} />
               : <AuthWall onLogin={handleLogin} message="Admin access only. Sign in with an administrator account." />
           )}
           {view === "profile" && (isAuthenticated

@@ -7,14 +7,12 @@ import pool from "./db.js";
 
 // ─── Graph API helper ─────────────────────────────────────────────────────────
 
-async function updateEntraDisplayName(oid, firstName, lastName) {
+async function getGraphToken() {
   const tenantId = process.env.ENTRA_TENANT_ID;
   const clientId = process.env.ENTRA_CLIENT_ID;
   const clientSecret = process.env.ENTRA_CLIENT_SECRET;
-  if (!tenantId || !clientId || !clientSecret) return; // skip if not configured
-
-  // Get an app-only access token
-  const tokenRes = await fetch(
+  if (!tenantId || !clientId || !clientSecret) return null;
+  const res = await fetch(
     `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
     {
       method: "POST",
@@ -27,15 +25,25 @@ async function updateEntraDisplayName(oid, firstName, lastName) {
       }),
     }
   );
-  const { access_token } = await tokenRes.json();
+  const { access_token } = await res.json();
+  return access_token;
+}
 
-  // Patch the user's display name in Entra
+async function deleteEntraUser(oid) {
+  const token = await getGraphToken();
+  if (!token) return;
+  await fetch(`https://graph.microsoft.com/v1.0/users/${oid}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+async function updateEntraDisplayName(oid, firstName, lastName) {
+  const token = await getGraphToken();
+  if (!token) return;
   await fetch(`https://graph.microsoft.com/v1.0/users/${oid}`, {
     method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${access_token}`,
-      "Content-Type": "application/json",
-    },
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       displayName: `${firstName} ${lastName}`,
       givenName: firstName,
@@ -99,6 +107,22 @@ app.get("/api/students/:id/enrollments", async (req, res) => {
     WHERE e.student_id = $1
   `, [req.params.id]);
   res.json(rows);
+});
+
+// List all student profiles (admin)
+app.get("/api/profiles", async (req, res) => {
+  const { rows } = await pool.query(
+    "SELECT * FROM student_profiles ORDER BY created_at DESC"
+  );
+  res.json(rows);
+});
+
+// Delete student profile + Entra account
+app.delete("/api/profile/:oid", async (req, res) => {
+  const { oid } = req.params;
+  await pool.query("DELETE FROM student_profiles WHERE entra_oid = $1", [oid]);
+  await deleteEntraUser(oid).catch(() => {});
+  res.json({ success: true });
 });
 
 // Get student profile
