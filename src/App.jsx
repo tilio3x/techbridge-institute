@@ -1175,6 +1175,7 @@ export default function App() {
   const { instance, accounts } = useMsal();
   const isAuthenticated = useIsAuthenticated();
   const user = accounts[0] ?? null;
+  const isAdmin = user?.idTokenClaims?.roles?.includes("Admin") ?? false;
 
   const [view, setView] = useState("home");
   const [enrolledCourses, setEnrolledCourses] = useState([]);
@@ -1234,7 +1235,7 @@ export default function App() {
     { id: "schedule", label: "Schedule" },
     { id: "register", label: "Register" },
     { id: "dashboard", label: "My Learning" },
-    { id: "admin", label: "Admin ⚙️" },
+    ...(isAdmin ? [{ id: "admin", label: "Admin ⚙️" }] : []),
   ];
 
   if (loading) return (
@@ -1323,9 +1324,10 @@ export default function App() {
             ? <DashboardView enrolledCourses={enrolledCourses} courses={courses} user={user} profile={profile} />
             : <AuthWall onLogin={handleLogin} message="Sign in to access your dashboard." />
           )}
-          {view === "admin" && (isAuthenticated
-            ? <AdminView courses={courses} vendors={vendors} schedule={schedule} students={students} />
-            : <AuthWall onLogin={handleLogin} message="Sign in to access the admin console." />
+          {view === "admin" && (
+            isAdmin
+              ? <AdminView courses={courses} vendors={vendors} schedule={schedule} students={students} />
+              : <AuthWall onLogin={handleLogin} message="Admin access only. Sign in with an administrator account." />
           )}
           {view === "profile" && (isAuthenticated
             ? <ProfileEditView user={user} profile={profile} onSaved={setProfile} />
