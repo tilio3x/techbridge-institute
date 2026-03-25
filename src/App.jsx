@@ -707,11 +707,44 @@ function DashboardView({ enrolledCourses, courses, user }) {
   );
 }
 
-function AdminView({ courses, vendors, schedule, students, profiles, onDeleteProfile }) {
+const EMPTY_COURSE = { vendor_id: "", code: "", title: "", level: "Beginner", duration: "", price: "", seats: "", delivery: "Online", next_start: "", description: "", badge: "" };
+
+function AdminView({ courses, vendors, schedule, students, profiles, onDeleteProfile, onCourseAdd, onCourseUpdate, onCourseDelete }) {
   const [tab, setTab] = useState("overview");
-  const [confirmDelete, setConfirmDelete] = useState(null); // holds profile to delete
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [confirmDeleteCourse, setConfirmDeleteCourse] = useState(null);
+  const [courseModal, setCourseModal] = useState(null); // null | { mode: "new"|"edit", data: {} }
+  const [courseForm, setCourseForm] = useState(EMPTY_COURSE);
+  const [courseSaving, setCourseSaving] = useState(false);
   const courseById = (id) => courses.find(c => c.id === id);
-  const vendorOf = (id) => vendors.find(v => v.id === id) || {};
+
+  const openNew = () => { setCourseForm(EMPTY_COURSE); setCourseModal({ mode: "new" }); };
+  const openEdit = (c) => {
+    setCourseForm({
+      vendor_id: c.vendor, code: c.code, title: c.title, level: c.level,
+      duration: c.duration, price: c.price, seats: c.seats, delivery: c.delivery,
+      next_start: c.nextStart ? c.nextStart.split("T")[0] : "", description: c.description, badge: c.badge || "",
+    });
+    setCourseModal({ mode: "edit", id: c.id });
+  };
+
+  const saveCourse = async () => {
+    setCourseSaving(true);
+    const isEdit = courseModal.mode === "edit";
+    const url = isEdit ? `/api/courses/${courseModal.id}` : "/api/courses";
+    const method = isEdit ? "PUT" : "POST";
+    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...courseForm, price: Number(courseForm.price), seats: Number(courseForm.seats) }) });
+    const saved = await res.json();
+    isEdit ? onCourseUpdate(saved) : onCourseAdd(saved);
+    setCourseModal(null);
+    setCourseSaving(false);
+  };
+
+  const deleteCourse = async (course) => {
+    await fetch(`/api/courses/${course.id}`, { method: "DELETE" });
+    onCourseDelete(course.id);
+    setConfirmDeleteCourse(null);
+  };
 
   const handleDelete = async (profile) => {
     await fetch(`/api/profile/${profile.entra_oid}`, { method: "DELETE" });
@@ -845,7 +878,7 @@ function AdminView({ courses, vendors, schedule, students, profiles, onDeletePro
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
               <h2 style={{ fontSize: 28, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", margin: 0 }}>Course Management</h2>
-              <button style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ New Course</button>
+              <button onClick={openNew} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ New Course</button>
             </div>
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
@@ -875,11 +908,13 @@ function AdminView({ courses, vendors, schedule, students, profiles, onDeletePro
                           <div style={{ height: "100%", width: `${(c.enrolled / c.seats) * 100}%`, background: "#0ea5e9" }} />
                         </div>
                       </td>
-                      <td style={{ padding: "14px", color: "#94a3b8", fontFamily: "monospace", fontSize: 12 }}>{c.nextStart}</td>
+                      <td style={{ padding: "14px", color: "#94a3b8", fontFamily: "monospace", fontSize: 12 }}>
+                        {c.nextStart ? new Date(c.nextStart).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                      </td>
                       <td style={{ padding: "14px" }}>
                         <div style={{ display: "flex", gap: 6 }}>
-                          <button style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer" }}>Edit</button>
-                          <button style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer" }}>Delete</button>
+                          <button onClick={() => openEdit(c)} style={{ background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Edit</button>
+                          <button onClick={() => setConfirmDeleteCourse(c)} style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Delete</button>
                         </div>
                       </td>
                     </tr>
@@ -887,6 +922,77 @@ function AdminView({ courses, vendors, schedule, students, profiles, onDeletePro
                 </tbody>
               </table>
             </div>
+
+            {/* Course form modal */}
+            {courseModal && (() => {
+              const inp = { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "10px 14px", color: "#f1f5f9", fontSize: 13, width: "100%", boxSizing: "border-box" };
+              const lbl = { color: "#94a3b8", fontSize: 12, fontWeight: 600, marginBottom: 4, display: "block" };
+              const set = (k) => (e) => setCourseForm(f => ({ ...f, [k]: e.target.value }));
+              return (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 24, overflowY: "auto" }}>
+                  <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 36, width: "100%", maxWidth: 680 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
+                      <h3 style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 20, margin: 0 }}>{courseModal.mode === "new" ? "New Course" : "Edit Course"}</h3>
+                      <button onClick={() => setCourseModal(null)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#94a3b8", borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}>✕</button>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                      <div style={{ gridColumn: "span 2" }}>
+                        <label style={lbl}>Vendor</label>
+                        <select value={courseForm.vendor_id} onChange={set("vendor_id")} style={inp}>
+                          <option value="">Select vendor...</option>
+                          {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                        </select>
+                      </div>
+                      <div><label style={lbl}>Course Code</label><input value={courseForm.code} onChange={set("code")} style={inp} placeholder="e.g. AZ-900" /></div>
+                      <div><label style={lbl}>Badge</label>
+                        <select value={courseForm.badge} onChange={set("badge")} style={inp}>
+                          {["", "Hot", "New", "Core"].map(b => <option key={b} value={b}>{b || "None"}</option>)}
+                        </select>
+                      </div>
+                      <div style={{ gridColumn: "span 2" }}><label style={lbl}>Title</label><input value={courseForm.title} onChange={set("title")} style={inp} placeholder="Full course title" /></div>
+                      <div style={{ gridColumn: "span 2" }}><label style={lbl}>Description</label><textarea value={courseForm.description} onChange={set("description")} style={{ ...inp, height: 80, resize: "vertical" }} placeholder="Short course description" /></div>
+                      <div><label style={lbl}>Level</label>
+                        <select value={courseForm.level} onChange={set("level")} style={inp}>
+                          {["Beginner", "Intermediate", "Advanced"].map(l => <option key={l} value={l}>{l}</option>)}
+                        </select>
+                      </div>
+                      <div><label style={lbl}>Delivery</label>
+                        <select value={courseForm.delivery} onChange={set("delivery")} style={inp}>
+                          {["Online", "Hybrid", "In-Person"].map(d => <option key={d} value={d}>{d}</option>)}
+                        </select>
+                      </div>
+                      <div><label style={lbl}>Duration</label><input value={courseForm.duration} onChange={set("duration")} style={inp} placeholder="e.g. 8 weeks" /></div>
+                      <div><label style={lbl}>Start Date</label><input type="date" value={courseForm.next_start} onChange={set("next_start")} style={inp} /></div>
+                      <div><label style={lbl}>Price (USD)</label><input type="number" value={courseForm.price} onChange={set("price")} style={inp} placeholder="0" /></div>
+                      <div><label style={lbl}>Seats</label><input type="number" value={courseForm.seats} onChange={set("seats")} style={inp} placeholder="0" /></div>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 28 }}>
+                      <button onClick={() => setCourseModal(null)} style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+                      <button onClick={saveCourse} disabled={courseSaving || !courseForm.vendor_id || !courseForm.title} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", fontWeight: 700, cursor: "pointer", opacity: courseSaving ? 0.7 : 1 }}>
+                        {courseSaving ? "Saving..." : courseModal.mode === "new" ? "Create Course" : "Save Changes"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Confirm delete course modal */}
+            {confirmDeleteCourse && (
+              <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 24 }}>
+                <div style={{ background: "#0f172a", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 20, padding: 36, maxWidth: 440, width: "100%", textAlign: "center" }}>
+                  <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
+                  <h3 style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 20, marginBottom: 12 }}>Delete Course?</h3>
+                  <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.6, marginBottom: 28 }}>
+                    This will permanently delete <strong style={{ color: "#f1f5f9" }}>{confirmDeleteCourse.title}</strong> along with its schedule and all enrollment records. This cannot be undone.
+                  </p>
+                  <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+                    <button onClick={() => setConfirmDeleteCourse(null)} style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+                    <button onClick={() => deleteCourse(confirmDeleteCourse)} style={{ background: "rgba(239,68,68,0.15)", color: "#f87171", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Yes, Delete</button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -1377,7 +1483,13 @@ export default function App() {
           )}
           {view === "admin" && (
             isAdmin
-              ? <AdminView courses={courses} vendors={vendors} schedule={schedule} students={students} profiles={profiles} onDeleteProfile={(oid) => setProfiles(p => p.filter(x => x.entra_oid !== oid))} />
+              ? <AdminView
+                  courses={courses} vendors={vendors} schedule={schedule} students={students} profiles={profiles}
+                  onDeleteProfile={(oid) => setProfiles(p => p.filter(x => x.entra_oid !== oid))}
+                  onCourseAdd={(c) => setCourses(prev => [...prev, normalizeCourse(c)])}
+                  onCourseUpdate={(c) => setCourses(prev => prev.map(x => x.id === c.id ? normalizeCourse(c) : x))}
+                  onCourseDelete={(id) => setCourses(prev => prev.filter(x => x.id !== id))}
+                />
               : <AuthWall onLogin={handleLogin} message="Admin access only. Sign in with an administrator account." />
           )}
           {view === "profile" && (isAuthenticated

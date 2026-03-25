@@ -162,6 +162,45 @@ app.post("/api/profile", async (req, res) => {
   res.json(saved);
 });
 
+// Create course
+app.post("/api/courses", async (req, res) => {
+  const { vendor_id, code, title, level, duration, price, seats, delivery, next_start, description, badge } = req.body;
+  const { rows } = await pool.query(`
+    INSERT INTO courses (vendor_id, code, title, level, duration, price, seats, enrolled, delivery, next_start, description, badge)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,0,$8,$9,$10,$11)
+    RETURNING *
+  `, [vendor_id, code, title, level, duration, price, seats, delivery, next_start, description, badge || '']);
+  const { rows: full } = await pool.query(`
+    SELECT c.*, v.name AS vendor_name, v.color AS vendor_color, v.logo AS vendor_logo
+    FROM courses c JOIN vendors v ON v.id = c.vendor_id WHERE c.id = $1
+  `, [rows[0].id]);
+  res.json(full[0]);
+});
+
+// Update course
+app.put("/api/courses/:id", async (req, res) => {
+  const { vendor_id, code, title, level, duration, price, seats, delivery, next_start, description, badge } = req.body;
+  const { rows } = await pool.query(`
+    UPDATE courses SET
+      vendor_id=$1, code=$2, title=$3, level=$4, duration=$5,
+      price=$6, seats=$7, delivery=$8, next_start=$9, description=$10, badge=$11
+    WHERE id=$12 RETURNING *
+  `, [vendor_id, code, title, level, duration, price, seats, delivery, next_start, description, badge || '', req.params.id]);
+  const { rows: full } = await pool.query(`
+    SELECT c.*, v.name AS vendor_name, v.color AS vendor_color, v.logo AS vendor_logo
+    FROM courses c JOIN vendors v ON v.id = c.vendor_id WHERE c.id = $1
+  `, [rows[0].id]);
+  res.json(full[0]);
+});
+
+// Delete course (cascades schedule and enrollments)
+app.delete("/api/courses/:id", async (req, res) => {
+  await pool.query("DELETE FROM schedule WHERE course_id=$1", [req.params.id]);
+  await pool.query("DELETE FROM enrollments WHERE course_id=$1", [req.params.id]);
+  await pool.query("DELETE FROM courses WHERE id=$1", [req.params.id]);
+  res.json({ success: true });
+});
+
 // Enroll a student in a course
 app.post("/api/enrollments", async (req, res) => {
   const { student_id, course_id } = req.body;
