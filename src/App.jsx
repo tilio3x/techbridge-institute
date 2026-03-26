@@ -132,6 +132,53 @@ function Chip({ text, color }) {
   );
 }
 
+function SignInSelector({ onStudentLogin, onClose }) {
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
+      <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: 40, width: "100%", maxWidth: 560 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
+          <div>
+            <div style={{ color: "#0ea5e9", fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>TechBridge Institute</div>
+            <h2 style={{ color: "#f1f5f9", fontWeight: 900, fontSize: 22, margin: 0, fontFamily: "Georgia, serif" }}>Welcome — how would you like to sign in?</h2>
+          </div>
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#64748b", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontSize: 16 }}>✕</button>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          {/* Student card */}
+          <div style={{ background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 16, padding: 28, display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ fontSize: 36 }}>🎓</div>
+            <div>
+              <div style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 16, marginBottom: 6 }}>Student</div>
+              <div style={{ color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>Sign in to access your courses, dashboard, and certifications. New students can register here.</div>
+            </div>
+            <button onClick={() => { onClose(); onStudentLogin(); }} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "12px 20px", fontWeight: 700, fontSize: 14, cursor: "pointer", marginTop: "auto" }}>
+              Student Sign In / Register
+            </button>
+          </div>
+
+          {/* Educator card */}
+          <div style={{ background: "rgba(99,102,241,0.05)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 16, padding: 28, display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ fontSize: 36 }}>👨‍🏫</div>
+            <div>
+              <div style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 16, marginBottom: 6 }}>Educator</div>
+              <div style={{ color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>Sign in with your institution Microsoft 365 account. Educator accounts are provisioned by HR.</div>
+            </div>
+            <button disabled style={{ background: "rgba(99,102,241,0.15)", color: "#818cf8", border: "1px solid rgba(99,102,241,0.3)", borderRadius: 10, padding: "12px 20px", fontWeight: 700, fontSize: 14, cursor: "not-allowed", marginTop: "auto", opacity: 0.7 }}>
+              Educator Sign In
+              <div style={{ fontSize: 10, fontWeight: 500, marginTop: 3, color: "#6366f1" }}>M365 setup in progress</div>
+            </button>
+          </div>
+        </div>
+
+        <p style={{ color: "#475569", fontSize: 12, textAlign: "center", marginTop: 24, marginBottom: 0 }}>
+          Educators — don't have an account? Contact HR to start the onboarding process.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function AuthWall({ onLogin, message }) {
   return (
     <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24, padding: 40, textAlign: "center" }}>
@@ -1348,17 +1395,20 @@ export default function App() {
   const [profile, setProfile] = useState(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
 
+  const [showSignInSelector, setShowSignInSelector] = useState(false);
+
   const handleLogin = async () => {
     try {
       await instance.loginPopup(loginRequest);
     } catch (e) {
       if (e?.errorCode === "interaction_in_progress") {
-        // Stale lock left by a page refresh mid-flow — clear it and retry
         await instance.clearCache();
         await instance.loginPopup(loginRequest).catch(() => {});
       }
     }
   };
+
+  const openSignIn = () => setShowSignInSelector(true);
   const handleLogout = () => {
     setProfile(null);
     setProfileLoaded(false);
@@ -1431,6 +1481,13 @@ export default function App() {
         input, textarea, select { color: #f1f5f9 !important; }
       `}</style>
 
+      {showSignInSelector && (
+        <SignInSelector
+          onStudentLogin={handleLogin}
+          onClose={() => setShowSignInSelector(false)}
+        />
+      )}
+
       {/* Navbar */}
       <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(10,15,30,0.95)", borderBottom: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(20px)" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", height: 64, gap: 32 }}>
@@ -1470,7 +1527,7 @@ export default function App() {
                 </button>
               </div>
             ) : (
-              <button onClick={handleLogin} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "9px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+              <button onClick={openSignIn} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "9px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                 Sign In / Register
               </button>
             )}
