@@ -1215,7 +1215,14 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
                           {["Physical", "Online", "Hybrid"].map(t => <option key={t} value={t}>{t}</option>)}
                         </select>
                       </div>
-                      <div><label style={lbl}>Timezone (IANA)</label><input value={locationForm.timezone} onChange={set("timezone")} style={inp} placeholder="e.g. Africa/Bamako" /></div>
+                      <div>
+                        <label style={lbl}>Timezone</label>
+                        <select value={locationForm.timezone} onChange={set("timezone")} style={inp}>
+                          {Intl.supportedValuesOf("timeZone").map(tz => (
+                            <option key={tz} value={tz}>{tz.replace(/_/g, " ")}</option>
+                          ))}
+                        </select>
+                      </div>
 
                       <div style={{ gridColumn: "span 2", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 14, marginTop: 4 }}>
                         <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Address</div>
