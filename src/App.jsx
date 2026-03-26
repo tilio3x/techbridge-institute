@@ -1395,7 +1395,7 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
                             <div style={{ color: "#475569", fontSize: 11 }}>Temporary Password <span style={{ color: "#64748b", fontWeight: 400 }}>(instructor must change on first login)</span></div>
                             <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
                               <code style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, padding: "6px 12px", color: "#f1f5f9", fontFamily: "monospace", fontSize: 15, fontWeight: 700, flex: 1, textAlign: "center", letterSpacing: 2 }}>{instructorCreated.tempPassword}</code>
-                              <button onClick={() => navigator.clipboard.writeText(instructorCreated.tempPassword)} style={{ background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>Copy</button>
+                              <button onClick={() => instructorCreated.tempPassword && navigator.clipboard.writeText(instructorCreated.tempPassword)} disabled={!instructorCreated.tempPassword} style={{ background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: instructorCreated.tempPassword ? "pointer" : "not-allowed", whiteSpace: "nowrap", opacity: instructorCreated.tempPassword ? 1 : 0.4 }}>Copy</button>
                             </div>
                           </div>
                         </div>

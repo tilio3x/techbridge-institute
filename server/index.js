@@ -165,6 +165,8 @@ app.post("/api/instructors", async (req, res) => {
       entra_oid = entraUser.oid;
       upn = entraUser.upn;
       tempPassword = entraUser.tempPassword;
+    } else {
+      entraWarning = "Staff Entra ID credentials are not configured. Set ENTRA_STAFF_TENANT_ID, ENTRA_STAFF_CLIENT_ID, and ENTRA_STAFF_CLIENT_SECRET in App Service settings.";
     }
   } catch (err) {
     entraWarning = err.message;
