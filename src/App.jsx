@@ -922,7 +922,7 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
     isEdit ? onInstructorUpdate(saved) : onInstructorAdd(saved);
     setInstructorModal(null);
     setInstructorSaving(false);
-    if (!isEdit) {
+    if (!isEdit || saved.upn || saved.entraWarning) {
       setInstructorCreated({
         name: `${saved.first_name} ${saved.last_name}`,
         upn: saved.upn,

@@ -183,15 +183,41 @@ app.post("/api/instructors", async (req, res) => {
 
 app.put("/api/instructors/:id", async (req, res) => {
   const { first_name, last_name, email, phone, title, bio, specializations, certifications, employment_type, status, hire_date, photo_url, linkedin_url, available_days, available_hours, availability_note } = req.body;
+
+  // Check if this instructor already has an Entra account
+  const { rows: existing } = await pool.query("SELECT entra_oid FROM instructors WHERE id = $1", [req.params.id]);
+  const alreadyLinked = existing[0]?.entra_oid;
+
+  let upn = null;
+  let tempPassword = null;
+  let entraWarning = null;
+  let entra_oid = alreadyLinked || null;
+
+  if (!alreadyLinked) {
+    try {
+      const entraUser = await createEntraStaffUser(first_name, last_name);
+      if (entraUser) {
+        entra_oid = entraUser.oid;
+        upn = entraUser.upn;
+        tempPassword = entraUser.tempPassword;
+      } else {
+        entraWarning = "Staff Entra ID credentials are not configured. Set ENTRA_STAFF_TENANT_ID, ENTRA_STAFF_CLIENT_ID, and ENTRA_STAFF_CLIENT_SECRET in App Service settings.";
+      }
+    } catch (err) {
+      entraWarning = err.message;
+    }
+  }
+
   const { rows } = await pool.query(`
     UPDATE instructors SET
       first_name=$1, last_name=$2, email=$3, phone=$4, title=$5, bio=$6,
       specializations=$7, certifications=$8, employment_type=$9, status=$10,
       hire_date=$11, photo_url=$12, linkedin_url=$13, available_days=$14,
-      available_hours=$15, availability_note=$16
-    WHERE id=$17 RETURNING *
-  `, [first_name, last_name, email, phone||null, title||null, bio||null, specializations||[], certifications||[], employment_type||'Full-time', status||'Active', hire_date||null, photo_url||null, linkedin_url||null, available_days||[], available_hours||null, availability_note||null, req.params.id]);
-  res.json(rows[0]);
+      available_hours=$15, availability_note=$16, entra_oid=$17
+    WHERE id=$18 RETURNING *
+  `, [first_name, last_name, email, phone||null, title||null, bio||null, specializations||[], certifications||[], employment_type||'Full-time', status||'Active', hire_date||null, photo_url||null, linkedin_url||null, available_days||[], available_hours||null, availability_note||null, entra_oid, req.params.id]);
+
+  res.json({ ...rows[0], upn, tempPassword, entraWarning });
 });
 
 app.delete("/api/instructors/:id", async (req, res) => {
