@@ -135,7 +135,7 @@ function Chip({ text, color }) {
 function SignInSelector({ onStudentLogin, onClose }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
-      <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: 40, width: "100%", maxWidth: 560 }}>
+      <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: 40, width: "100%", maxWidth: 780 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
           <div>
             <div style={{ color: "#0ea5e9", fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>TechBridge Institute</div>
@@ -144,35 +144,48 @@ function SignInSelector({ onStudentLogin, onClose }) {
           <button onClick={onClose} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#64748b", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontSize: 16 }}>✕</button>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
           {/* Student card */}
-          <div style={{ background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 16, padding: 28, display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ fontSize: 36 }}>🎓</div>
+          <div style={{ background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ fontSize: 34 }}>🎓</div>
             <div>
-              <div style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 16, marginBottom: 6 }}>Student</div>
-              <div style={{ color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>Sign in to access your courses, dashboard, and certifications. New students can register here.</div>
+              <div style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 15, marginBottom: 6 }}>Student</div>
+              <div style={{ color: "#64748b", fontSize: 12, lineHeight: 1.6 }}>Sign in to access your courses, dashboard, and certifications. New students can register here.</div>
             </div>
-            <button onClick={() => { onClose(); onStudentLogin(); }} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "12px 20px", fontWeight: 700, fontSize: 14, cursor: "pointer", marginTop: "auto" }}>
+            <button onClick={() => { onClose(); onStudentLogin(); }} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 16px", fontWeight: 700, fontSize: 13, cursor: "pointer", marginTop: "auto" }}>
               Student Sign In / Register
             </button>
           </div>
 
           {/* Educator card */}
-          <div style={{ background: "rgba(99,102,241,0.05)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 16, padding: 28, display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ fontSize: 36 }}>👨‍🏫</div>
+          <div style={{ background: "rgba(99,102,241,0.05)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ fontSize: 34 }}>👨‍🏫</div>
             <div>
-              <div style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 16, marginBottom: 6 }}>Educator</div>
-              <div style={{ color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>Sign in with your institution Microsoft 365 account. Educator accounts are provisioned by HR.</div>
+              <div style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 15, marginBottom: 6 }}>Educator</div>
+              <div style={{ color: "#64748b", fontSize: 12, lineHeight: 1.6 }}>Sign in with your institution Microsoft 365 account. Educator accounts are provisioned by HR.</div>
             </div>
-            <button disabled style={{ background: "rgba(99,102,241,0.15)", color: "#818cf8", border: "1px solid rgba(99,102,241,0.3)", borderRadius: 10, padding: "12px 20px", fontWeight: 700, fontSize: 14, cursor: "not-allowed", marginTop: "auto", opacity: 0.7 }}>
+            <button disabled style={{ background: "rgba(99,102,241,0.15)", color: "#818cf8", border: "1px solid rgba(99,102,241,0.3)", borderRadius: 10, padding: "11px 16px", fontWeight: 700, fontSize: 13, cursor: "not-allowed", marginTop: "auto", opacity: 0.7 }}>
               Educator Sign In
               <div style={{ fontSize: 10, fontWeight: 500, marginTop: 3, color: "#6366f1" }}>M365 setup in progress</div>
+            </button>
+          </div>
+
+          {/* Site Admin card */}
+          <div style={{ background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ fontSize: 34 }}>🛡️</div>
+            <div>
+              <div style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 15, marginBottom: 6 }}>Site Admin</div>
+              <div style={{ color: "#64748b", fontSize: 12, lineHeight: 1.6 }}>Sign in with your institution Microsoft 365 account. Admin access is granted by IT.</div>
+            </div>
+            <button disabled style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "11px 16px", fontWeight: 700, fontSize: 13, cursor: "not-allowed", marginTop: "auto", opacity: 0.7 }}>
+              Admin Sign In
+              <div style={{ fontSize: 10, fontWeight: 500, marginTop: 3, color: "#ef4444" }}>M365 setup in progress</div>
             </button>
           </div>
         </div>
 
         <p style={{ color: "#475569", fontSize: 12, textAlign: "center", marginTop: 24, marginBottom: 0 }}>
-          Educators — don't have an account? Contact HR to start the onboarding process.
+          Educators & admins — don't have an account? Contact HR or IT to start the onboarding process.
         </p>
       </div>
     </div>
