@@ -799,7 +799,7 @@ function DashboardView({ enrolledCourses, courses, user }) {
 }
 
 const EMPTY_COURSE = { vendor_id: "", code: "", title: "", level: "Beginner", duration: "", price: "", seats: "", delivery: "Online", next_start: "", description: "", badge: "", instructor_id: "", delivery_location_id: "" };
-const EMPTY_LOCATION = { name: "", type: "Physical", city: "", country_code: "", country_name: "", room_number: "", building: "", floor: "", capacity: "", platform: "", timezone: "UTC", contact_name: "", contact_email: "", contact_phone: "", notes: "" };
+const EMPTY_LOCATION = { name: "", type: "Physical", address_line1: "", address_line2: "", city: "", state_province: "", postal_code: "", country_code: "", country_name: "", room_number: "", building: "", floor: "", capacity: "", platform: "", timezone: "UTC", contact_name: "", contact_email: "", contact_phone: "", notes: "" };
 
 function AdminView({ courses, vendors, schedule, students, profiles, instructors, deliveryLocations, onDeleteProfile, onCourseAdd, onCourseUpdate, onCourseDelete, onLocationAdd, onLocationUpdate, onLocationDelete }) {
   const [tab, setTab] = useState("overview");
@@ -854,7 +854,9 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
   const openEditLocation = (loc) => {
     setLocationForm({
       name: loc.name || "", type: loc.type || "Physical",
-      city: loc.city || "", country_code: loc.country_code || "", country_name: loc.country_name || "",
+      address_line1: loc.address_line1 || "", address_line2: loc.address_line2 || "",
+      city: loc.city || "", state_province: loc.state_province || "", postal_code: loc.postal_code || "",
+      country_code: loc.country_code || "", country_name: loc.country_name || "",
       room_number: loc.room_number || "", building: loc.building || "",
       floor: loc.floor || "", capacity: loc.capacity || "",
       platform: loc.platform || "", timezone: loc.timezone || "UTC",
@@ -1245,12 +1247,14 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
                       <div style={{ gridColumn: "span 2", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 14, marginTop: 4 }}>
                         <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Address</div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                          <div style={{ gridColumn: "span 2" }}><label style={lbl}>Address Line 1</label><input value={locationForm.address_line1} onChange={set("address_line1")} style={inp} placeholder="Street address, P.O. box" /></div>
+                          <div style={{ gridColumn: "span 2" }}><label style={lbl}>Address Line 2</label><input value={locationForm.address_line2} onChange={set("address_line2")} style={inp} placeholder="Apartment, suite, building, floor…" /></div>
                           <div>
                             <label style={lbl}>Country</label>
                             <select value={locationForm.country_code} onChange={e => {
                               const code = e.target.value;
                               const name = Country.getAllCountries().find(c => c.isoCode === code)?.name || "";
-                              setLocationForm(f => ({ ...f, country_code: code, country_name: name, city: "" }));
+                              setLocationForm(f => ({ ...f, country_code: code, country_name: name, city: "", state_province: "" }));
                             }} style={inp}>
                               <option value="">Select country...</option>
                               {Country.getAllCountries().map(c => <option key={c.isoCode} value={c.isoCode}>{c.name}</option>)}
@@ -1270,6 +1274,8 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
                               );
                             })()}
                           </div>
+                          <div><label style={lbl}>State / Province</label><input value={locationForm.state_province} onChange={set("state_province")} style={inp} placeholder="State or province" /></div>
+                          <div><label style={lbl}>Postal Code</label><input value={locationForm.postal_code} onChange={set("postal_code")} style={inp} placeholder="ZIP / postal code" /></div>
                         </div>
                       </div>
 
