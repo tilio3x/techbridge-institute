@@ -85,9 +85,37 @@ app.get("/api/courses", async (req, res) => {
 // Instructors
 app.get("/api/instructors", async (req, res) => {
   const { rows } = await pool.query(
-    "SELECT id, first_name, last_name, title, status FROM instructors WHERE status = 'Active' ORDER BY last_name, first_name"
+    "SELECT * FROM instructors ORDER BY last_name, first_name"
   );
   res.json(rows);
+});
+
+app.post("/api/instructors", async (req, res) => {
+  const { first_name, last_name, email, phone, title, bio, specializations, certifications, employment_type, status, hire_date, photo_url, linkedin_url, available_days, available_hours, availability_note } = req.body;
+  const { rows } = await pool.query(`
+    INSERT INTO instructors (first_name, last_name, email, phone, title, bio, specializations, certifications, employment_type, status, hire_date, photo_url, linkedin_url, available_days, available_hours, availability_note)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+    RETURNING *
+  `, [first_name, last_name, email, phone||null, title||null, bio||null, specializations||[], certifications||[], employment_type||'Full-time', status||'Active', hire_date||null, photo_url||null, linkedin_url||null, available_days||[], available_hours||null, availability_note||null]);
+  res.json(rows[0]);
+});
+
+app.put("/api/instructors/:id", async (req, res) => {
+  const { first_name, last_name, email, phone, title, bio, specializations, certifications, employment_type, status, hire_date, photo_url, linkedin_url, available_days, available_hours, availability_note } = req.body;
+  const { rows } = await pool.query(`
+    UPDATE instructors SET
+      first_name=$1, last_name=$2, email=$3, phone=$4, title=$5, bio=$6,
+      specializations=$7, certifications=$8, employment_type=$9, status=$10,
+      hire_date=$11, photo_url=$12, linkedin_url=$13, available_days=$14,
+      available_hours=$15, availability_note=$16
+    WHERE id=$17 RETURNING *
+  `, [first_name, last_name, email, phone||null, title||null, bio||null, specializations||[], certifications||[], employment_type||'Full-time', status||'Active', hire_date||null, photo_url||null, linkedin_url||null, available_days||[], available_hours||null, availability_note||null, req.params.id]);
+  res.json(rows[0]);
+});
+
+app.delete("/api/instructors/:id", async (req, res) => {
+  await pool.query("UPDATE instructors SET status = 'Inactive' WHERE id = $1", [req.params.id]);
+  res.json({ success: true });
 });
 
 // Delivery locations

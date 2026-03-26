@@ -799,9 +799,10 @@ function DashboardView({ enrolledCourses, courses, user }) {
 }
 
 const EMPTY_COURSE = { vendor_id: "", code: "", title: "", level: "Beginner", duration: "", price: "", seats: "", delivery: "Online", next_start: "", description: "", badge: "", instructor_id: "", delivery_location_id: "" };
+const EMPTY_INSTRUCTOR = { first_name: "", last_name: "", email: "", phone: "", title: "", bio: "", specializations: "", certifications: "", employment_type: "Full-time", status: "Active", hire_date: "", linkedin_url: "", available_days: [], available_hours: "", availability_note: "" };
 const EMPTY_LOCATION = { name: "", type: "Physical", address_line1: "", address_line2: "", city: "", state_province: "", postal_code: "", country_code: "", country_name: "", room_number: "", building: "", floor: "", capacity: "", platform: "", timezone: "UTC", contact_name: "", contact_email: "", contact_phone: "", notes: "" };
 
-function AdminView({ courses, vendors, schedule, students, profiles, instructors, deliveryLocations, onDeleteProfile, onCourseAdd, onCourseUpdate, onCourseDelete, onLocationAdd, onLocationUpdate, onLocationDelete }) {
+function AdminView({ courses, vendors, schedule, students, profiles, instructors, deliveryLocations, onDeleteProfile, onCourseAdd, onCourseUpdate, onCourseDelete, onLocationAdd, onLocationUpdate, onLocationDelete, onInstructorAdd, onInstructorUpdate, onInstructorDeactivate }) {
   const [tab, setTab] = useState("overview");
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [confirmDeleteCourse, setConfirmDeleteCourse] = useState(null);
@@ -812,6 +813,10 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
   const [locationForm, setLocationForm] = useState(EMPTY_LOCATION);
   const [locationSaving, setLocationSaving] = useState(false);
   const [confirmDeleteLocation, setConfirmDeleteLocation] = useState(null);
+  const [instructorModal, setInstructorModal] = useState(null);
+  const [instructorForm, setInstructorForm] = useState(EMPTY_INSTRUCTOR);
+  const [instructorSaving, setInstructorSaving] = useState(false);
+  const [confirmDeactivateInstructor, setConfirmDeactivateInstructor] = useState(null);
   const courseById = (id) => courses.find(c => c.id === id);
 
   const openNew = () => { setCourseForm(EMPTY_COURSE); setCourseModal({ mode: "new" }); };
@@ -884,7 +889,47 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
     setConfirmDeleteLocation(null);
   };
 
-  const adminTabs = ["overview", "students", "courses", "locations", "schedule", "integrations"];
+  const openNewInstructor = () => { setInstructorForm(EMPTY_INSTRUCTOR); setInstructorModal({ mode: "new" }); };
+  const openEditInstructor = (i) => {
+    setInstructorForm({
+      first_name: i.first_name || "", last_name: i.last_name || "", email: i.email || "",
+      phone: i.phone || "", title: i.title || "", bio: i.bio || "",
+      specializations: (i.specializations || []).join(", "),
+      certifications: (i.certifications || []).join(", "),
+      employment_type: i.employment_type || "Full-time", status: i.status || "Active",
+      hire_date: i.hire_date ? i.hire_date.split("T")[0] : "",
+      linkedin_url: i.linkedin_url || "",
+      available_days: i.available_days || [],
+      available_hours: i.available_hours || "", availability_note: i.availability_note || "",
+    });
+    setInstructorModal({ mode: "edit", id: i.id });
+  };
+
+  const saveInstructor = async () => {
+    setInstructorSaving(true);
+    const isEdit = instructorModal.mode === "edit";
+    const url = isEdit ? `/api/instructors/${instructorModal.id}` : "/api/instructors";
+    const method = isEdit ? "PUT" : "POST";
+    const payload = {
+      ...instructorForm,
+      specializations: instructorForm.specializations.split(",").map(s => s.trim()).filter(Boolean),
+      certifications: instructorForm.certifications.split(",").map(s => s.trim()).filter(Boolean),
+      hire_date: instructorForm.hire_date || null,
+    };
+    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    const saved = await res.json();
+    isEdit ? onInstructorUpdate(saved) : onInstructorAdd(saved);
+    setInstructorModal(null);
+    setInstructorSaving(false);
+  };
+
+  const deactivateInstructor = async (instructor) => {
+    await fetch(`/api/instructors/${instructor.id}`, { method: "DELETE" });
+    onInstructorDeactivate(instructor.id);
+    setConfirmDeactivateInstructor(null);
+  };
+
+  const adminTabs = ["overview", "students", "courses", "instructors", "locations", "schedule", "integrations"];
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
@@ -1080,7 +1125,7 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
                         <label style={lbl}>Instructor</label>
                         <select value={courseForm.instructor_id} onChange={set("instructor_id")} style={inp}>
                           <option value="">Unassigned</option>
-                          {instructors.map(i => <option key={i.id} value={i.id}>{i.first_name} {i.last_name}{i.title ? ` — ${i.title}` : ""}</option>)}
+                          {instructors.filter(i => i.status === "Active").map(i => <option key={i.id} value={i.id}>{i.first_name} {i.last_name}{i.title ? ` — ${i.title}` : ""}</option>)}
                         </select>
                       </div>
                       <div><label style={lbl}>Course Code</label><input value={courseForm.code} onChange={set("code")} style={inp} placeholder="e.g. AZ-900" /></div>
@@ -1170,6 +1215,149 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
             )}
           </div>
         )}
+
+        {tab === "instructors" && (() => {
+          const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+          const statusColor = { Active: "#22c55e", Inactive: "#ef4444", "On Leave": "#f59e0b" };
+          const inp = { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "10px 14px", color: "#f1f5f9", fontSize: 13, width: "100%", boxSizing: "border-box" };
+          const lbl = { color: "#94a3b8", fontSize: 12, fontWeight: 600, marginBottom: 4, display: "block" };
+          const set = (k) => (e) => setInstructorForm(f => ({ ...f, [k]: e.target.value }));
+          const toggleDay = (day) => setInstructorForm(f => ({ ...f, available_days: f.available_days.includes(day) ? f.available_days.filter(d => d !== day) : [...f.available_days, day] }));
+          return (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                <div>
+                  <h2 style={{ fontSize: 28, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", margin: "0 0 4px" }}>Instructors</h2>
+                  <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>{instructors.length} instructor{instructors.length !== 1 ? "s" : ""} on record</p>
+                </div>
+                <button onClick={openNewInstructor} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ New Instructor</button>
+              </div>
+
+              <div style={{ display: "grid", gap: 14 }}>
+                {instructors.length === 0 && <div style={{ color: "#64748b", fontSize: 14, padding: 24, textAlign: "center" }}>No instructors on record.</div>}
+                {instructors.map(ins => (
+                  <div key={ins.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: 20, display: "flex", gap: 16, alignItems: "flex-start" }}>
+                    <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 18, flexShrink: 0 }}>
+                      {ins.first_name?.[0]}{ins.last_name?.[0]}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                        <div>
+                          <div style={{ color: "#f1f5f9", fontWeight: 700, fontSize: 15 }}>{ins.first_name} {ins.last_name}</div>
+                          <div style={{ color: "#0ea5e9", fontSize: 12, fontFamily: "monospace" }}>{ins.email}</div>
+                          {ins.title && <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 2 }}>{ins.title} · {ins.employment_type}</div>}
+                        </div>
+                        <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
+                          <span style={{ background: `rgba(${ins.status === "Active" ? "34,197,94" : ins.status === "On Leave" ? "251,191,36" : "239,68,68"},0.12)`, color: statusColor[ins.status] || "#94a3b8", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>{ins.status}</span>
+                          <button onClick={() => openEditInstructor(ins)} style={{ background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Edit</button>
+                          {ins.status === "Active" && <button onClick={() => setConfirmDeactivateInstructor(ins)} style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Deactivate</button>}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 12px", marginTop: 10 }}>
+                        {(ins.specializations || []).map(s => <span key={s} style={{ background: "rgba(99,102,241,0.1)", color: "#818cf8", fontSize: 11, padding: "2px 8px", borderRadius: 20 }}>{s}</span>)}
+                        {(ins.certifications || []).map(c => <span key={c} style={{ background: "rgba(251,191,36,0.1)", color: "#fbbf24", fontSize: 11, padding: "2px 8px", borderRadius: 20 }}>{c}</span>)}
+                        {ins.available_days?.length > 0 && <span style={{ color: "#64748b", fontSize: 12 }}>Available: {ins.available_days.map(d => d.slice(0,3)).join(", ")}{ins.available_hours ? ` · ${ins.available_hours}` : ""}</span>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Instructor form modal */}
+              {instructorModal && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 24, overflowY: "auto" }}>
+                  <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 36, width: "100%", maxWidth: 720, margin: "auto" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
+                      <h3 style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 20, margin: 0 }}>{instructorModal.mode === "new" ? "New Instructor" : "Edit Instructor"}</h3>
+                      <button onClick={() => setInstructorModal(null)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#94a3b8", borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}>✕</button>
+                    </div>
+
+                    {/* Basic Info */}
+                    <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Basic Information</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }}>
+                      <div><label style={lbl}>First Name</label><input value={instructorForm.first_name} onChange={set("first_name")} style={inp} placeholder="First name" /></div>
+                      <div><label style={lbl}>Last Name</label><input value={instructorForm.last_name} onChange={set("last_name")} style={inp} placeholder="Last name" /></div>
+                      <div><label style={lbl}>Email</label><input value={instructorForm.email} onChange={set("email")} style={inp} placeholder="email@example.com" /></div>
+                      <div><label style={lbl}>Phone</label><input value={instructorForm.phone} onChange={set("phone")} style={inp} placeholder="+223 ..." /></div>
+                      <div><label style={lbl}>Title / Role</label><input value={instructorForm.title} onChange={set("title")} style={inp} placeholder="e.g. Senior Instructor" /></div>
+                      <div><label style={lbl}>LinkedIn URL</label><input value={instructorForm.linkedin_url} onChange={set("linkedin_url")} style={inp} placeholder="https://linkedin.com/in/..." /></div>
+                      <div style={{ gridColumn: "span 2" }}><label style={lbl}>Bio</label><textarea value={instructorForm.bio} onChange={set("bio")} style={{ ...inp, height: 72, resize: "vertical" }} placeholder="Short public-facing biography" /></div>
+                    </div>
+
+                    {/* Employment */}
+                    <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 16, marginBottom: 16 }}>
+                      <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Employment</div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+                        <div>
+                          <label style={lbl}>Employment Type</label>
+                          <select value={instructorForm.employment_type} onChange={set("employment_type")} style={inp}>
+                            {["Full-time", "Part-time", "Contractor"].map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={lbl}>Status</label>
+                          <select value={instructorForm.status} onChange={set("status")} style={inp}>
+                            {["Active", "Inactive", "On Leave"].map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        </div>
+                        <div><label style={lbl}>Hire Date</label><input type="date" value={instructorForm.hire_date} onChange={set("hire_date")} style={inp} /></div>
+                      </div>
+                    </div>
+
+                    {/* Expertise */}
+                    <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 16, marginBottom: 16 }}>
+                      <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Expertise</div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                        <div><label style={lbl}>Specializations <span style={{ color: "#475569", fontWeight: 400 }}>(comma-separated)</span></label><input value={instructorForm.specializations} onChange={set("specializations")} style={inp} placeholder="e.g. Azure, Security, CompTIA" /></div>
+                        <div><label style={lbl}>Certifications <span style={{ color: "#475569", fontWeight: 400 }}>(comma-separated)</span></label><input value={instructorForm.certifications} onChange={set("certifications")} style={inp} placeholder="e.g. AZ-104, Security+, CCNA" /></div>
+                      </div>
+                    </div>
+
+                    {/* Availability */}
+                    <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 16, marginBottom: 24 }}>
+                      <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Availability</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+                        {DAYS.map(day => (
+                          <button key={day} type="button" onClick={() => toggleDay(day)} style={{ padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "1px solid", borderColor: instructorForm.available_days.includes(day) ? "#0ea5e9" : "rgba(255,255,255,0.1)", background: instructorForm.available_days.includes(day) ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.03)", color: instructorForm.available_days.includes(day) ? "#0ea5e9" : "#64748b" }}>
+                            {day.slice(0, 3)}
+                          </button>
+                        ))}
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                        <div><label style={lbl}>Available Hours</label><input value={instructorForm.available_hours} onChange={set("available_hours")} style={inp} placeholder="e.g. 09:00–17:00" /></div>
+                        <div><label style={lbl}>Availability Note</label><input value={instructorForm.availability_note} onChange={set("availability_note")} style={inp} placeholder="e.g. Evenings only in July" /></div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
+                      <button onClick={() => setInstructorModal(null)} style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+                      <button onClick={saveInstructor} disabled={instructorSaving || !instructorForm.first_name || !instructorForm.last_name || !instructorForm.email} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", fontWeight: 700, cursor: "pointer", opacity: instructorSaving ? 0.7 : 1 }}>
+                        {instructorSaving ? "Saving..." : instructorModal.mode === "new" ? "Add Instructor" : "Save Changes"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Confirm deactivate modal */}
+              {confirmDeactivateInstructor && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 24 }}>
+                  <div style={{ background: "#0f172a", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 20, padding: 36, maxWidth: 440, width: "100%", textAlign: "center" }}>
+                    <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
+                    <h3 style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 20, marginBottom: 12 }}>Deactivate Instructor?</h3>
+                    <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.6, marginBottom: 28 }}>
+                      <strong style={{ color: "#f1f5f9" }}>{confirmDeactivateInstructor.first_name} {confirmDeactivateInstructor.last_name}</strong> will be set to Inactive and removed from course assignment dropdowns.
+                    </p>
+                    <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+                      <button onClick={() => setConfirmDeactivateInstructor(null)} style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+                      <button onClick={() => deactivateInstructor(confirmDeactivateInstructor)} style={{ background: "rgba(239,68,68,0.15)", color: "#f87171", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Yes, Deactivate</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {tab === "locations" && (
           <div>
@@ -1843,6 +2031,9 @@ export default function App() {
                   onLocationAdd={(loc) => setDeliveryLocations(prev => [...prev, loc])}
                   onLocationUpdate={(loc) => setDeliveryLocations(prev => prev.map(x => x.id === loc.id ? loc : x))}
                   onLocationDelete={(id) => setDeliveryLocations(prev => prev.filter(x => x.id !== id))}
+                  onInstructorAdd={(i) => setInstructors(prev => [...prev, i])}
+                  onInstructorUpdate={(i) => setInstructors(prev => prev.map(x => x.id === i.id ? i : x))}
+                  onInstructorDeactivate={(id) => setInstructors(prev => prev.map(x => x.id === id ? { ...x, status: "Inactive" } : x))}
                 />
               : <AuthWall onLogin={handleLogin} message="Admin access only. Sign in with an administrator account." />
           )}
