@@ -36,6 +36,10 @@ function normalizeCourse(c) {
     vendorName: c.vendor_name,
     vendorColor: c.vendor_color,
     vendorLogo: c.vendor_logo,
+    instructorId: c.instructor_id || null,
+    instructorName: c.instructor_first_name
+      ? `${c.instructor_first_name} ${c.instructor_last_name}`
+      : null,
   };
 }
 
@@ -707,9 +711,9 @@ function DashboardView({ enrolledCourses, courses, user }) {
   );
 }
 
-const EMPTY_COURSE = { vendor_id: "", code: "", title: "", level: "Beginner", duration: "", price: "", seats: "", delivery: "Online", next_start: "", description: "", badge: "" };
+const EMPTY_COURSE = { vendor_id: "", code: "", title: "", level: "Beginner", duration: "", price: "", seats: "", delivery: "Online", next_start: "", description: "", badge: "", instructor_id: "" };
 
-function AdminView({ courses, vendors, schedule, students, profiles, onDeleteProfile, onCourseAdd, onCourseUpdate, onCourseDelete }) {
+function AdminView({ courses, vendors, schedule, students, profiles, instructors, onDeleteProfile, onCourseAdd, onCourseUpdate, onCourseDelete }) {
   const [tab, setTab] = useState("overview");
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [confirmDeleteCourse, setConfirmDeleteCourse] = useState(null);
@@ -724,6 +728,7 @@ function AdminView({ courses, vendors, schedule, students, profiles, onDeletePro
       vendor_id: c.vendor, code: c.code, title: c.title, level: c.level,
       duration: c.duration, price: c.price, seats: c.seats, delivery: c.delivery,
       next_start: c.nextStart ? c.nextStart.split("T")[0] : "", description: c.description, badge: c.badge || "",
+      instructor_id: c.instructorId || "",
     });
     setCourseModal({ mode: "edit", id: c.id });
   };
@@ -884,7 +889,7 @@ function AdminView({ courses, vendors, schedule, students, profiles, onDeletePro
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-                    {["Course", "Vendor", "Level", "Delivery", "Enrollment", "Start Date", "Actions"].map(h => (
+                    {["Course", "Vendor", "Instructor", "Level", "Delivery", "Enrollment", "Start Date", "Actions"].map(h => (
                       <th key={h} style={{ padding: "10px 14px", textAlign: "left", color: "#64748b", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>{h}</th>
                     ))}
                   </tr>
@@ -897,6 +902,7 @@ function AdminView({ courses, vendors, schedule, students, profiles, onDeletePro
                         <div style={{ color: "#64748b", fontFamily: "monospace", fontSize: 11 }}>{c.code}</div>
                       </td>
                       <td style={{ padding: "14px" }}><span style={{ color: c.vendorColor, fontWeight: 700 }}>{c.vendorName}</span></td>
+                      <td style={{ padding: "14px", color: c.instructorName ? "#e2e8f0" : "#475569", fontSize: 12 }}>{c.instructorName || "—"}</td>
                       <td style={{ padding: "14px" }}><Chip text={c.level} color={levelColor[c.level]} /></td>
                       <td style={{ padding: "14px" }}><Chip text={c.delivery} color="#0ea5e9" /></td>
                       <td style={{ padding: "14px" }}>
@@ -936,11 +942,18 @@ function AdminView({ courses, vendors, schedule, students, profiles, onDeletePro
                       <button onClick={() => setCourseModal(null)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#94a3b8", borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}>✕</button>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                      <div style={{ gridColumn: "span 2" }}>
+                      <div>
                         <label style={lbl}>Vendor</label>
                         <select value={courseForm.vendor_id} onChange={set("vendor_id")} style={inp}>
                           <option value="">Select vendor...</option>
                           {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={lbl}>Instructor</label>
+                        <select value={courseForm.instructor_id} onChange={set("instructor_id")} style={inp}>
+                          <option value="">Unassigned</option>
+                          {instructors.map(i => <option key={i.id} value={i.id}>{i.first_name} {i.last_name}{i.title ? ` — ${i.title}` : ""}</option>)}
                         </select>
                       </div>
                       <div><label style={lbl}>Course Code</label><input value={courseForm.code} onChange={set("code")} style={inp} placeholder="e.g. AZ-900" /></div>
@@ -1329,6 +1342,7 @@ export default function App() {
   const [schedule, setSchedule] = useState([]);
   const [students, setStudents] = useState([]);
   const [profiles, setProfiles] = useState([]);
+  const [instructors, setInstructors] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [profile, setProfile] = useState(null);
@@ -1370,12 +1384,14 @@ export default function App() {
       fetch("/api/schedule").then(r => r.json()),
       fetch("/api/students").then(r => r.json()),
       fetch("/api/profiles").then(r => r.json()),
-    ]).then(([v, c, s, st, p]) => {
+      fetch("/api/instructors").then(r => r.json()),
+    ]).then(([v, c, s, st, p, ins]) => {
       setVendors(v);
       setCourses(c.map(normalizeCourse));
       setSchedule(s.map(normalizeSchedule));
       setStudents(st);
       setProfiles(p);
+      setInstructors(ins);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
@@ -1484,7 +1500,7 @@ export default function App() {
           {view === "admin" && (
             isAdmin
               ? <AdminView
-                  courses={courses} vendors={vendors} schedule={schedule} students={students} profiles={profiles}
+                  courses={courses} vendors={vendors} schedule={schedule} students={students} profiles={profiles} instructors={instructors}
                   onDeleteProfile={(oid) => setProfiles(p => p.filter(x => x.entra_oid !== oid))}
                   onCourseAdd={(c) => setCourses(prev => [...prev, normalizeCourse(c)])}
                   onCourseUpdate={(c) => setCourses(prev => prev.map(x => x.id === c.id ? normalizeCourse(c) : x))}
