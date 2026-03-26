@@ -18,6 +18,24 @@ const INTEGRATIONS = [
 
 const levelColor = { Beginner: "#22c55e", Intermediate: "#f59e0b", Advanced: "#ef4444" };
 
+const TIMEZONES = (() => {
+  const now = new Date();
+  return Intl.supportedValuesOf("timeZone")
+    .map(tz => {
+      try {
+        const parts = new Intl.DateTimeFormat("en", { timeZone: tz, timeZoneName: "shortOffset" }).formatToParts(now);
+        const offset = parts.find(p => p.type === "timeZoneName")?.value?.replace("GMT", "UTC") ?? "UTC";
+        return { tz, label: `${offset} · ${tz.replace(/_/g, " ")}` };
+      } catch {
+        return { tz, label: `UTC · ${tz.replace(/_/g, " ")}` };
+      }
+    })
+    .sort((a, b) => {
+      const toMin = s => { const m = s.label.match(/UTC([+-])(\d+)(?::(\d+))?/); return m ? (m[1] === "+" ? 1 : -1) * (parseInt(m[2]) * 60 + parseInt(m[3] ?? 0)) : 0; };
+      return toMin(a) - toMin(b);
+    });
+})();
+
 function normalizeCourse(c) {
   return {
     id: c.id,
@@ -1218,8 +1236,8 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
                       <div>
                         <label style={lbl}>Timezone</label>
                         <select value={locationForm.timezone} onChange={set("timezone")} style={inp}>
-                          {Intl.supportedValuesOf("timeZone").map(tz => (
-                            <option key={tz} value={tz}>{tz.replace(/_/g, " ")}</option>
+                          {TIMEZONES.map(({ tz, label }) => (
+                            <option key={tz} value={tz}>{label}</option>
                           ))}
                         </select>
                       </div>
