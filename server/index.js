@@ -64,14 +64,19 @@ app.get("/api/vendors", async (req, res) => {
   res.json(rows);
 });
 
-// Courses (with vendor + instructor info joined)
+// Courses (with vendor + instructor + location joined)
 app.get("/api/courses", async (req, res) => {
   const { rows } = await pool.query(`
     SELECT c.*, v.name AS vendor_name, v.color AS vendor_color, v.logo AS vendor_logo,
-           i.id AS instructor_id, i.first_name AS instructor_first_name, i.last_name AS instructor_last_name
+           i.id AS instructor_id, i.first_name AS instructor_first_name, i.last_name AS instructor_last_name,
+           dl.id AS loc_id, dl.name AS loc_name, dl.type AS loc_type,
+           dl.city AS loc_city, dl.country_name AS loc_country, dl.room_number AS loc_room,
+           dl.building AS loc_building, dl.floor AS loc_floor, dl.capacity AS loc_capacity,
+           dl.platform AS loc_platform, dl.timezone AS loc_timezone
     FROM courses c
     JOIN vendors v ON v.id = c.vendor_id
     LEFT JOIN instructors i ON i.id = c.instructor_id
+    LEFT JOIN delivery_locations dl ON dl.id = c.delivery_location_id
     ORDER BY c.id
   `);
   res.json(rows);
@@ -83,6 +88,42 @@ app.get("/api/instructors", async (req, res) => {
     "SELECT id, first_name, last_name, title, status FROM instructors WHERE status = 'Active' ORDER BY last_name, first_name"
   );
   res.json(rows);
+});
+
+// Delivery locations
+app.get("/api/delivery-locations", async (req, res) => {
+  const { rows } = await pool.query(
+    "SELECT * FROM delivery_locations WHERE is_active = TRUE ORDER BY country_name, city, name"
+  );
+  res.json(rows);
+});
+
+app.post("/api/delivery-locations", async (req, res) => {
+  const { name, type, address_line1, address_line2, city, state_province, country_code, country_name, postal_code, room_number, floor, building, capacity, platform, meeting_url, facilities, timezone, contact_name, contact_email, contact_phone, notes } = req.body;
+  const { rows } = await pool.query(`
+    INSERT INTO delivery_locations (name, type, address_line1, address_line2, city, state_province, country_code, country_name, postal_code, room_number, floor, building, capacity, platform, meeting_url, facilities, timezone, contact_name, contact_email, contact_phone, notes)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
+    RETURNING *
+  `, [name, type || 'Physical', address_line1||null, address_line2||null, city||null, state_province||null, country_code||null, country_name||null, postal_code||null, room_number||null, floor||null, building||null, capacity||null, platform||null, meeting_url||null, facilities||null, timezone||'UTC', contact_name||null, contact_email||null, contact_phone||null, notes||null]);
+  res.json(rows[0]);
+});
+
+app.put("/api/delivery-locations/:id", async (req, res) => {
+  const { name, type, address_line1, address_line2, city, state_province, country_code, country_name, postal_code, room_number, floor, building, capacity, platform, meeting_url, facilities, timezone, contact_name, contact_email, contact_phone, notes, is_active } = req.body;
+  const { rows } = await pool.query(`
+    UPDATE delivery_locations SET
+      name=$1, type=$2, address_line1=$3, address_line2=$4, city=$5, state_province=$6,
+      country_code=$7, country_name=$8, postal_code=$9, room_number=$10, floor=$11, building=$12,
+      capacity=$13, platform=$14, meeting_url=$15, facilities=$16, timezone=$17,
+      contact_name=$18, contact_email=$19, contact_phone=$20, notes=$21, is_active=$22
+    WHERE id=$23 RETURNING *
+  `, [name, type, address_line1||null, address_line2||null, city||null, state_province||null, country_code||null, country_name||null, postal_code||null, room_number||null, floor||null, building||null, capacity||null, platform||null, meeting_url||null, facilities||null, timezone||'UTC', contact_name||null, contact_email||null, contact_phone||null, notes||null, is_active !== false, req.params.id]);
+  res.json(rows[0]);
+});
+
+app.delete("/api/delivery-locations/:id", async (req, res) => {
+  await pool.query("UPDATE delivery_locations SET is_active = FALSE WHERE id = $1", [req.params.id]);
+  res.json({ success: true });
 });
 
 // Schedule (with course info joined)
@@ -175,10 +216,15 @@ app.post("/api/profile", async (req, res) => {
 const courseWithDetails = async (id) => {
   const { rows } = await pool.query(`
     SELECT c.*, v.name AS vendor_name, v.color AS vendor_color, v.logo AS vendor_logo,
-           i.id AS instructor_id, i.first_name AS instructor_first_name, i.last_name AS instructor_last_name
+           i.id AS instructor_id, i.first_name AS instructor_first_name, i.last_name AS instructor_last_name,
+           dl.id AS loc_id, dl.name AS loc_name, dl.type AS loc_type,
+           dl.city AS loc_city, dl.country_name AS loc_country, dl.room_number AS loc_room,
+           dl.building AS loc_building, dl.floor AS loc_floor, dl.capacity AS loc_capacity,
+           dl.platform AS loc_platform, dl.timezone AS loc_timezone
     FROM courses c
     JOIN vendors v ON v.id = c.vendor_id
     LEFT JOIN instructors i ON i.id = c.instructor_id
+    LEFT JOIN delivery_locations dl ON dl.id = c.delivery_location_id
     WHERE c.id = $1
   `, [id]);
   return rows[0];
@@ -186,24 +232,25 @@ const courseWithDetails = async (id) => {
 
 // Create course
 app.post("/api/courses", async (req, res) => {
-  const { vendor_id, code, title, level, duration, price, seats, delivery, next_start, description, badge, instructor_id } = req.body;
+  const { vendor_id, code, title, level, duration, price, seats, delivery, next_start, description, badge, instructor_id, delivery_location_id } = req.body;
   const { rows } = await pool.query(`
-    INSERT INTO courses (vendor_id, code, title, level, duration, price, seats, enrolled, delivery, next_start, description, badge, instructor_id)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,0,$8,$9,$10,$11,$12)
+    INSERT INTO courses (vendor_id, code, title, level, duration, price, seats, enrolled, delivery, next_start, description, badge, instructor_id, delivery_location_id)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,0,$8,$9,$10,$11,$12,$13)
     RETURNING *
-  `, [vendor_id, code, title, level, duration, price, seats, delivery, next_start, description, badge || '', instructor_id || null]);
+  `, [vendor_id, code, title, level, duration, price, seats, delivery, next_start, description, badge || '', instructor_id || null, delivery_location_id || null]);
   res.json(await courseWithDetails(rows[0].id));
 });
 
 // Update course
 app.put("/api/courses/:id", async (req, res) => {
-  const { vendor_id, code, title, level, duration, price, seats, delivery, next_start, description, badge, instructor_id } = req.body;
+  const { vendor_id, code, title, level, duration, price, seats, delivery, next_start, description, badge, instructor_id, delivery_location_id } = req.body;
   await pool.query(`
     UPDATE courses SET
       vendor_id=$1, code=$2, title=$3, level=$4, duration=$5,
-      price=$6, seats=$7, delivery=$8, next_start=$9, description=$10, badge=$11, instructor_id=$12
-    WHERE id=$13
-  `, [vendor_id, code, title, level, duration, price, seats, delivery, next_start, description, badge || '', instructor_id || null, req.params.id]);
+      price=$6, seats=$7, delivery=$8, next_start=$9, description=$10, badge=$11,
+      instructor_id=$12, delivery_location_id=$13
+    WHERE id=$14
+  `, [vendor_id, code, title, level, duration, price, seats, delivery, next_start, description, badge || '', instructor_id || null, delivery_location_id || null, req.params.id]);
   res.json(await courseWithDetails(req.params.id));
 });
 

@@ -40,6 +40,17 @@ function normalizeCourse(c) {
     instructorName: c.instructor_first_name
       ? `${c.instructor_first_name} ${c.instructor_last_name}`
       : null,
+    locationId: c.loc_id || null,
+    locationName: c.loc_name || null,
+    locationType: c.loc_type || null,
+    locationCity: c.loc_city || null,
+    locationCountry: c.loc_country || null,
+    locationRoom: c.loc_room || null,
+    locationBuilding: c.loc_building || null,
+    locationFloor: c.loc_floor || null,
+    locationCapacity: c.loc_capacity || null,
+    locationPlatform: c.loc_platform || null,
+    locationTimezone: c.loc_timezone || null,
   };
 }
 
@@ -769,9 +780,9 @@ function DashboardView({ enrolledCourses, courses, user }) {
   );
 }
 
-const EMPTY_COURSE = { vendor_id: "", code: "", title: "", level: "Beginner", duration: "", price: "", seats: "", delivery: "Online", next_start: "", description: "", badge: "", instructor_id: "" };
+const EMPTY_COURSE = { vendor_id: "", code: "", title: "", level: "Beginner", duration: "", price: "", seats: "", delivery: "Online", next_start: "", description: "", badge: "", instructor_id: "", delivery_location_id: "" };
 
-function AdminView({ courses, vendors, schedule, students, profiles, instructors, onDeleteProfile, onCourseAdd, onCourseUpdate, onCourseDelete }) {
+function AdminView({ courses, vendors, schedule, students, profiles, instructors, deliveryLocations, onDeleteProfile, onCourseAdd, onCourseUpdate, onCourseDelete }) {
   const [tab, setTab] = useState("overview");
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [confirmDeleteCourse, setConfirmDeleteCourse] = useState(null);
@@ -787,6 +798,7 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
       duration: c.duration, price: c.price, seats: c.seats, delivery: c.delivery,
       next_start: c.nextStart ? c.nextStart.split("T")[0] : "", description: c.description, badge: c.badge || "",
       instructor_id: c.instructorId || "",
+      delivery_location_id: c.locationId || "",
     });
     setCourseModal({ mode: "edit", id: c.id });
   };
@@ -1036,6 +1048,41 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
                       <div><label style={lbl}>Start Date</label><input type="date" value={courseForm.next_start} onChange={set("next_start")} style={inp} /></div>
                       <div><label style={lbl}>Price (USD)</label><input type="number" value={courseForm.price} onChange={set("price")} style={inp} placeholder="0" /></div>
                       <div><label style={lbl}>Seats</label><input type="number" value={courseForm.seats} onChange={set("seats")} style={inp} placeholder="0" /></div>
+
+                      {/* Delivery Location */}
+                      <div style={{ gridColumn: "span 2", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 16, marginTop: 4 }}>
+                        <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Delivery Location</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                          <div style={{ gridColumn: "span 2" }}>
+                            <label style={lbl}>Location</label>
+                            <select value={courseForm.delivery_location_id} onChange={set("delivery_location_id")} style={inp}>
+                              <option value="">No location assigned</option>
+                              {deliveryLocations.map(loc => (
+                                <option key={loc.id} value={loc.id}>
+                                  {loc.name}{loc.city ? ` — ${loc.city}` : ""}{loc.country_name ? `, ${loc.country_name}` : ""}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          {courseForm.delivery_location_id && (() => {
+                            const loc = deliveryLocations.find(l => String(l.id) === String(courseForm.delivery_location_id));
+                            if (!loc) return null;
+                            return (
+                              <div style={{ gridColumn: "span 2", background: "rgba(14,165,233,0.04)", border: "1px solid rgba(14,165,233,0.12)", borderRadius: 10, padding: "14px 16px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px 16px" }}>
+                                {loc.type && <div><span style={{ color: "#475569", fontSize: 11 }}>Type</span><div style={{ color: "#e2e8f0", fontSize: 13, fontWeight: 600 }}>{loc.type}</div></div>}
+                                {loc.room_number && <div><span style={{ color: "#475569", fontSize: 11 }}>Room</span><div style={{ color: "#e2e8f0", fontSize: 13, fontWeight: 600 }}>{loc.room_number}{loc.floor ? `, ${loc.floor} floor` : ""}</div></div>}
+                                {loc.building && <div><span style={{ color: "#475569", fontSize: 11 }}>Building</span><div style={{ color: "#e2e8f0", fontSize: 13, fontWeight: 600 }}>{loc.building}</div></div>}
+                                {loc.city && <div><span style={{ color: "#475569", fontSize: 11 }}>City</span><div style={{ color: "#e2e8f0", fontSize: 13, fontWeight: 600 }}>{loc.city}</div></div>}
+                                {loc.country_name && <div><span style={{ color: "#475569", fontSize: 11 }}>Country</span><div style={{ color: "#e2e8f0", fontSize: 13, fontWeight: 600 }}>{loc.country_name}</div></div>}
+                                {loc.capacity && <div><span style={{ color: "#475569", fontSize: 11 }}>Capacity</span><div style={{ color: "#e2e8f0", fontSize: 13, fontWeight: 600 }}>{loc.capacity} seats</div></div>}
+                                {loc.platform && <div><span style={{ color: "#475569", fontSize: 11 }}>Platform</span><div style={{ color: "#e2e8f0", fontSize: 13, fontWeight: 600 }}>{loc.platform}</div></div>}
+                                {loc.timezone && <div><span style={{ color: "#475569", fontSize: 11 }}>Timezone</span><div style={{ color: "#e2e8f0", fontSize: 13, fontWeight: 600 }}>{loc.timezone}</div></div>}
+                                {loc.contact_name && <div><span style={{ color: "#475569", fontSize: 11 }}>Contact</span><div style={{ color: "#e2e8f0", fontSize: 13, fontWeight: 600 }}>{loc.contact_name}</div></div>}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </div>
                     </div>
                     <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 28 }}>
                       <button onClick={() => setCourseModal(null)} style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
@@ -1401,6 +1448,7 @@ export default function App() {
   const [students, setStudents] = useState([]);
   const [profiles, setProfiles] = useState([]);
   const [instructors, setInstructors] = useState([]);
+  const [deliveryLocations, setDeliveryLocations] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [profile, setProfile] = useState(null);
@@ -1446,13 +1494,15 @@ export default function App() {
       fetch("/api/students").then(r => r.json()),
       fetch("/api/profiles").then(r => r.json()),
       fetch("/api/instructors").then(r => r.json()),
-    ]).then(([v, c, s, st, p, ins]) => {
+      fetch("/api/delivery-locations").then(r => r.json()),
+    ]).then(([v, c, s, st, p, ins, locs]) => {
       setVendors(v);
       setCourses(c.map(normalizeCourse));
       setSchedule(s.map(normalizeSchedule));
       setStudents(st);
       setProfiles(p);
       setInstructors(ins);
+      setDeliveryLocations(locs);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
@@ -1568,7 +1618,7 @@ export default function App() {
           {view === "admin" && (
             isAdmin
               ? <AdminView
-                  courses={courses} vendors={vendors} schedule={schedule} students={students} profiles={profiles} instructors={instructors}
+                  courses={courses} vendors={vendors} schedule={schedule} students={students} profiles={profiles} instructors={instructors} deliveryLocations={deliveryLocations}
                   onDeleteProfile={(oid) => setProfiles(p => p.filter(x => x.entra_oid !== oid))}
                   onCourseAdd={(c) => setCourses(prev => [...prev, normalizeCourse(c)])}
                   onCourseUpdate={(c) => setCourses(prev => prev.map(x => x.id === c.id ? normalizeCourse(c) : x))}
