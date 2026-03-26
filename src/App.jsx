@@ -781,14 +781,19 @@ function DashboardView({ enrolledCourses, courses, user }) {
 }
 
 const EMPTY_COURSE = { vendor_id: "", code: "", title: "", level: "Beginner", duration: "", price: "", seats: "", delivery: "Online", next_start: "", description: "", badge: "", instructor_id: "", delivery_location_id: "" };
+const EMPTY_LOCATION = { name: "", type: "Physical", city: "", country_name: "", room_number: "", building: "", floor: "", capacity: "", platform: "", timezone: "UTC", contact_name: "", contact_email: "", contact_phone: "", notes: "" };
 
-function AdminView({ courses, vendors, schedule, students, profiles, instructors, deliveryLocations, onDeleteProfile, onCourseAdd, onCourseUpdate, onCourseDelete }) {
+function AdminView({ courses, vendors, schedule, students, profiles, instructors, deliveryLocations, onDeleteProfile, onCourseAdd, onCourseUpdate, onCourseDelete, onLocationAdd, onLocationUpdate, onLocationDelete }) {
   const [tab, setTab] = useState("overview");
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [confirmDeleteCourse, setConfirmDeleteCourse] = useState(null);
   const [courseModal, setCourseModal] = useState(null); // null | { mode: "new"|"edit", data: {} }
   const [courseForm, setCourseForm] = useState(EMPTY_COURSE);
   const [courseSaving, setCourseSaving] = useState(false);
+  const [locationModal, setLocationModal] = useState(null); // null | { mode: "new"|"edit", id? }
+  const [locationForm, setLocationForm] = useState(EMPTY_LOCATION);
+  const [locationSaving, setLocationSaving] = useState(false);
+  const [confirmDeleteLocation, setConfirmDeleteLocation] = useState(null);
   const courseById = (id) => courses.find(c => c.id === id);
 
   const openNew = () => { setCourseForm(EMPTY_COURSE); setCourseModal({ mode: "new" }); };
@@ -827,7 +832,39 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
     setConfirmDelete(null);
   };
 
-  const adminTabs = ["overview", "students", "courses", "schedule", "integrations"];
+  const openNewLocation = () => { setLocationForm(EMPTY_LOCATION); setLocationModal({ mode: "new" }); };
+  const openEditLocation = (loc) => {
+    setLocationForm({
+      name: loc.name || "", type: loc.type || "Physical",
+      city: loc.city || "", country_name: loc.country_name || "",
+      room_number: loc.room_number || "", building: loc.building || "",
+      floor: loc.floor || "", capacity: loc.capacity || "",
+      platform: loc.platform || "", timezone: loc.timezone || "UTC",
+      contact_name: loc.contact_name || "", contact_email: loc.contact_email || "",
+      contact_phone: loc.contact_phone || "", notes: loc.notes || "",
+    });
+    setLocationModal({ mode: "edit", id: loc.id });
+  };
+
+  const saveLocation = async () => {
+    setLocationSaving(true);
+    const isEdit = locationModal.mode === "edit";
+    const url = isEdit ? `/api/delivery-locations/${locationModal.id}` : "/api/delivery-locations";
+    const method = isEdit ? "PUT" : "POST";
+    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...locationForm, capacity: locationForm.capacity ? Number(locationForm.capacity) : null, is_active: true }) });
+    const saved = await res.json();
+    isEdit ? onLocationUpdate(saved) : onLocationAdd(saved);
+    setLocationModal(null);
+    setLocationSaving(false);
+  };
+
+  const deleteLocation = async (loc) => {
+    await fetch(`/api/delivery-locations/${loc.id}`, { method: "DELETE" });
+    onLocationDelete(loc.id);
+    setConfirmDeleteLocation(null);
+  };
+
+  const adminTabs = ["overview", "students", "courses", "locations", "schedule", "integrations"];
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
@@ -1107,6 +1144,132 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
                   <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
                     <button onClick={() => setConfirmDeleteCourse(null)} style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
                     <button onClick={() => deleteCourse(confirmDeleteCourse)} style={{ background: "rgba(239,68,68,0.15)", color: "#f87171", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Yes, Delete</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === "locations" && (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <div>
+                <h2 style={{ fontSize: 28, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", margin: "0 0 4px" }}>Delivery Locations</h2>
+                <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>{deliveryLocations.length} location{deliveryLocations.length !== 1 ? "s" : ""} configured</p>
+              </div>
+              <button onClick={openNewLocation} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ New Location</button>
+            </div>
+
+            <div style={{ display: "grid", gap: 14 }}>
+              {deliveryLocations.length === 0 && (
+                <div style={{ color: "#64748b", fontSize: 14, padding: 24, textAlign: "center" }}>No locations configured yet.</div>
+              )}
+              {deliveryLocations.map(loc => (
+                <div key={loc.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: 20, display: "flex", gap: 16, alignItems: "flex-start" }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: loc.type === "Online" ? "rgba(99,102,241,0.15)" : loc.type === "Hybrid" ? "rgba(251,191,36,0.15)" : "rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
+                    {loc.type === "Online" ? "🌐" : loc.type === "Hybrid" ? "🔀" : "🏢"}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                      <div>
+                        <div style={{ color: "#f1f5f9", fontWeight: 700, fontSize: 15 }}>{loc.name}</div>
+                        <div style={{ color: "#64748b", fontSize: 12, marginTop: 2 }}>
+                          {[loc.room_number && `Room ${loc.room_number}`, loc.building, loc.city, loc.country_name].filter(Boolean).join(" · ")}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                        <button onClick={() => openEditLocation(loc)} style={{ background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Edit</button>
+                        <button onClick={() => setConfirmDeleteLocation(loc)} style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Deactivate</button>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", marginTop: 10 }}>
+                      <span style={{ background: loc.type === "Online" ? "rgba(99,102,241,0.12)" : loc.type === "Hybrid" ? "rgba(251,191,36,0.12)" : "rgba(14,165,233,0.12)", color: loc.type === "Online" ? "#818cf8" : loc.type === "Hybrid" ? "#fbbf24" : "#38bdf8", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20 }}>{loc.type}</span>
+                      {loc.capacity && <span style={{ color: "#64748b", fontSize: 12 }}>Capacity: <span style={{ color: "#94a3b8" }}>{loc.capacity}</span></span>}
+                      {loc.platform && <span style={{ color: "#64748b", fontSize: 12 }}>Platform: <span style={{ color: "#94a3b8" }}>{loc.platform}</span></span>}
+                      {loc.timezone && loc.timezone !== "UTC" && <span style={{ color: "#64748b", fontSize: 12 }}>TZ: <span style={{ color: "#94a3b8", fontFamily: "monospace" }}>{loc.timezone}</span></span>}
+                      {loc.contact_name && <span style={{ color: "#64748b", fontSize: 12 }}>Contact: <span style={{ color: "#94a3b8" }}>{loc.contact_name}</span></span>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Location form modal */}
+            {locationModal && (() => {
+              const inp = { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "10px 14px", color: "#f1f5f9", fontSize: 13, width: "100%", boxSizing: "border-box" };
+              const lbl = { color: "#94a3b8", fontSize: 12, fontWeight: 600, marginBottom: 4, display: "block" };
+              const set = (k) => (e) => setLocationForm(f => ({ ...f, [k]: e.target.value }));
+              return (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 24, overflowY: "auto" }}>
+                  <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 36, width: "100%", maxWidth: 680, margin: "auto" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
+                      <h3 style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 20, margin: 0 }}>{locationModal.mode === "new" ? "New Location" : "Edit Location"}</h3>
+                      <button onClick={() => setLocationModal(null)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#94a3b8", borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}>✕</button>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                      <div style={{ gridColumn: "span 2" }}><label style={lbl}>Location Name</label><input value={locationForm.name} onChange={set("name")} style={inp} placeholder='e.g. "Bamako Training Centre – Lab A"' /></div>
+                      <div>
+                        <label style={lbl}>Type</label>
+                        <select value={locationForm.type} onChange={set("type")} style={inp}>
+                          {["Physical", "Online", "Hybrid"].map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                      <div><label style={lbl}>Timezone (IANA)</label><input value={locationForm.timezone} onChange={set("timezone")} style={inp} placeholder="e.g. Africa/Bamako" /></div>
+
+                      <div style={{ gridColumn: "span 2", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 14, marginTop: 4 }}>
+                        <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Address</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                          <div><label style={lbl}>City</label><input value={locationForm.city} onChange={set("city")} style={inp} placeholder="City" /></div>
+                          <div><label style={lbl}>Country</label><input value={locationForm.country_name} onChange={set("country_name")} style={inp} placeholder="Country" /></div>
+                        </div>
+                      </div>
+
+                      <div style={{ gridColumn: "span 2", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 14, marginTop: 4 }}>
+                        <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Room Details</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                          <div><label style={lbl}>Room Number</label><input value={locationForm.room_number} onChange={set("room_number")} style={inp} placeholder="e.g. Lab A" /></div>
+                          <div><label style={lbl}>Floor</label><input value={locationForm.floor} onChange={set("floor")} style={inp} placeholder="e.g. 2nd" /></div>
+                          <div><label style={lbl}>Building</label><input value={locationForm.building} onChange={set("building")} style={inp} placeholder="e.g. ICT Block" /></div>
+                          <div><label style={lbl}>Capacity (seats)</label><input type="number" value={locationForm.capacity} onChange={set("capacity")} style={inp} placeholder="0" /></div>
+                          <div><label style={lbl}>Platform</label><input value={locationForm.platform} onChange={set("platform")} style={inp} placeholder="e.g. Microsoft Teams" /></div>
+                        </div>
+                      </div>
+
+                      <div style={{ gridColumn: "span 2", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 14, marginTop: 4 }}>
+                        <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Venue Contact</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                          <div><label style={lbl}>Contact Name</label><input value={locationForm.contact_name} onChange={set("contact_name")} style={inp} placeholder="Full name" /></div>
+                          <div><label style={lbl}>Email</label><input value={locationForm.contact_email} onChange={set("contact_email")} style={inp} placeholder="email@example.com" /></div>
+                          <div><label style={lbl}>Phone</label><input value={locationForm.contact_phone} onChange={set("contact_phone")} style={inp} placeholder="+223 ..." /></div>
+                        </div>
+                      </div>
+
+                      <div style={{ gridColumn: "span 2" }}><label style={lbl}>Notes</label><textarea value={locationForm.notes} onChange={set("notes")} style={{ ...inp, height: 72, resize: "vertical" }} placeholder="Additional notes..." /></div>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 28 }}>
+                      <button onClick={() => setLocationModal(null)} style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+                      <button onClick={saveLocation} disabled={locationSaving || !locationForm.name} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", fontWeight: 700, cursor: "pointer", opacity: locationSaving ? 0.7 : 1 }}>
+                        {locationSaving ? "Saving..." : locationModal.mode === "new" ? "Create Location" : "Save Changes"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Confirm deactivate modal */}
+            {confirmDeleteLocation && (
+              <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 24 }}>
+                <div style={{ background: "#0f172a", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 20, padding: 36, maxWidth: 440, width: "100%", textAlign: "center" }}>
+                  <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
+                  <h3 style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 20, marginBottom: 12 }}>Deactivate Location?</h3>
+                  <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.6, marginBottom: 28 }}>
+                    <strong style={{ color: "#f1f5f9" }}>{confirmDeleteLocation.name}</strong> will be hidden from location selectors. Existing course assignments are preserved.
+                  </p>
+                  <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+                    <button onClick={() => setConfirmDeleteLocation(null)} style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+                    <button onClick={() => deleteLocation(confirmDeleteLocation)} style={{ background: "rgba(239,68,68,0.15)", color: "#f87171", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Yes, Deactivate</button>
                   </div>
                 </div>
               </div>
@@ -1623,6 +1786,9 @@ export default function App() {
                   onCourseAdd={(c) => setCourses(prev => [...prev, normalizeCourse(c)])}
                   onCourseUpdate={(c) => setCourses(prev => prev.map(x => x.id === c.id ? normalizeCourse(c) : x))}
                   onCourseDelete={(id) => setCourses(prev => prev.filter(x => x.id !== id))}
+                  onLocationAdd={(loc) => setDeliveryLocations(prev => [...prev, loc])}
+                  onLocationUpdate={(loc) => setDeliveryLocations(prev => prev.map(x => x.id === loc.id ? loc : x))}
+                  onLocationDelete={(id) => setDeliveryLocations(prev => prev.filter(x => x.id !== id))}
                 />
               : <AuthWall onLogin={handleLogin} message="Admin access only. Sign in with an administrator account." />
           )}
