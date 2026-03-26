@@ -781,7 +781,7 @@ function DashboardView({ enrolledCourses, courses, user }) {
 }
 
 const EMPTY_COURSE = { vendor_id: "", code: "", title: "", level: "Beginner", duration: "", price: "", seats: "", delivery: "Online", next_start: "", description: "", badge: "", instructor_id: "", delivery_location_id: "" };
-const EMPTY_LOCATION = { name: "", type: "Physical", city: "", country_name: "", room_number: "", building: "", floor: "", capacity: "", platform: "", timezone: "UTC", contact_name: "", contact_email: "", contact_phone: "", notes: "" };
+const EMPTY_LOCATION = { name: "", type: "Physical", city: "", country_code: "", country_name: "", room_number: "", building: "", floor: "", capacity: "", platform: "", timezone: "UTC", contact_name: "", contact_email: "", contact_phone: "", notes: "" };
 
 function AdminView({ courses, vendors, schedule, students, profiles, instructors, deliveryLocations, onDeleteProfile, onCourseAdd, onCourseUpdate, onCourseDelete, onLocationAdd, onLocationUpdate, onLocationDelete }) {
   const [tab, setTab] = useState("overview");
@@ -836,7 +836,7 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
   const openEditLocation = (loc) => {
     setLocationForm({
       name: loc.name || "", type: loc.type || "Physical",
-      city: loc.city || "", country_name: loc.country_name || "",
+      city: loc.city || "", country_code: loc.country_code || "", country_name: loc.country_name || "",
       room_number: loc.room_number || "", building: loc.building || "",
       floor: loc.floor || "", capacity: loc.capacity || "",
       platform: loc.platform || "", timezone: loc.timezone || "UTC",
@@ -1227,8 +1227,31 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
                       <div style={{ gridColumn: "span 2", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 14, marginTop: 4 }}>
                         <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Address</div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                          <div><label style={lbl}>City</label><input value={locationForm.city} onChange={set("city")} style={inp} placeholder="City" /></div>
-                          <div><label style={lbl}>Country</label><input value={locationForm.country_name} onChange={set("country_name")} style={inp} placeholder="Country" /></div>
+                          <div>
+                            <label style={lbl}>Country</label>
+                            <select value={locationForm.country_code} onChange={e => {
+                              const code = e.target.value;
+                              const name = Country.getAllCountries().find(c => c.isoCode === code)?.name || "";
+                              setLocationForm(f => ({ ...f, country_code: code, country_name: name, city: "" }));
+                            }} style={inp}>
+                              <option value="">Select country...</option>
+                              {Country.getAllCountries().map(c => <option key={c.isoCode} value={c.isoCode}>{c.name}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label style={lbl}>City</label>
+                            {(() => {
+                              const cities = locationForm.country_code ? City.getCitiesOfCountry(locationForm.country_code) : [];
+                              return cities.length > 0 ? (
+                                <select value={locationForm.city} onChange={set("city")} style={inp}>
+                                  <option value="">Select city...</option>
+                                  {cities.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                                </select>
+                              ) : (
+                                <input value={locationForm.city} onChange={set("city")} style={inp} placeholder={locationForm.country_code ? "Enter city" : "Select a country first"} disabled={!locationForm.country_code} />
+                              );
+                            })()}
+                          </div>
                         </div>
                       </div>
 
