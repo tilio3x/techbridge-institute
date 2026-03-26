@@ -817,6 +817,7 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
   const [instructorForm, setInstructorForm] = useState(EMPTY_INSTRUCTOR);
   const [instructorSaving, setInstructorSaving] = useState(false);
   const [confirmDeactivateInstructor, setConfirmDeactivateInstructor] = useState(null);
+  const [instructorCreated, setInstructorCreated] = useState(null); // { name, upn, tempPassword, warning }
   const courseById = (id) => courses.find(c => c.id === id);
 
   const openNew = () => { setCourseForm(EMPTY_COURSE); setCourseModal({ mode: "new" }); };
@@ -921,6 +922,14 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
     isEdit ? onInstructorUpdate(saved) : onInstructorAdd(saved);
     setInstructorModal(null);
     setInstructorSaving(false);
+    if (!isEdit) {
+      setInstructorCreated({
+        name: `${saved.first_name} ${saved.last_name}`,
+        upn: saved.upn,
+        tempPassword: saved.tempPassword,
+        warning: saved.entraWarning,
+      });
+    }
   };
 
   const deactivateInstructor = async (instructor) => {
@@ -1352,6 +1361,48 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
                       <button onClick={() => setConfirmDeactivateInstructor(null)} style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
                       <button onClick={() => deactivateInstructor(confirmDeactivateInstructor)} style={{ background: "rgba(239,68,68,0.15)", color: "#f87171", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Yes, Deactivate</button>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Entra account created modal */}
+              {instructorCreated && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
+                  <div style={{ background: "#0f172a", border: `1px solid ${instructorCreated.warning ? "rgba(251,191,36,0.3)" : "rgba(34,197,94,0.3)"}`, borderRadius: 20, padding: 36, maxWidth: 480, width: "100%" }}>
+                    <div style={{ textAlign: "center", marginBottom: 24 }}>
+                      <div style={{ fontSize: 44, marginBottom: 12 }}>{instructorCreated.warning ? "⚠️" : "✅"}</div>
+                      <h3 style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 20, margin: "0 0 8px" }}>
+                        {instructorCreated.warning ? "Instructor Saved" : "Instructor Created"}
+                      </h3>
+                      <p style={{ color: "#64748b", fontSize: 14, margin: 0 }}>{instructorCreated.name} has been added to the system.</p>
+                    </div>
+
+                    {instructorCreated.warning ? (
+                      <div style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: 10, padding: 14, marginBottom: 20 }}>
+                        <div style={{ color: "#fbbf24", fontWeight: 700, fontSize: 13, marginBottom: 4 }}>Entra ID account could not be created</div>
+                        <div style={{ color: "#94a3b8", fontSize: 12 }}>{instructorCreated.warning}</div>
+                        <div style={{ color: "#64748b", fontSize: 12, marginTop: 6 }}>The instructor record has been saved. Set up the Entra ID credentials in Azure App Service settings and try again via Edit.</div>
+                      </div>
+                    ) : (
+                      <div style={{ background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.15)", borderRadius: 10, padding: 16, marginBottom: 20 }}>
+                        <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Entra ID Account Details</div>
+                        <div style={{ display: "grid", gap: 10 }}>
+                          <div>
+                            <div style={{ color: "#475569", fontSize: 11 }}>Username (UPN)</div>
+                            <div style={{ color: "#38bdf8", fontFamily: "monospace", fontSize: 13, fontWeight: 600 }}>{instructorCreated.upn}</div>
+                          </div>
+                          <div>
+                            <div style={{ color: "#475569", fontSize: 11 }}>Temporary Password <span style={{ color: "#64748b", fontWeight: 400 }}>(instructor must change on first login)</span></div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                              <code style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, padding: "6px 12px", color: "#f1f5f9", fontFamily: "monospace", fontSize: 15, fontWeight: 700, flex: 1, textAlign: "center", letterSpacing: 2 }}>{instructorCreated.tempPassword}</code>
+                              <button onClick={() => navigator.clipboard.writeText(instructorCreated.tempPassword)} style={{ background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>Copy</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <button onClick={() => setInstructorCreated(null)} style={{ width: "100%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "12px 0", fontWeight: 700, cursor: "pointer" }}>Done</button>
                   </div>
                 </div>
               )}

@@ -38,6 +38,67 @@ async function deleteEntraUser(oid) {
   });
 }
 
+// ─── Staff Entra ID (tidisoft.com corporate tenant) ──────────────────────────
+
+async function getStaffGraphToken() {
+  const tenantId = process.env.ENTRA_STAFF_TENANT_ID;
+  const clientId = process.env.ENTRA_STAFF_CLIENT_ID;
+  const clientSecret = process.env.ENTRA_STAFF_CLIENT_SECRET;
+  if (!tenantId || !clientId || !clientSecret) return null;
+  const res = await fetch(
+    `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "client_credentials",
+        client_id: clientId,
+        client_secret: clientSecret,
+        scope: "https://graph.microsoft.com/.default",
+      }),
+    }
+  );
+  const { access_token } = await res.json();
+  return access_token;
+}
+
+function buildUpn(firstName, lastName) {
+  const normalize = (s) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+  return `${normalize(firstName)}.${normalize(lastName)}@techbridge.academy`;
+}
+
+function generateTempPassword() {
+  const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+  const rand = (n) => chars[Math.floor(Math.random() * n)];
+  return `TB-${Array.from({ length: 6 }, () => rand(chars.length)).join("")}#1`;
+}
+
+async function createEntraStaffUser(firstName, lastName) {
+  const token = await getStaffGraphToken();
+  if (!token) return null;
+  const upn = buildUpn(firstName, lastName);
+  const tempPassword = generateTempPassword();
+  const res = await fetch("https://graph.microsoft.com/v1.0/users", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      accountEnabled: true,
+      displayName: `${firstName} ${lastName}`,
+      givenName: firstName,
+      surname: lastName,
+      userPrincipalName: upn,
+      mailNickname: upn.split("@")[0],
+      passwordProfile: { forceChangePasswordNextSignIn: true, password: tempPassword },
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `Graph API error ${res.status}`);
+  }
+  const user = await res.json();
+  return { oid: user.id, upn, tempPassword };
+}
+
 async function updateEntraDisplayName(oid, firstName, lastName) {
   const token = await getGraphToken();
   if (!token) return;
@@ -92,12 +153,30 @@ app.get("/api/instructors", async (req, res) => {
 
 app.post("/api/instructors", async (req, res) => {
   const { first_name, last_name, email, phone, title, bio, specializations, certifications, employment_type, status, hire_date, photo_url, linkedin_url, available_days, available_hours, availability_note } = req.body;
+
+  // Create Entra ID account in tidisoft.com tenant
+  let entra_oid = null;
+  let upn = null;
+  let tempPassword = null;
+  let entraWarning = null;
+  try {
+    const entraUser = await createEntraStaffUser(first_name, last_name);
+    if (entraUser) {
+      entra_oid = entraUser.oid;
+      upn = entraUser.upn;
+      tempPassword = entraUser.tempPassword;
+    }
+  } catch (err) {
+    entraWarning = err.message;
+  }
+
   const { rows } = await pool.query(`
-    INSERT INTO instructors (first_name, last_name, email, phone, title, bio, specializations, certifications, employment_type, status, hire_date, photo_url, linkedin_url, available_days, available_hours, availability_note)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+    INSERT INTO instructors (first_name, last_name, email, phone, title, bio, specializations, certifications, employment_type, status, hire_date, photo_url, linkedin_url, available_days, available_hours, availability_note, entra_oid)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
     RETURNING *
-  `, [first_name, last_name, email, phone||null, title||null, bio||null, specializations||[], certifications||[], employment_type||'Full-time', status||'Active', hire_date||null, photo_url||null, linkedin_url||null, available_days||[], available_hours||null, availability_note||null]);
-  res.json(rows[0]);
+  `, [first_name, last_name, email, phone||null, title||null, bio||null, specializations||[], certifications||[], employment_type||'Full-time', status||'Active', hire_date||null, photo_url||null, linkedin_url||null, available_days||[], available_hours||null, availability_note||null, entra_oid||null]);
+
+  res.json({ ...rows[0], upn, tempPassword, entraWarning });
 });
 
 app.put("/api/instructors/:id", async (req, res) => {
