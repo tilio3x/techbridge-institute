@@ -136,12 +136,10 @@ function SignInSelector({ onStudentLogin, onClose }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
       <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: 40, width: "100%", maxWidth: 780 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
-          <div>
-            <div style={{ color: "#0ea5e9", fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>TechBridge Institute</div>
-            <h2 style={{ color: "#f1f5f9", fontWeight: 900, fontSize: 22, margin: 0, fontFamily: "Georgia, serif" }}>Welcome — how would you like to sign in?</h2>
-          </div>
-          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#64748b", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontSize: 16 }}>✕</button>
+        <div style={{ position: "relative", textAlign: "center", marginBottom: 32 }}>
+          <div style={{ color: "#0ea5e9", fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>TechBridge Institute</div>
+          <h2 style={{ color: "#f1f5f9", fontWeight: 900, fontSize: 22, margin: 0, fontFamily: "Georgia, serif" }}>Welcome — how would you like to sign in?</h2>
+          <button onClick={onClose} style={{ position: "absolute", top: 0, right: 0, background: "rgba(255,255,255,0.05)", border: "none", color: "#64748b", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontSize: 16 }}>✕</button>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
