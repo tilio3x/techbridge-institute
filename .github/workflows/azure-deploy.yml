@@ -40,6 +40,8 @@ jobs:
           NODE_ENV: production
           VITE_ENTRA_CLIENT_ID: ${{ secrets.VITE_ENTRA_CLIENT_ID }}
           VITE_ENTRA_TENANT_SUBDOMAIN: ${{ secrets.VITE_ENTRA_TENANT_SUBDOMAIN }}
+          VITE_ENTRA_STAFF_TENANT_ID: ${{ secrets.VITE_ENTRA_STAFF_TENANT_ID }}
+          VITE_ENTRA_STAFF_CLIENT_ID: ${{ secrets.VITE_ENTRA_STAFF_CLIENT_ID }}
 
       - name: Prepare deployment package
         run: |

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useMsal, useIsAuthenticated } from "@azure/msal-react";
-import { loginRequest } from "./auth/msalConfig.js";
+import { loginRequest, staffMsalInstance, staffLoginRequest } from "./auth/msalConfig.js";
 import { Country, City } from "country-state-city";
 
 // ─── STATIC DATA ─────────────────────────────────────────────────────────────
@@ -161,7 +161,7 @@ function Chip({ text, color }) {
   );
 }
 
-function SignInSelector({ onStudentLogin, onClose }) {
+function SignInSelector({ onStudentLogin, onStaffLogin, onClose }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
       <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: 40, width: "100%", maxWidth: 780 }}>
@@ -191,9 +191,8 @@ function SignInSelector({ onStudentLogin, onClose }) {
               <div style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 15, marginBottom: 6 }}>Educator</div>
               <div style={{ color: "#64748b", fontSize: 12, lineHeight: 1.6 }}>Sign in with your institution Microsoft 365 account. Educator accounts are provisioned by HR.</div>
             </div>
-            <button disabled style={{ background: "rgba(99,102,241,0.15)", color: "#818cf8", border: "1px solid rgba(99,102,241,0.3)", borderRadius: 10, padding: "11px 16px", fontWeight: 700, fontSize: 13, cursor: "not-allowed", marginTop: "auto", opacity: 0.7 }}>
+            <button onClick={onStaffLogin} style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 16px", fontWeight: 700, fontSize: 13, cursor: "pointer", marginTop: "auto" }}>
               Educator Sign In
-              <div style={{ fontSize: 10, fontWeight: 500, marginTop: 3, color: "#6366f1" }}>M365 setup in progress</div>
             </button>
           </div>
 
@@ -204,9 +203,8 @@ function SignInSelector({ onStudentLogin, onClose }) {
               <div style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 15, marginBottom: 6 }}>Site Admin</div>
               <div style={{ color: "#64748b", fontSize: 12, lineHeight: 1.6 }}>Sign in with your institution Microsoft 365 account. Admin access is granted by IT.</div>
             </div>
-            <button disabled style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "11px 16px", fontWeight: 700, fontSize: 13, cursor: "not-allowed", marginTop: "auto", opacity: 0.7 }}>
+            <button onClick={onStaffLogin} style={{ background: "linear-gradient(135deg, #ef4444, #dc2626)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 16px", fontWeight: 700, fontSize: 13, cursor: "pointer", marginTop: "auto" }}>
               Admin Sign In
-              <div style={{ fontSize: 10, fontWeight: 500, marginTop: 3, color: "#ef4444" }}>M365 setup in progress</div>
             </button>
           </div>
         </div>
@@ -1893,7 +1891,9 @@ export default function App() {
   const { instance, accounts } = useMsal();
   const isAuthenticated = useIsAuthenticated();
   const user = accounts[0] ?? null;
-  const isAdmin = user?.idTokenClaims?.roles?.includes("Admin") ?? false;
+  const [staffAccount, setStaffAccount] = useState(() => staffMsalInstance.getAllAccounts()[0] ?? null);
+  const isAdmin = staffAccount?.idTokenClaims?.roles?.includes("Admin") ?? user?.idTokenClaims?.roles?.includes("Admin") ?? false;
+  const isStaff = !!staffAccount;
 
   const [view, setView] = useState("home");
   const [enrolledCourses, setEnrolledCourses] = useState([]);
@@ -1924,10 +1924,30 @@ export default function App() {
   };
 
   const openSignIn = () => setShowSignInSelector(true);
+
+  const handleStaffLogin = async () => {
+    try {
+      const result = await staffMsalInstance.loginPopup(staffLoginRequest);
+      setStaffAccount(result.account);
+      setShowSignInSelector(false);
+    } catch (e) {
+      if (e?.errorCode === "interaction_in_progress") {
+        await staffMsalInstance.clearCache();
+        const result = await staffMsalInstance.loginPopup(staffLoginRequest).catch(() => null);
+        if (result) { setStaffAccount(result.account); setShowSignInSelector(false); }
+      }
+    }
+  };
+
   const handleLogout = () => {
     setProfile(null);
     setProfileLoaded(false);
-    instance.logoutPopup({ postLogoutRedirectUri: window.location.origin });
+    if (staffAccount) {
+      setStaffAccount(null);
+      staffMsalInstance.logoutPopup({ postLogoutRedirectUri: window.location.origin });
+    } else {
+      instance.logoutPopup({ postLogoutRedirectUri: window.location.origin });
+    }
   };
 
   useEffect(() => {
@@ -2001,6 +2021,7 @@ export default function App() {
       {showSignInSelector && (
         <SignInSelector
           onStudentLogin={handleLogin}
+          onStaffLogin={handleStaffLogin}
           onClose={() => setShowSignInSelector(false)}
         />
       )}
@@ -2034,7 +2055,16 @@ export default function App() {
                 {enrolledCourses.length} enrolled
               </div>
             )}
-            {isAuthenticated ? (
+            {isStaff ? (
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "7px 14px", fontSize: 13, color: "#fca5a5", fontWeight: 600 }}>
+                  🛡️ {staffAccount?.name ?? staffAccount?.username ?? "Staff"}
+                </div>
+                <button onClick={handleLogout} style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "9px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  Sign Out
+                </button>
+              </div>
+            ) : isAuthenticated ? (
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <div onClick={() => setView("profile")} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "7px 14px", fontSize: 13, color: "#e2e8f0", fontWeight: 600, cursor: "pointer" }}>
                   👤 {profile ? `${profile.first_name} ${profile.last_name}` : (user?.name ?? "Student")}
