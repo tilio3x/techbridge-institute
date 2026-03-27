@@ -2389,8 +2389,6 @@ export default function App() {
 
   const handleStaffLogin = async () => {
     const finalize = (account) => {
-      console.log("[Staff login] idTokenClaims:", account?.idTokenClaims);
-      console.log("[Staff login] roles:", account?.idTokenClaims?.roles);
       setStaffAccount(account);
       setShowSignInSelector(false);
       const roles = account?.idTokenClaims?.roles ?? [];
