@@ -820,7 +820,8 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
   const [enrollForm, setEnrollForm] = useState({ student_id: "", course_id: "" });
   const [enrollSaving, setEnrollSaving] = useState(false);
   const [confirmUnenroll, setConfirmUnenroll] = useState(null);
-  const [enrollFilter, setEnrollFilter] = useState(""); // { name, upn, tempPassword, warning }
+  const [enrollFilter, setEnrollFilter] = useState("");
+  const [studentDetail, setStudentDetail] = useState(null); // student_id
   const courseById = (id) => courses.find(c => c.id === id);
 
   const openNew = () => { setCourseForm(EMPTY_COURSE); setCourseModal({ mode: "new" }); };
@@ -1299,11 +1300,11 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
                       {filtered.map((e, i) => (
                         <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
                           <td style={{ padding: "14px 16px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <div onClick={() => setStudentDetail(e.student_id)} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                               <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
                                 {e.student_name?.split(" ").map(n => n[0]).join("").slice(0, 2)}
                               </div>
-                              <span style={{ color: "#f1f5f9", fontWeight: 600 }}>{e.student_name}</span>
+                              <span style={{ color: "#0ea5e9", fontWeight: 600, textDecoration: "underline", textDecorationStyle: "dotted", textUnderlineOffset: 3 }}>{e.student_name}</span>
                             </div>
                           </td>
                           <td style={{ padding: "14px 16px", color: "#64748b", fontSize: 12, fontFamily: "monospace" }}>{e.student_email}</td>
@@ -1373,6 +1374,67 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
                   </div>
                 </div>
               )}
+
+              {/* Student detail modal */}
+              {studentDetail && (() => {
+                const student = students.find(s => s.id === studentDetail);
+                const profile = profiles.find(p => p.email === student?.email);
+                const studentEnrollments = enrollments.filter(e => e.student_id === studentDetail);
+                return (
+                  <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 24 }}>
+                    <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 36, width: "100%", maxWidth: 580, maxHeight: "85vh", overflowY: "auto" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
+                        <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 20, flexShrink: 0 }}>
+                            {student?.name?.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                          </div>
+                          <div>
+                            <div style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 18 }}>{student?.name}</div>
+                            <div style={{ color: "#0ea5e9", fontSize: 13, fontFamily: "monospace" }}>{student?.email}</div>
+                          </div>
+                        </div>
+                        <button onClick={() => setStudentDetail(null)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#94a3b8", borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}>✕</button>
+                      </div>
+
+                      {profile && (
+                        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: 20, marginBottom: 20 }}>
+                          <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Profile</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 24px", fontSize: 13 }}>
+                            {profile.city && <div><span style={{ color: "#475569" }}>Location </span><span style={{ color: "#e2e8f0" }}>{profile.city}, {profile.country_name}</span></div>}
+                            {profile.phone && <div><span style={{ color: "#475569" }}>Phone </span><span style={{ color: "#e2e8f0" }}>{profile.phone}</span></div>}
+                            {profile.date_of_birth && <div><span style={{ color: "#475569" }}>Date of Birth </span><span style={{ color: "#e2e8f0" }}>{new Date(profile.date_of_birth).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span></div>}
+                            {profile.education && <div><span style={{ color: "#475569" }}>Education </span><span style={{ color: "#e2e8f0" }}>{profile.education}</span></div>}
+                            <div><span style={{ color: "#475569" }}>Joined </span><span style={{ color: "#e2e8f0" }}>{new Date(profile.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span></div>
+                          </div>
+                          {profile.goals && <div style={{ marginTop: 12, color: "#64748b", fontSize: 12 }}>Goals: <span style={{ color: "#94a3b8" }}>{profile.goals}</span></div>}
+                        </div>
+                      )}
+
+                      <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>
+                        Enrolled Courses ({studentEnrollments.length})
+                      </div>
+                      {studentEnrollments.length === 0 ? (
+                        <div style={{ color: "#475569", fontSize: 13, padding: "12px 0" }}>No enrollments.</div>
+                      ) : (
+                        <div style={{ display: "grid", gap: 10 }}>
+                          {studentEnrollments.map((e, i) => (
+                            <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div>
+                                <div style={{ color: "#f1f5f9", fontWeight: 600, fontSize: 14 }}>{e.title}</div>
+                                <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                                  <span style={{ color: e.vendor_color, fontSize: 11, fontWeight: 700 }}>{e.vendor_name}</span>
+                                  <span style={{ color: "#475569", fontFamily: "monospace", fontSize: 11 }}>{e.code}</span>
+                                </div>
+                              </div>
+                              <Chip text={e.delivery} color="#0ea5e9" />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           );
         })()}
