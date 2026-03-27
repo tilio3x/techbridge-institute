@@ -2095,11 +2095,11 @@ export default function App() {
           {view === "schedule" && <ScheduleView schedule={schedule} courses={courses} />}
           {view === "register" && (isAuthenticated
             ? <RegisterView enrolledCourses={enrolledCourses} onEnroll={handleEnroll} courses={courses} />
-            : <AuthWall onLogin={handleLogin} message="Sign in to register for courses." />
+            : <AuthWall onLogin={openSignIn} message="Sign in to register for courses." />
           )}
           {view === "dashboard" && (isAuthenticated
             ? <DashboardView enrolledCourses={enrolledCourses} courses={courses} user={user} profile={profile} />
-            : <AuthWall onLogin={handleLogin} message="Sign in to access your dashboard." />
+            : <AuthWall onLogin={openSignIn} message="Sign in to access your dashboard." />
           )}
           {view === "admin" && (
             isAdmin
@@ -2120,7 +2120,7 @@ export default function App() {
           )}
           {view === "profile" && (isAuthenticated
             ? <ProfileEditView user={user} profile={profile} onSaved={setProfile} />
-            : <AuthWall onLogin={handleLogin} message="Sign in to view your profile." />
+            : <AuthWall onLogin={openSignIn} message="Sign in to view your profile." />
           )}
         </>)}
       </main>
