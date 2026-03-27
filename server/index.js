@@ -397,17 +397,45 @@ app.delete("/api/courses/:id", async (req, res) => {
   res.json({ success: true });
 });
 
+// All enrollments (admin view)
+app.get("/api/enrollments", async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT e.student_id, e.course_id,
+           s.name AS student_name, s.email AS student_email,
+           c.code, c.title, c.delivery,
+           v.name AS vendor_name, v.color AS vendor_color
+    FROM enrollments e
+    JOIN students s ON s.id = e.student_id
+    JOIN courses c ON c.id = e.course_id
+    JOIN vendors v ON v.id = c.vendor_id
+    ORDER BY c.title, s.name
+  `);
+  res.json(rows);
+});
+
 // Enroll a student in a course
 app.post("/api/enrollments", async (req, res) => {
   const { student_id, course_id } = req.body;
-  await pool.query(
-    "INSERT INTO enrollments (student_id, course_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+  const result = await pool.query(
+    "INSERT INTO enrollments (student_id, course_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *",
     [student_id, course_id]
   );
-  await pool.query(
-    "UPDATE courses SET enrolled = enrolled + 1 WHERE id = $1",
-    [course_id]
+  if (result.rowCount > 0) {
+    await pool.query("UPDATE courses SET enrolled = enrolled + 1 WHERE id = $1", [course_id]);
+  }
+  res.json({ success: true, inserted: result.rowCount > 0 });
+});
+
+// Unenroll a student from a course
+app.delete("/api/enrollments", async (req, res) => {
+  const { student_id, course_id } = req.body;
+  const result = await pool.query(
+    "DELETE FROM enrollments WHERE student_id=$1 AND course_id=$2 RETURNING *",
+    [student_id, course_id]
   );
+  if (result.rowCount > 0) {
+    await pool.query("UPDATE courses SET enrolled = GREATEST(enrolled - 1, 0) WHERE id = $1", [course_id]);
+  }
   res.json({ success: true });
 });
 

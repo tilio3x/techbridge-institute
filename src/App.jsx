@@ -800,7 +800,7 @@ const EMPTY_COURSE = { vendor_id: "", code: "", title: "", level: "Beginner", du
 const EMPTY_INSTRUCTOR = { first_name: "", last_name: "", email: "", phone: "", title: "", bio: "", specializations: "", certifications: "", employment_type: "Full-time", status: "Active", hire_date: "", linkedin_url: "", available_days: [], available_hours: "", availability_note: "" };
 const EMPTY_LOCATION = { name: "", type: "Physical", address_line1: "", address_line2: "", city: "", state_province: "", postal_code: "", country_code: "", country_name: "", room_number: "", building: "", floor: "", capacity: "", platform: "", timezone: "UTC", contact_name: "", contact_email: "", contact_phone: "", notes: "" };
 
-function AdminView({ courses, vendors, schedule, students, profiles, instructors, deliveryLocations, onDeleteProfile, onCourseAdd, onCourseUpdate, onCourseDelete, onLocationAdd, onLocationUpdate, onLocationDelete, onInstructorAdd, onInstructorUpdate, onInstructorDeactivate }) {
+function AdminView({ courses, vendors, schedule, students, profiles, instructors, deliveryLocations, enrollments, onDeleteProfile, onCourseAdd, onCourseUpdate, onCourseDelete, onLocationAdd, onLocationUpdate, onLocationDelete, onInstructorAdd, onInstructorUpdate, onInstructorDeactivate, onEnrollmentAdd, onEnrollmentRemove }) {
   const [tab, setTab] = useState("overview");
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [confirmDeleteCourse, setConfirmDeleteCourse] = useState(null);
@@ -815,7 +815,12 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
   const [instructorForm, setInstructorForm] = useState(EMPTY_INSTRUCTOR);
   const [instructorSaving, setInstructorSaving] = useState(false);
   const [confirmDeactivateInstructor, setConfirmDeactivateInstructor] = useState(null);
-  const [instructorCreated, setInstructorCreated] = useState(null); // { name, upn, tempPassword, warning }
+  const [instructorCreated, setInstructorCreated] = useState(null);
+  const [enrollModal, setEnrollModal] = useState(false);
+  const [enrollForm, setEnrollForm] = useState({ student_id: "", course_id: "" });
+  const [enrollSaving, setEnrollSaving] = useState(false);
+  const [confirmUnenroll, setConfirmUnenroll] = useState(null);
+  const [enrollFilter, setEnrollFilter] = useState(""); // { name, upn, tempPassword, warning }
   const courseById = (id) => courses.find(c => c.id === id);
 
   const openNew = () => { setCourseForm(EMPTY_COURSE); setCourseModal({ mode: "new" }); };
@@ -936,7 +941,27 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
     setConfirmDeactivateInstructor(null);
   };
 
-  const adminTabs = ["overview", "students", "courses", "instructors", "locations", "schedule", "integrations"];
+  const saveEnrollment = async () => {
+    setEnrollSaving(true);
+    const res = await fetch("/api/enrollments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ student_id: Number(enrollForm.student_id), course_id: Number(enrollForm.course_id) }) });
+    const data = await res.json();
+    if (data.inserted) {
+      const course = courses.find(c => c.id === Number(enrollForm.course_id));
+      const student = students.find(s => s.id === Number(enrollForm.student_id));
+      onEnrollmentAdd({ student_id: Number(enrollForm.student_id), course_id: Number(enrollForm.course_id), student_name: student?.name, student_email: student?.email, code: course?.code, title: course?.title, delivery: course?.delivery, vendor_name: course?.vendorName, vendor_color: course?.vendorColor });
+    }
+    setEnrollModal(false);
+    setEnrollForm({ student_id: "", course_id: "" });
+    setEnrollSaving(false);
+  };
+
+  const unenroll = async (row) => {
+    await fetch("/api/enrollments", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ student_id: row.student_id, course_id: row.course_id }) });
+    onEnrollmentRemove(row.student_id, row.course_id);
+    setConfirmUnenroll(null);
+  };
+
+  const adminTabs = ["overview", "students", "courses", "enrollments", "instructors", "locations", "schedule", "integrations"];
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
@@ -1222,6 +1247,135 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
             )}
           </div>
         )}
+
+        {tab === "enrollments" && (() => {
+          const filtered = enrollFilter
+            ? enrollments.filter(e => String(e.course_id) === enrollFilter)
+            : enrollments;
+          const inp = { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "10px 14px", color: "#f1f5f9", fontSize: 13, boxSizing: "border-box" };
+          const lbl = { color: "#94a3b8", fontSize: 12, fontWeight: 600, marginBottom: 4, display: "block" };
+          return (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                <div>
+                  <h2 style={{ fontSize: 28, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", margin: "0 0 4px" }}>Enrollment Management</h2>
+                  <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>{enrollments.length} enrollment{enrollments.length !== 1 ? "s" : ""} across {courses.length} course{courses.length !== 1 ? "s" : ""}</p>
+                </div>
+                <button onClick={() => { setEnrollForm({ student_id: "", course_id: "" }); setEnrollModal(true); }} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ Enroll Student</button>
+              </div>
+
+              {/* Course filter + per-course enrollment counts */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10, marginBottom: 24 }}>
+                <div onClick={() => setEnrollFilter("")} style={{ background: enrollFilter === "" ? "rgba(14,165,233,0.12)" : "rgba(255,255,255,0.02)", border: `1px solid ${enrollFilter === "" ? "rgba(14,165,233,0.3)" : "rgba(255,255,255,0.07)"}`, borderRadius: 12, padding: "14px 16px", cursor: "pointer" }}>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "#0ea5e9" }}>{enrollments.length}</div>
+                  <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 2 }}>All Enrollments</div>
+                </div>
+                {courses.map(c => {
+                  const count = enrollments.filter(e => e.course_id === c.id).length;
+                  return (
+                    <div key={c.id} onClick={() => setEnrollFilter(String(c.id))} style={{ background: enrollFilter === String(c.id) ? `${c.vendorColor}18` : "rgba(255,255,255,0.02)", border: `1px solid ${enrollFilter === String(c.id) ? c.vendorColor + "44" : "rgba(255,255,255,0.07)"}`, borderRadius: 12, padding: "14px 16px", cursor: "pointer" }}>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: c.vendorColor }}>{count}</div>
+                      <div style={{ color: "#e2e8f0", fontSize: 12, fontWeight: 600, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.title}</div>
+                      <div style={{ color: "#475569", fontSize: 11, fontFamily: "monospace" }}>{c.code}</div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Enrollment table */}
+              <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, overflow: "hidden" }}>
+                {filtered.length === 0 ? (
+                  <div style={{ color: "#64748b", fontSize: 14, padding: 32, textAlign: "center" }}>No enrollments found.</div>
+                ) : (
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                        {["Student", "Email", "Course", "Vendor", "Delivery", ""].map(h => (
+                          <th key={h} style={{ padding: "12px 16px", textAlign: "left", color: "#64748b", fontSize: 11, fontWeight: 700, textTransform: "uppercase" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtered.map((e, i) => (
+                        <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                          <td style={{ padding: "14px 16px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
+                                {e.student_name?.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                              </div>
+                              <span style={{ color: "#f1f5f9", fontWeight: 600 }}>{e.student_name}</span>
+                            </div>
+                          </td>
+                          <td style={{ padding: "14px 16px", color: "#64748b", fontSize: 12, fontFamily: "monospace" }}>{e.student_email}</td>
+                          <td style={{ padding: "14px 16px" }}>
+                            <div style={{ color: "#f1f5f9", fontWeight: 600 }}>{e.title}</div>
+                            <div style={{ color: "#475569", fontFamily: "monospace", fontSize: 11 }}>{e.code}</div>
+                          </td>
+                          <td style={{ padding: "14px 16px" }}><span style={{ color: e.vendor_color, fontWeight: 700 }}>{e.vendor_name}</span></td>
+                          <td style={{ padding: "14px 16px" }}><Chip text={e.delivery} color="#0ea5e9" /></td>
+                          <td style={{ padding: "14px 16px" }}>
+                            <button onClick={() => setConfirmUnenroll(e)} style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Unenroll</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+
+              {/* Enroll modal */}
+              {enrollModal && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 24 }}>
+                  <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 36, width: "100%", maxWidth: 480 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                      <h3 style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 20, margin: 0 }}>Enroll Student</h3>
+                      <button onClick={() => setEnrollModal(false)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#94a3b8", borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}>✕</button>
+                    </div>
+                    <div style={{ display: "grid", gap: 16 }}>
+                      <div>
+                        <label style={lbl}>Student</label>
+                        <select value={enrollForm.student_id} onChange={e => setEnrollForm(f => ({ ...f, student_id: e.target.value }))} style={{ ...inp, width: "100%" }}>
+                          <option value="">Select student...</option>
+                          {students.map(s => <option key={s.id} value={s.id}>{s.name} — {s.email}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={lbl}>Course</label>
+                        <select value={enrollForm.course_id} onChange={e => setEnrollForm(f => ({ ...f, course_id: e.target.value }))} style={{ ...inp, width: "100%" }}>
+                          <option value="">Select course...</option>
+                          {courses.map(c => <option key={c.id} value={c.id}>{c.title} ({c.code})</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 28 }}>
+                      <button onClick={() => setEnrollModal(false)} style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+                      <button onClick={saveEnrollment} disabled={enrollSaving || !enrollForm.student_id || !enrollForm.course_id} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", fontWeight: 700, cursor: "pointer", opacity: enrollSaving || !enrollForm.student_id || !enrollForm.course_id ? 0.6 : 1 }}>
+                        {enrollSaving ? "Enrolling..." : "Confirm Enrollment"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Confirm unenroll modal */}
+              {confirmUnenroll && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 24 }}>
+                  <div style={{ background: "#0f172a", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 20, padding: 36, maxWidth: 440, width: "100%", textAlign: "center" }}>
+                    <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
+                    <h3 style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 20, marginBottom: 12 }}>Remove Enrollment?</h3>
+                    <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.6, marginBottom: 28 }}>
+                      Remove <strong style={{ color: "#f1f5f9" }}>{confirmUnenroll.student_name}</strong> from <strong style={{ color: "#f1f5f9" }}>{confirmUnenroll.title}</strong>? This cannot be undone.
+                    </p>
+                    <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+                      <button onClick={() => setConfirmUnenroll(null)} style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+                      <button onClick={() => unenroll(confirmUnenroll)} style={{ background: "rgba(239,68,68,0.15)", color: "#f87171", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Yes, Remove</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {tab === "instructors" && (() => {
           const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -1905,6 +2059,7 @@ export default function App() {
   const [profiles, setProfiles] = useState([]);
   const [instructors, setInstructors] = useState([]);
   const [deliveryLocations, setDeliveryLocations] = useState([]);
+  const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [profile, setProfile] = useState(null);
@@ -1971,7 +2126,8 @@ export default function App() {
       fetch("/api/profiles").then(r => r.json()),
       fetch("/api/instructors").then(r => r.json()),
       fetch("/api/delivery-locations").then(r => r.json()),
-    ]).then(([v, c, s, st, p, ins, locs]) => {
+      fetch("/api/enrollments").then(r => r.json()),
+    ]).then(([v, c, s, st, p, ins, locs, enr]) => {
       setVendors(v);
       setCourses(c.map(normalizeCourse));
       setSchedule(s.map(normalizeSchedule));
@@ -1979,6 +2135,7 @@ export default function App() {
       setProfiles(p);
       setInstructors(ins);
       setDeliveryLocations(locs);
+      setEnrollments(enr);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
@@ -2104,7 +2261,7 @@ export default function App() {
           {view === "admin" && (
             isAdmin
               ? <AdminView
-                  courses={courses} vendors={vendors} schedule={schedule} students={students} profiles={profiles} instructors={instructors} deliveryLocations={deliveryLocations}
+                  courses={courses} vendors={vendors} schedule={schedule} students={students} profiles={profiles} instructors={instructors} deliveryLocations={deliveryLocations} enrollments={enrollments}
                   onDeleteProfile={(oid) => setProfiles(p => p.filter(x => x.entra_oid !== oid))}
                   onCourseAdd={(c) => setCourses(prev => [...prev, normalizeCourse(c)])}
                   onCourseUpdate={(c) => setCourses(prev => prev.map(x => x.id === c.id ? normalizeCourse(c) : x))}
@@ -2115,6 +2272,8 @@ export default function App() {
                   onInstructorAdd={(i) => setInstructors(prev => [...prev, i])}
                   onInstructorUpdate={(i) => setInstructors(prev => prev.map(x => x.id === i.id ? i : x))}
                   onInstructorDeactivate={(id) => setInstructors(prev => prev.map(x => x.id === id ? { ...x, status: "Inactive" } : x))}
+                  onEnrollmentAdd={(e) => setEnrollments(prev => [...prev, e])}
+                  onEnrollmentRemove={(sid, cid) => setEnrollments(prev => prev.filter(e => !(e.student_id === sid && e.course_id === cid)))}
                 />
               : <AuthWall onLogin={handleLogin} message="Admin access only. Sign in with an administrator account." />
           )}
