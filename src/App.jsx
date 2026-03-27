@@ -984,43 +984,114 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
 
       {/* Content */}
       <div style={{ flex: 1, padding: "40px 32px", overflowY: "auto" }}>
-        {tab === "overview" && (
-          <div>
-            <h2 style={{ fontSize: 28, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", marginBottom: 32 }}>Platform Overview</h2>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, marginBottom: 40 }}>
-              {[
-                { label: "Total Students", value: students.length || 47, change: "+8 this month", color: "#0ea5e9" },
-                { label: "Active Courses", value: courses.length || 11, change: "2 starting soon", color: "#6366f1" },
-                { label: "Completions", value: 23, change: "+5 this week", color: "#22c55e" },
-                { label: "Certs Issued", value: 19, change: "+3 this week", color: "#fbbf24" },
-                { label: "M365 Accounts", value: students.length || 47, change: "All synced ✓", color: "#0ea5e9" },
-                { label: "Avg Completion", value: "71%", change: "↑ from 64%", color: "#22c55e" },
-              ].map(stat => (
-                <div key={stat.label} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: 20 }}>
-                  <div style={{ fontSize: 32, fontWeight: 900, color: stat.color, fontFamily: "Georgia, serif" }}>{stat.value}</div>
-                  <div style={{ color: "#e2e8f0", fontWeight: 700, fontSize: 13, margin: "4px 0" }}>{stat.label}</div>
-                  <div style={{ color: "#64748b", fontSize: 12 }}>{stat.change}</div>
-                </div>
-              ))}
-            </div>
-            <h3 style={{ color: "#e2e8f0", fontWeight: 700, marginBottom: 16 }}>Recent Registrations</h3>
-            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12 }}>
-              {students.map((s, i) => (
-                <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 16, padding: "16px 20px", borderBottom: i < students.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>
-                    {s.name.split(" ").map(n => n[0]).join("")}
+        {tab === "overview" && (() => {
+          const activeInstructors = instructors.filter(i => i.status === "Active").length;
+          const totalEnrollments = enrollments.length;
+          const studentsEnrolled = new Set(enrollments.map(e => e.student_id)).size;
+          const avgFill = courses.length
+            ? Math.round(courses.reduce((sum, c) => sum + (c.seats > 0 ? (c.enrolled / c.seats) * 100 : 0), 0) / courses.length)
+            : 0;
+          const now = new Date();
+          const soon = courses.filter(c => {
+            if (!c.nextStart) return false;
+            const d = new Date(c.nextStart);
+            return d >= now && d <= new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+          });
+          const recentProfiles = [...profiles].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
+
+          const stats = [
+            { label: "Registered Students", value: profiles.length, change: `${studentsEnrolled} enrolled in at least 1 course`, color: "#0ea5e9" },
+            { label: "Active Courses", value: courses.length, change: soon.length > 0 ? `${soon.length} starting within 30 days` : "No upcoming start dates", color: "#6366f1" },
+            { label: "Total Enrollments", value: totalEnrollments, change: `Across ${courses.length} course${courses.length !== 1 ? "s" : ""}`, color: "#22c55e" },
+            { label: "Active Instructors", value: activeInstructors, change: `${instructors.length - activeInstructors} inactive / on leave`, color: "#f59e0b" },
+            { label: "Entra Accounts", value: profiles.length, change: "All synced ✓", color: "#0ea5e9" },
+            { label: "Avg Seats Filled", value: `${avgFill}%`, change: courses.length ? `across ${courses.length} courses` : "No courses yet", color: avgFill >= 75 ? "#22c55e" : avgFill >= 40 ? "#f59e0b" : "#ef4444" },
+          ];
+
+          return (
+            <div>
+              <h2 style={{ fontSize: 28, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", marginBottom: 32 }}>Platform Overview</h2>
+
+              {/* Stat tiles */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, marginBottom: 40 }}>
+                {stats.map(stat => (
+                  <div key={stat.label} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: 20 }}>
+                    <div style={{ fontSize: 32, fontWeight: 900, color: stat.color, fontFamily: "Georgia, serif" }}>{stat.value}</div>
+                    <div style={{ color: "#e2e8f0", fontWeight: 700, fontSize: 13, margin: "4px 0" }}>{stat.label}</div>
+                    <div style={{ color: "#64748b", fontSize: 12 }}>{stat.change}</div>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ color: "#f1f5f9", fontWeight: 600, fontSize: 14 }}>{s.name}</div>
-                    <div style={{ color: "#64748b", fontSize: 12 }}>{s.email}</div>
+                ))}
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 32 }}>
+                {/* Enrollment breakdown by course */}
+                <div>
+                  <h3 style={{ color: "#e2e8f0", fontWeight: 700, marginBottom: 14, fontSize: 15 }}>Enrollment by Course</h3>
+                  <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, overflow: "hidden" }}>
+                    {courses.length === 0 && <div style={{ color: "#64748b", fontSize: 13, padding: 20, textAlign: "center" }}>No courses yet.</div>}
+                    {courses.map((c, i) => {
+                      const pct = c.seats > 0 ? Math.round((c.enrolled / c.seats) * 100) : 0;
+                      return (
+                        <div key={c.id} style={{ padding: "12px 16px", borderBottom: i < courses.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                            <div>
+                              <span style={{ color: "#e2e8f0", fontWeight: 600, fontSize: 13 }}>{c.title}</span>
+                              <span style={{ color: c.vendorColor, fontSize: 11, fontWeight: 700, marginLeft: 8 }}>{c.vendorName}</span>
+                            </div>
+                            <span style={{ color: "#94a3b8", fontSize: 12 }}>{c.enrolled}/{c.seats}</span>
+                          </div>
+                          <div style={{ height: 4, background: "rgba(255,255,255,0.07)", borderRadius: 2, overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${pct}%`, background: pct >= 75 ? "#22c55e" : pct >= 40 ? "#f59e0b" : "#0ea5e9", borderRadius: 2, transition: "width 0.4s" }} />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div style={{ color: "#94a3b8", fontSize: 12 }}>{s.course_count} course{s.course_count !== 1 ? "s" : ""}</div>
-                  <div style={{ color: "#64748b", fontSize: 11, fontFamily: "monospace" }}>{s.joined}</div>
                 </div>
-              ))}
+
+                {/* Courses starting soon */}
+                <div>
+                  <h3 style={{ color: "#e2e8f0", fontWeight: 700, marginBottom: 14, fontSize: 15 }}>Starting Within 30 Days</h3>
+                  <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, overflow: "hidden" }}>
+                    {soon.length === 0 && <div style={{ color: "#64748b", fontSize: 13, padding: 20, textAlign: "center" }}>No courses starting soon.</div>}
+                    {soon.sort((a, b) => new Date(a.nextStart) - new Date(b.nextStart)).map((c, i) => (
+                      <div key={c.id} style={{ display: "flex", gap: 14, alignItems: "center", padding: "12px 16px", borderBottom: i < soon.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                        <div style={{ width: 40, textAlign: "center", flexShrink: 0 }}>
+                          <div style={{ color: c.vendorColor, fontWeight: 900, fontSize: 16 }}>{new Date(c.nextStart).getDate()}</div>
+                          <div style={{ color: "#64748b", fontSize: 10, textTransform: "uppercase" }}>{new Date(c.nextStart).toLocaleString("en-US", { month: "short" })}</div>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ color: "#e2e8f0", fontWeight: 600, fontSize: 13, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.title}</div>
+                          <div style={{ color: "#64748b", fontSize: 11 }}>{c.enrolled}/{c.seats} enrolled · {c.delivery}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent registrations */}
+              <h3 style={{ color: "#e2e8f0", fontWeight: 700, marginBottom: 14, fontSize: 15 }}>Recent Registrations</h3>
+              <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12 }}>
+                {recentProfiles.length === 0 && <div style={{ color: "#64748b", fontSize: 13, padding: 20, textAlign: "center" }}>No students registered yet.</div>}
+                {recentProfiles.map((p, i) => (
+                  <div key={p.entra_oid} style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 20px", borderBottom: i < recentProfiles.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
+                      {p.first_name[0]}{p.last_name[0]}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ color: "#f1f5f9", fontWeight: 600, fontSize: 14 }}>{p.first_name} {p.last_name}</div>
+                      <div style={{ color: "#64748b", fontSize: 12 }}>{p.city}, {p.country_name}</div>
+                    </div>
+                    <div style={{ color: "#64748b", fontSize: 11, fontFamily: "monospace" }}>
+                      {new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {tab === "students" && (
           <div>
