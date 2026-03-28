@@ -74,6 +74,7 @@ function normalizeCourse(c) {
 
 function normalizeSchedule(s) {
   return {
+    id: s.id,
     courseId: s.course_id,
     day: s.day,
     time: s.time,
@@ -973,7 +974,9 @@ function EducatorPortalView({ staffAccount, instructors, courses, enrollments, s
   );
 }
 
-function AdminView({ courses, vendors, schedule, students, profiles, instructors, deliveryLocations, enrollments, onDeleteProfile, onCourseAdd, onCourseUpdate, onCourseDelete, onLocationAdd, onLocationUpdate, onLocationDelete, onInstructorAdd, onInstructorUpdate, onInstructorDeactivate, onEnrollmentAdd, onEnrollmentRemove }) {
+const EMPTY_SCHEDULE = { course_id: "", day: "", time: "", instructor: "", room: "", type: "Online" };
+
+function AdminView({ courses, vendors, schedule, students, profiles, instructors, deliveryLocations, enrollments, onDeleteProfile, onCourseAdd, onCourseUpdate, onCourseDelete, onLocationAdd, onLocationUpdate, onLocationDelete, onInstructorAdd, onInstructorUpdate, onInstructorDeactivate, onEnrollmentAdd, onEnrollmentRemove, onScheduleAdd, onScheduleUpdate, onScheduleDelete }) {
   const [tab, setTab] = useState("overview");
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [confirmDeleteCourse, setConfirmDeleteCourse] = useState(null);
@@ -994,7 +997,11 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
   const [enrollSaving, setEnrollSaving] = useState(false);
   const [confirmUnenroll, setConfirmUnenroll] = useState(null);
   const [enrollFilter, setEnrollFilter] = useState("");
-  const [studentDetail, setStudentDetail] = useState(null); // student_id
+  const [studentDetail, setStudentDetail] = useState(null);
+  const [scheduleModal, setScheduleModal] = useState(null); // null | { mode: "new"|"edit", data: {} }
+  const [scheduleForm, setScheduleForm] = useState(EMPTY_SCHEDULE);
+  const [scheduleSaving, setScheduleSaving] = useState(false);
+  const [confirmDeleteSchedule, setConfirmDeleteSchedule] = useState(null);
   const courseById = (id) => courses.find(c => c.id === id);
 
   const openNew = () => { setCourseForm(EMPTY_COURSE); setCourseModal({ mode: "new" }); };
@@ -2060,41 +2067,171 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
           </div>
         )}
 
-        {tab === "schedule" && (
-          <div>
-            <h2 style={{ fontSize: 28, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", marginBottom: 24 }}>Schedule Management</h2>
-            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: 4 }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-                <thead>
-                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                    {["Course", "Days", "Time", "Instructor", "Room", "Format"].map(h => (
-                      <th key={h} style={{ padding: "12px 16px", textAlign: "left", color: "#64748b", fontSize: 11, fontWeight: 700, textTransform: "uppercase" }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {schedule.map((s, i) => {
-                    const c = courseById(s.courseId);
-                    if (!c) return null;
-                    return (
-                      <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                        <td style={{ padding: "14px 16px" }}>
-                          <div style={{ color: "#f1f5f9", fontWeight: 600 }}>{c.title}</div>
-                          <div style={{ color: c.vendorColor, fontSize: 11, fontWeight: 700 }}>{c.code}</div>
-                        </td>
-                        <td style={{ padding: "14px 16px", color: "#94a3b8", fontFamily: "monospace" }}>{s.day}</td>
-                        <td style={{ padding: "14px 16px", color: "#94a3b8", fontFamily: "monospace" }}>{s.time}</td>
-                        <td style={{ padding: "14px 16px", color: "#e2e8f0" }}>{s.instructor}</td>
-                        <td style={{ padding: "14px 16px", color: "#94a3b8", fontSize: 12 }}>{s.room}</td>
-                        <td style={{ padding: "14px 16px" }}><Chip text={s.type} color={s.type === "Online" ? "#0ea5e9" : "#8b5cf6"} /></td>
+        {tab === "schedule" && (() => {
+          const openNewSchedule = () => {
+            setScheduleForm(EMPTY_SCHEDULE);
+            setScheduleModal({ mode: "new" });
+          };
+          const openEditSchedule = (s) => {
+            setScheduleForm({ course_id: s.courseId, day: s.day, time: s.time, instructor: s.instructor, room: s.room, type: s.type });
+            setScheduleModal({ mode: "edit", id: s.id });
+          };
+          const saveSchedule = async () => {
+            if (!scheduleForm.course_id || !scheduleForm.day || !scheduleForm.time || !scheduleForm.type) return;
+            setScheduleSaving(true);
+            try {
+              if (scheduleModal.mode === "new") {
+                const r = await fetch("/api/schedule", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(scheduleForm) });
+                const saved = await r.json();
+                onScheduleAdd(normalizeSchedule(saved));
+              } else {
+                const r = await fetch(`/api/schedule/${scheduleModal.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(scheduleForm) });
+                const saved = await r.json();
+                onScheduleUpdate(normalizeSchedule(saved));
+              }
+              setScheduleModal(null);
+            } finally {
+              setScheduleSaving(false);
+            }
+          };
+          const deleteSchedule = async (entry) => {
+            await fetch(`/api/schedule/${entry.id}`, { method: "DELETE" });
+            onScheduleDelete(entry.id);
+            setConfirmDeleteSchedule(null);
+          };
+
+          const inputStyle = { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 14px", color: "#f1f5f9", fontSize: 14, width: "100%", outline: "none", boxSizing: "border-box" };
+          const labelStyle = { color: "#94a3b8", fontSize: 12, fontWeight: 600, marginBottom: 6, display: "block" };
+
+          return (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                <h2 style={{ fontSize: 28, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", margin: 0 }}>Schedule Management</h2>
+                <button onClick={openNewSchedule} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                  + Add Entry
+                </button>
+              </div>
+
+              {schedule.length === 0 ? (
+                <div style={{ textAlign: "center", padding: 60, color: "#475569" }}>No schedule entries yet. Add one to get started.</div>
+              ) : (
+                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, overflow: "hidden" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ background: "rgba(255,255,255,0.04)" }}>
+                        {["Course", "Day", "Time", "Instructor", "Room", "Format", ""].map(h => (
+                          <th key={h} style={{ padding: "12px 16px", textAlign: "left", color: "#64748b", fontSize: 11, fontWeight: 700, textTransform: "uppercase" }}>{h}</th>
+                        ))}
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody>
+                      {schedule.map((s, i) => {
+                        const c = courseById(s.courseId);
+                        if (!c) return null;
+                        return (
+                          <tr key={s.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}>
+                            <td style={{ padding: "14px 16px" }}>
+                              <div style={{ color: "#f1f5f9", fontWeight: 600 }}>{c.title}</div>
+                              <div style={{ color: c.vendorColor, fontSize: 11, fontWeight: 700 }}>{c.code}</div>
+                            </td>
+                            <td style={{ padding: "14px 16px", color: "#94a3b8", fontFamily: "monospace" }}>{s.day}</td>
+                            <td style={{ padding: "14px 16px", color: "#94a3b8", fontFamily: "monospace" }}>{s.time}</td>
+                            <td style={{ padding: "14px 16px", color: "#e2e8f0" }}>{s.instructor || "—"}</td>
+                            <td style={{ padding: "14px 16px", color: "#94a3b8", fontSize: 12 }}>{s.room || "—"}</td>
+                            <td style={{ padding: "14px 16px" }}><Chip text={s.type} color={s.type === "Online" ? "#0ea5e9" : s.type === "Hybrid" ? "#f59e0b" : "#8b5cf6"} /></td>
+                            <td style={{ padding: "14px 16px", whiteSpace: "nowrap" }}>
+                              <button onClick={() => openEditSchedule(s)} style={{ background: "rgba(255,255,255,0.06)", color: "#94a3b8", border: "none", borderRadius: 7, padding: "6px 12px", fontSize: 12, cursor: "pointer", marginRight: 6 }}>Edit</button>
+                              <button onClick={() => setConfirmDeleteSchedule(s)} style={{ background: "rgba(239,68,68,0.08)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 7, padding: "6px 12px", fontSize: 12, cursor: "pointer" }}>Delete</button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Schedule modal */}
+              {scheduleModal && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 24 }}>
+                  <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 36, width: "100%", maxWidth: 560, maxHeight: "90vh", overflowY: "auto" }}>
+                    <h3 style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 20, marginBottom: 28 }}>
+                      {scheduleModal.mode === "new" ? "Add Schedule Entry" : "Edit Schedule Entry"}
+                    </h3>
+                    <div style={{ display: "grid", gap: 18 }}>
+                      <div>
+                        <label style={labelStyle}>Course *</label>
+                        <select value={scheduleForm.course_id} onChange={e => {
+                          const c = courses.find(x => x.id === Number(e.target.value));
+                          setScheduleForm(f => ({ ...f, course_id: Number(e.target.value), instructor: c?.instructorName || f.instructor }));
+                        }} style={inputStyle}>
+                          <option value="">Select a course...</option>
+                          {courses.map(c => <option key={c.id} value={c.id}>{c.code} — {c.title}</option>)}
+                        </select>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                        <div>
+                          <label style={labelStyle}>Day *</label>
+                          <select value={scheduleForm.day} onChange={e => setScheduleForm(f => ({ ...f, day: e.target.value }))} style={inputStyle}>
+                            <option value="">Select...</option>
+                            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
+                              "Mon & Wed", "Tue & Thu", "Mon–Fri", "Weekends"].map(d => <option key={d} value={d}>{d}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Time *</label>
+                          <input value={scheduleForm.time} onChange={e => setScheduleForm(f => ({ ...f, time: e.target.value }))} style={inputStyle} placeholder="e.g. 9:00 AM – 12:00 PM" />
+                        </div>
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Format *</label>
+                        <select value={scheduleForm.type} onChange={e => setScheduleForm(f => ({ ...f, type: e.target.value }))} style={inputStyle}>
+                          {["Online", "In-Person", "Hybrid"].map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Instructor</label>
+                        <select value={scheduleForm.instructor} onChange={e => setScheduleForm(f => ({ ...f, instructor: e.target.value }))} style={inputStyle}>
+                          <option value="">— None / TBD —</option>
+                          {instructors.filter(i => i.status === "Active").map(i => (
+                            <option key={i.id} value={`${i.first_name} ${i.last_name}`}>{i.first_name} {i.last_name}{i.title ? ` — ${i.title}` : ""}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Room / Location</label>
+                        <input value={scheduleForm.room} onChange={e => setScheduleForm(f => ({ ...f, room: e.target.value }))} style={inputStyle} placeholder="e.g. Room 204 or Teams link" />
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 28 }}>
+                      <button onClick={() => setScheduleModal(null)} style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+                      <button onClick={saveSchedule} disabled={scheduleSaving || !scheduleForm.course_id || !scheduleForm.day || !scheduleForm.time} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", fontWeight: 700, cursor: "pointer", opacity: scheduleSaving || !scheduleForm.course_id || !scheduleForm.day || !scheduleForm.time ? 0.6 : 1 }}>
+                        {scheduleSaving ? "Saving..." : scheduleModal.mode === "new" ? "Add Entry" : "Save Changes"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Confirm delete modal */}
+              {confirmDeleteSchedule && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 24 }}>
+                  <div style={{ background: "#0f172a", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 20, padding: 36, maxWidth: 440, width: "100%", textAlign: "center" }}>
+                    <div style={{ fontSize: 40, marginBottom: 16 }}>🗑️</div>
+                    <h3 style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 20, marginBottom: 12 }}>Delete Schedule Entry?</h3>
+                    <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.6, marginBottom: 28 }}>
+                      This will permanently remove the <strong style={{ color: "#f1f5f9" }}>{confirmDeleteSchedule.day} {confirmDeleteSchedule.time}</strong> entry for <strong style={{ color: "#f1f5f9" }}>{courseById(confirmDeleteSchedule.courseId)?.title}</strong>.
+                    </p>
+                    <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+                      <button onClick={() => setConfirmDeleteSchedule(null)} style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+                      <button onClick={() => deleteSchedule(confirmDeleteSchedule)} style={{ background: "rgba(239,68,68,0.15)", color: "#f87171", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Yes, Delete</button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );
@@ -2588,6 +2725,9 @@ export default function App() {
                   onInstructorDeactivate={(id) => setInstructors(prev => prev.map(x => x.id === id ? { ...x, status: "Inactive" } : x))}
                   onEnrollmentAdd={(e) => setEnrollments(prev => [...prev, e])}
                   onEnrollmentRemove={(sid, cid) => setEnrollments(prev => prev.filter(e => !(e.student_id === sid && e.course_id === cid)))}
+                  onScheduleAdd={(s) => setSchedule(prev => [...prev, s])}
+                  onScheduleUpdate={(s) => setSchedule(prev => prev.map(x => x.id === s.id ? s : x))}
+                  onScheduleDelete={(id) => setSchedule(prev => prev.filter(x => x.id !== id))}
                 />
               : <AuthWall onLogin={handleLogin} message="Admin access only. Sign in with an administrator account." />
           )}

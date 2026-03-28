@@ -272,6 +272,29 @@ app.get("/api/schedule", async (req, res) => {
   res.json(rows);
 });
 
+app.post("/api/schedule", async (req, res) => {
+  const { course_id, day, time, instructor, room, type } = req.body;
+  const { rows } = await pool.query(
+    "INSERT INTO schedule (course_id, day, time, instructor, room, type) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *",
+    [course_id, day, time, instructor || "", room || "", type]
+  );
+  res.json(rows[0]);
+});
+
+app.put("/api/schedule/:id", async (req, res) => {
+  const { course_id, day, time, instructor, room, type } = req.body;
+  const { rows } = await pool.query(
+    "UPDATE schedule SET course_id=$1, day=$2, time=$3, instructor=$4, room=$5, type=$6 WHERE id=$7 RETURNING *",
+    [course_id, day, time, instructor || "", room || "", type, req.params.id]
+  );
+  res.json(rows[0]);
+});
+
+app.delete("/api/schedule/:id", async (req, res) => {
+  await pool.query("DELETE FROM schedule WHERE id=$1", [req.params.id]);
+  res.json({ success: true });
+});
+
 // Students (with enrollment count)
 app.get("/api/students", async (req, res) => {
   const { rows } = await pool.query(`
