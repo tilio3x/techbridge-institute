@@ -803,10 +803,28 @@ const EMPTY_LOCATION = { name: "", type: "Physical", address_line1: "", address_
 
 // ─── EDUCATOR PORTAL ─────────────────────────────────────────────────────────
 
-function EducatorPortalView({ staffAccount, instructors, courses, enrollments, schedule }) {
+function EducatorPortalView({ staffAccount, instructors, courses, enrollments, schedule, onInstructorUpdate }) {
   const [tab, setTab] = useState("courses");
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
 
   const instructor = instructors.find(i => i.entra_oid === staffAccount?.localAccountId) ?? null;
+
+  const [profileForm, setProfileForm] = useState(() => instructor ? {
+    title: instructor.title || "",
+    phone: instructor.phone || "",
+    linkedin_url: instructor.linkedin_url || "",
+    bio: instructor.bio || "",
+    specializations: (instructor.specializations || []).join(", "),
+    certifications: (instructor.certifications || []).join(", "),
+    available_days: instructor.available_days || [],
+    available_hours: instructor.available_hours || "",
+    availability_note: instructor.availability_note || "",
+  } : {
+    title: "", phone: "", linkedin_url: "", bio: "",
+    specializations: "", certifications: "",
+    available_days: [], available_hours: "", availability_note: "",
+  });
 
   const myCourses = instructor
     ? courses.filter(c => c.instructorId === instructor.id)
@@ -820,7 +838,39 @@ function EducatorPortalView({ staffAccount, instructors, courses, enrollments, s
 
   const mySchedule = schedule.filter(s => myCourseIds.has(s.courseId));
 
-  const portalTabs = ["courses", "students", "schedule"];
+  const portalTabs = ["courses", "students", "schedule", "profile"];
+
+  const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+  const saveProfile = async () => {
+    if (!instructor) return;
+    setProfileSaving(true);
+    try {
+      const payload = {
+        ...instructor,
+        title: profileForm.title,
+        phone: profileForm.phone,
+        linkedin_url: profileForm.linkedin_url,
+        bio: profileForm.bio,
+        specializations: profileForm.specializations.split(",").map(s => s.trim()).filter(Boolean),
+        certifications: profileForm.certifications.split(",").map(s => s.trim()).filter(Boolean),
+        available_days: profileForm.available_days,
+        available_hours: profileForm.available_hours,
+        availability_note: profileForm.availability_note,
+      };
+      const res = await fetch(`/api/instructors/${instructor.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const saved = await res.json();
+      onInstructorUpdate(saved);
+      setProfileSaved(true);
+      setTimeout(() => setProfileSaved(false), 3000);
+    } finally {
+      setProfileSaving(false);
+    }
+  };
 
   const cell = (content, opts = {}) => (
     <td style={{ padding: "12px 16px", color: "#cbd5e1", fontSize: 13, borderBottom: "1px solid rgba(255,255,255,0.04)", ...opts }}>{content}</td>
@@ -874,6 +924,7 @@ function EducatorPortalView({ staffAccount, instructors, courses, enrollments, s
             {t === "courses" && `Courses (${myCourses.length})`}
             {t === "students" && `Students (${uniqueStudentIds.length})`}
             {t === "schedule" && `Schedule (${mySchedule.length})`}
+            {t === "profile" && "My Profile"}
           </button>
         ))}
       </div>
@@ -967,6 +1018,67 @@ function EducatorPortalView({ staffAccount, instructors, courses, enrollments, s
                 })}
               </tbody>
             </table>
+          </div>
+        )
+      )}
+
+      {/* Profile tab */}
+      {tab === "profile" && (
+        !instructor ? (
+          <div style={{ textAlign: "center", padding: 60, color: "#475569" }}>No instructor record linked to your account.</div>
+        ) : (
+          <div style={{ maxWidth: 700 }}>
+            {(() => {
+              const inp = { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 14px", color: "#f1f5f9", fontSize: 14, width: "100%", outline: "none", boxSizing: "border-box" };
+              const lbl = { color: "#94a3b8", fontSize: 12, fontWeight: 600, marginBottom: 6, display: "block" };
+              const set = k => e => setProfileForm(f => ({ ...f, [k]: e.target.value }));
+              const toggleDay = day => setProfileForm(f => ({
+                ...f,
+                available_days: f.available_days.includes(day)
+                  ? f.available_days.filter(d => d !== day)
+                  : [...f.available_days, day],
+              }));
+              return (
+                <div style={{ display: "grid", gap: 20 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                    <div><label style={lbl}>Title / Role</label><input value={profileForm.title} onChange={set("title")} style={inp} placeholder="e.g. Senior Instructor" /></div>
+                    <div><label style={lbl}>Phone</label><input value={profileForm.phone} onChange={set("phone")} style={inp} placeholder="+223 ..." /></div>
+                    <div style={{ gridColumn: "span 2" }}><label style={lbl}>LinkedIn URL</label><input value={profileForm.linkedin_url} onChange={set("linkedin_url")} style={inp} placeholder="https://linkedin.com/in/..." /></div>
+                    <div style={{ gridColumn: "span 2" }}><label style={lbl}>Bio</label><textarea value={profileForm.bio} onChange={set("bio")} style={{ ...inp, height: 100, resize: "vertical" }} placeholder="Short public-facing biography" /></div>
+                  </div>
+
+                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 20 }}>
+                    <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Expertise</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                      <div><label style={lbl}>Specializations <span style={{ color: "#475569", fontWeight: 400 }}>(comma-separated)</span></label><input value={profileForm.specializations} onChange={set("specializations")} style={inp} placeholder="e.g. Networking, Cloud, Security" /></div>
+                      <div><label style={lbl}>Certifications <span style={{ color: "#475569", fontWeight: 400 }}>(comma-separated)</span></label><input value={profileForm.certifications} onChange={set("certifications")} style={inp} placeholder="e.g. CCNA, AWS SAA" /></div>
+                    </div>
+                  </div>
+
+                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 20 }}>
+                    <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Availability</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+                      {DAYS.map(day => (
+                        <button key={day} type="button" onClick={() => toggleDay(day)} style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "1px solid", borderColor: profileForm.available_days.includes(day) ? "#6366f1" : "rgba(255,255,255,0.1)", background: profileForm.available_days.includes(day) ? "rgba(99,102,241,0.15)" : "rgba(255,255,255,0.03)", color: profileForm.available_days.includes(day) ? "#818cf8" : "#64748b" }}>
+                          {day.slice(0, 3)}
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                      <div><label style={lbl}>Available Hours</label><input value={profileForm.available_hours} onChange={set("available_hours")} style={inp} placeholder="e.g. 09:00–17:00" /></div>
+                      <div><label style={lbl}>Availability Note</label><input value={profileForm.availability_note} onChange={set("availability_note")} style={inp} placeholder="e.g. Evenings only in July" /></div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: 16, paddingTop: 8 }}>
+                    <button onClick={saveProfile} disabled={profileSaving} style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "#fff", border: "none", borderRadius: 10, padding: "12px 32px", fontWeight: 700, fontSize: 14, cursor: "pointer", opacity: profileSaving ? 0.7 : 1 }}>
+                      {profileSaving ? "Saving..." : "Save Profile"}
+                    </button>
+                    {profileSaved && <span style={{ color: "#22c55e", fontSize: 13, fontWeight: 600 }}>✓ Profile updated</span>}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )
       )}
@@ -2852,7 +2964,7 @@ export default function App() {
           )}
           {view === "educator" && (
             isInstructor
-              ? <EducatorPortalView staffAccount={staffAccount} instructors={instructors} courses={courses} enrollments={enrollments} schedule={schedule} />
+              ? <EducatorPortalView staffAccount={staffAccount} instructors={instructors} courses={courses} enrollments={enrollments} schedule={schedule} onInstructorUpdate={(i) => setInstructors(prev => prev.map(x => x.id === i.id ? i : x))} />
               : <AuthWall onLogin={openSignIn} message="Educator access only. Sign in with your institution account." />
           )}
           {view === "profile" && (isAuthenticated
