@@ -2646,6 +2646,7 @@ export default function App() {
         select option { background: #1e293b; color: #f1f5f9; }
         input::placeholder, textarea::placeholder { color: #475569; }
         input, textarea, select { color: #f1f5f9 !important; }
+        input[type="date"], input[type="time"] { color-scheme: dark; }
       `}</style>
 
       {showSignInSelector && (
