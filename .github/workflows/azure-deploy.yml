@@ -98,7 +98,9 @@ jobs:
               --resource-group ${{ env.RESOURCE_GROUP }} \
               --settings \
                 DATABASE_URL="${{ secrets.DATABASE_URL }}" \
-                NODE_ENV="production"
+                NODE_ENV="production" \
+                ACS_CONNECTION_STRING="${{ secrets.ACS_CONNECTION_STRING }}" \
+                ACS_SENDER_EMAIL="${{ secrets.ACS_SENDER_EMAIL }}"
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2

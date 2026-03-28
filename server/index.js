@@ -3,7 +3,161 @@ import cors from "cors";
 import "dotenv/config";
 import { fileURLToPath } from "url";
 import path from "path";
+import cron from "node-cron";
+import { EmailClient } from "@azure/communication-email";
 import pool from "./db.js";
+
+// ─── Email (Azure Communication Services) ────────────────────────────────────
+
+const acsClient = process.env.ACS_CONNECTION_STRING
+  ? new EmailClient(process.env.ACS_CONNECTION_STRING)
+  : null;
+
+const SENDER = process.env.ACS_SENDER_EMAIL || "noreply@techbridge.academy";
+
+async function sendEmail({ to, subject, html }) {
+  if (!acsClient || !to) return;
+  try {
+    const poller = await acsClient.beginSend({
+      senderAddress: SENDER,
+      recipients: { to: [{ address: to }] },
+      content: { subject, html },
+    });
+    await poller.pollUntilDone();
+  } catch (err) {
+    console.error("[Email] Send error:", err.message);
+  }
+}
+
+// ─── Email Templates ──────────────────────────────────────────────────────────
+
+function emailWrapper(body) {
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 16px">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
+  <!-- Header -->
+  <tr><td style="background:linear-gradient(135deg,#0ea5e9,#6366f1);border-radius:16px 16px 0 0;padding:32px 40px;text-align:center">
+    <div style="font-size:28px;margin-bottom:8px">🖥️</div>
+    <div style="color:#fff;font-size:22px;font-weight:900;letter-spacing:-0.5px">TechBridge Institute</div>
+    <div style="color:rgba(255,255,255,0.7);font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-top:4px">Empowering IT Careers</div>
+  </td></tr>
+  <!-- Body -->
+  <tr><td style="background:#ffffff;padding:40px;border-radius:0 0 16px 16px">
+    ${body}
+    <hr style="border:none;border-top:1px solid #e2e8f0;margin:32px 0">
+    <p style="color:#94a3b8;font-size:12px;text-align:center;margin:0">
+      © ${new Date().getFullYear()} TechBridge Institute &nbsp;·&nbsp; This is an automated message, please do not reply.
+    </p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+function tplStudentWelcome({ firstName, lastName }) {
+  return emailWrapper(`
+    <h1 style="color:#1e293b;font-size:24px;font-weight:900;margin:0 0 8px">Welcome, ${firstName}! 🎉</h1>
+    <p style="color:#64748b;font-size:15px;margin:0 0 24px">Your TechBridge Institute account is ready.</p>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:24px;margin-bottom:24px">
+      <p style="color:#1e293b;font-size:14px;margin:0 0 12px">Hello <strong>${firstName} ${lastName}</strong>,</p>
+      <p style="color:#475569;font-size:14px;line-height:1.7;margin:0">
+        Thank you for joining TechBridge Institute. Your profile has been set up and you can now browse our course catalog,
+        register for IT certification programs, and track your learning progress — all from your personal dashboard.
+      </p>
+    </div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px">
+      <tr>
+        <td style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:16px 20px">
+          <div style="color:#0369a1;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">What's next?</div>
+          <ul style="color:#0c4a6e;font-size:13px;margin:0;padding-left:20px;line-height:2">
+            <li>Explore the course catalog</li>
+            <li>Register for a certification program</li>
+            <li>Complete your learning profile</li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+    <p style="color:#475569;font-size:14px;margin:0">We're excited to support your journey in IT. If you have questions, reach out to us at <a href="mailto:info@techbridge.edu" style="color:#0ea5e9">info@techbridge.edu</a>.</p>
+    <p style="color:#475569;font-size:14px;margin:16px 0 0">— The TechBridge Team</p>
+  `);
+}
+
+function tplEnrollmentConfirmation({ studentName, courseTitle, courseCode, vendorName, startDate, instructorName, locationName, deliveryType }) {
+  const start = startDate ? new Date(startDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) : "TBD";
+  return emailWrapper(`
+    <h1 style="color:#1e293b;font-size:24px;font-weight:900;margin:0 0 8px">Enrollment Confirmed ✅</h1>
+    <p style="color:#64748b;font-size:15px;margin:0 0 24px">You are registered for the following course.</p>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:24px;margin-bottom:24px">
+      <div style="color:#166534;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Course Details</div>
+      <div style="color:#15803d;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">${vendorName}</div>
+      <div style="color:#14532d;font-size:18px;font-weight:900;margin-bottom:4px">${courseTitle}</div>
+      <div style="color:#166534;font-size:12px;font-family:monospace;margin-bottom:16px">${courseCode}</div>
+      <table cellpadding="0" cellspacing="0">
+        <tr><td style="color:#64748b;font-size:13px;padding:4px 16px 4px 0;white-space:nowrap">📅 Start Date</td><td style="color:#1e293b;font-size:13px;font-weight:600">${start}</td></tr>
+        <tr><td style="color:#64748b;font-size:13px;padding:4px 16px 4px 0;white-space:nowrap">🎓 Format</td><td style="color:#1e293b;font-size:13px;font-weight:600">${deliveryType || "TBD"}</td></tr>
+        ${instructorName ? `<tr><td style="color:#64748b;font-size:13px;padding:4px 16px 4px 0;white-space:nowrap">👨‍🏫 Instructor</td><td style="color:#1e293b;font-size:13px;font-weight:600">${instructorName}</td></tr>` : ""}
+        ${locationName ? `<tr><td style="color:#64748b;font-size:13px;padding:4px 16px 4px 0;white-space:nowrap">📍 Location</td><td style="color:#1e293b;font-size:13px;font-weight:600">${locationName}</td></tr>` : ""}
+      </table>
+    </div>
+    <p style="color:#475569;font-size:14px;margin:0">Hello <strong>${studentName}</strong>, your enrollment has been confirmed. Please ensure you are prepared before the start date. Reach out to us at <a href="mailto:info@techbridge.edu" style="color:#0ea5e9">info@techbridge.edu</a> if you have any questions.</p>
+    <p style="color:#475569;font-size:14px;margin:16px 0 0">— The TechBridge Team</p>
+  `);
+}
+
+function tplInstructorWelcome({ firstName, lastName, upn, tempPassword }) {
+  return emailWrapper(`
+    <h1 style="color:#1e293b;font-size:24px;font-weight:900;margin:0 0 8px">Welcome to TechBridge, ${firstName}! 👨‍🏫</h1>
+    <p style="color:#64748b;font-size:15px;margin:0 0 24px">Your instructor account has been created.</p>
+    <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 24px">
+      Hello <strong>${firstName} ${lastName}</strong>, your TechBridge Institute instructor account is ready.
+      Use the credentials below to sign in to the educator portal for the first time. You will be required to change your password on first login.
+    </p>
+    <div style="background:#faf5ff;border:1px solid #e9d5ff;border-radius:12px;padding:24px;margin-bottom:24px">
+      <div style="color:#6b21a8;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px">🔐 Your Login Credentials</div>
+      <table cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td style="color:#64748b;font-size:13px;padding:8px 16px 8px 0;white-space:nowrap;vertical-align:top">Username (UPN)</td>
+          <td style="font-family:monospace;font-size:14px;font-weight:700;color:#581c87;background:#f3e8ff;border-radius:6px;padding:6px 12px">${upn}</td>
+        </tr>
+        <tr>
+          <td style="color:#64748b;font-size:13px;padding:8px 16px 8px 0;white-space:nowrap;vertical-align:top">Temp Password</td>
+          <td style="font-family:monospace;font-size:18px;font-weight:900;color:#581c87;background:#f3e8ff;border-radius:6px;padding:6px 12px;letter-spacing:2px">${tempPassword}</td>
+        </tr>
+      </table>
+    </div>
+    <div style="background:#fef9c3;border:1px solid #fde047;border-radius:10px;padding:14px 18px;margin-bottom:24px">
+      <p style="color:#713f12;font-size:13px;margin:0">⚠️ This password is temporary. You must change it on your first login. Keep your credentials secure and do not share them.</p>
+    </div>
+    <p style="color:#475569;font-size:14px;margin:0">Sign in at the TechBridge portal using the <strong>Educator Sign In</strong> option. For support, contact IT at <a href="mailto:it@techbridge.edu" style="color:#0ea5e9">it@techbridge.edu</a>.</p>
+    <p style="color:#475569;font-size:14px;margin:16px 0 0">— The TechBridge Team</p>
+  `);
+}
+
+function tplCourseReminder({ studentName, courseTitle, courseCode, vendorName, startDate, daysUntil, instructorName, locationName, deliveryType }) {
+  const start = startDate ? new Date(startDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) : "TBD";
+  const urgency = daysUntil === 1 ? "tomorrow" : `in ${daysUntil} days`;
+  return emailWrapper(`
+    <h1 style="color:#1e293b;font-size:24px;font-weight:900;margin:0 0 8px">Course Starting ${daysUntil === 1 ? "Tomorrow" : `in ${daysUntil} Days`} ⏰</h1>
+    <p style="color:#64748b;font-size:15px;margin:0 0 24px">Your course begins ${urgency} — make sure you're ready!</p>
+    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:24px;margin-bottom:24px">
+      <div style="color:#9a3412;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Course Details</div>
+      <div style="color:#c2410c;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">${vendorName}</div>
+      <div style="color:#7c2d12;font-size:18px;font-weight:900;margin-bottom:4px">${courseTitle}</div>
+      <div style="color:#9a3412;font-size:12px;font-family:monospace;margin-bottom:16px">${courseCode}</div>
+      <table cellpadding="0" cellspacing="0">
+        <tr><td style="color:#64748b;font-size:13px;padding:4px 16px 4px 0;white-space:nowrap">📅 Start Date</td><td style="color:#1e293b;font-size:13px;font-weight:600">${start}</td></tr>
+        <tr><td style="color:#64748b;font-size:13px;padding:4px 16px 4px 0;white-space:nowrap">🎓 Format</td><td style="color:#1e293b;font-size:13px;font-weight:600">${deliveryType || "TBD"}</td></tr>
+        ${instructorName ? `<tr><td style="color:#64748b;font-size:13px;padding:4px 16px 4px 0;white-space:nowrap">👨‍🏫 Instructor</td><td style="color:#1e293b;font-size:13px;font-weight:600">${instructorName}</td></tr>` : ""}
+        ${locationName ? `<tr><td style="color:#64748b;font-size:13px;padding:4px 16px 4px 0;white-space:nowrap">📍 Location</td><td style="color:#1e293b;font-size:13px;font-weight:600">${locationName}</td></tr>` : ""}
+      </table>
+    </div>
+    <p style="color:#475569;font-size:14px;margin:0">Hello <strong>${studentName}</strong>, this is a reminder that your course starts ${urgency}. If you have any questions or need to make changes to your enrollment, contact us at <a href="mailto:info@techbridge.edu" style="color:#0ea5e9">info@techbridge.edu</a>.</p>
+    <p style="color:#475569;font-size:14px;margin:16px 0 0">— The TechBridge Team</p>
+  `);
+}
 
 // ─── Graph API helper ─────────────────────────────────────────────────────────
 
@@ -177,6 +331,14 @@ app.post("/api/instructors", async (req, res) => {
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
     RETURNING *
   `, [first_name, last_name, email, phone||null, title||null, bio||null, specializations||[], certifications||[], employment_type||'Full-time', status||'Active', hire_date||null, photo_url||null, linkedin_url||null, available_days||[], available_hours||null, availability_note||null, entra_oid||null]);
+
+  if (upn && tempPassword && email) {
+    sendEmail({
+      to: email,
+      subject: "Welcome to TechBridge Institute — Your Educator Account is Ready",
+      html: tplInstructorWelcome({ firstName: first_name, lastName: last_name, upn, tempPassword }),
+    }).catch(() => {});
+  }
 
   res.json({ ...rows[0], upn, tempPassword, entraWarning });
 });
@@ -362,12 +524,18 @@ app.post("/api/profile", async (req, res) => {
       education    = COALESCE(EXCLUDED.education, student_profiles.education),
       goals        = COALESCE(EXCLUDED.goals, student_profiles.goals),
       updated_at   = NOW()
-    RETURNING *
+    RETURNING *, (xmax = 0) AS is_new
   `, [entra_oid, first_name, last_name, email, country_code, country_name, city,
       phone || null, date_of_birth || null, education || null, goals || null]);
   const saved = rows[0];
-  // Fire-and-forget — don't block the response if Graph API is slow/unavailable
   updateEntraDisplayName(entra_oid, first_name, last_name).catch(() => {});
+  if (saved.is_new && email) {
+    sendEmail({
+      to: email,
+      subject: `Welcome to TechBridge Institute, ${first_name}!`,
+      html: tplStudentWelcome({ firstName: first_name, lastName: last_name }),
+    }).catch(() => {});
+  }
   res.json(saved);
 });
 
@@ -445,6 +613,37 @@ app.post("/api/enrollments", async (req, res) => {
   );
   if (result.rowCount > 0) {
     await pool.query("UPDATE courses SET enrolled = enrolled + 1 WHERE id = $1", [course_id]);
+    // Send enrollment confirmation — fire-and-forget
+    pool.query(`
+      SELECT s.name AS student_name, s.email AS student_email,
+             c.title, c.code, c.delivery, c.next_start,
+             v.name AS vendor_name,
+             CONCAT(i.first_name, ' ', i.last_name) AS instructor_name,
+             dl.name AS location_name
+      FROM students s, courses c
+      LEFT JOIN vendors v ON v.id = c.vendor_id
+      LEFT JOIN instructors i ON i.id = c.instructor_id
+      LEFT JOIN delivery_locations dl ON dl.id = c.delivery_location_id
+      WHERE s.id = $1 AND c.id = $2
+    `, [student_id, course_id]).then(({ rows }) => {
+      const d = rows[0];
+      if (d?.student_email) {
+        sendEmail({
+          to: d.student_email,
+          subject: `Enrollment Confirmed: ${d.title}`,
+          html: tplEnrollmentConfirmation({
+            studentName: d.student_name,
+            courseTitle: d.title,
+            courseCode: d.code,
+            vendorName: d.vendor_name,
+            startDate: d.next_start,
+            instructorName: d.instructor_name,
+            locationName: d.location_name,
+            deliveryType: d.delivery,
+          }),
+        }).catch(() => {});
+      }
+    }).catch(() => {});
   }
   res.json({ success: true, inserted: result.rowCount > 0 });
 });
@@ -469,6 +668,50 @@ if (process.env.NODE_ENV === "production") {
     res.sendFile(path.join(__dirname, "../dist", "index.html"));
   });
 }
+
+// ─── Course reminder cron job (daily at 8:00 AM UTC) ─────────────────────────
+cron.schedule("0 8 * * *", async () => {
+  console.log("[Cron] Running course reminder job");
+  try {
+    const { rows } = await pool.query(`
+      SELECT s.name AS student_name, s.email AS student_email,
+             c.title, c.code, c.delivery, c.next_start,
+             v.name AS vendor_name,
+             CONCAT(i.first_name, ' ', i.last_name) AS instructor_name,
+             dl.name AS location_name,
+             (c.next_start - CURRENT_DATE) AS days_until
+      FROM courses c
+      JOIN enrollments e ON e.course_id = c.id
+      JOIN students s ON s.id = e.student_id
+      LEFT JOIN vendors v ON v.id = c.vendor_id
+      LEFT JOIN instructors i ON i.id = c.instructor_id
+      LEFT JOIN delivery_locations dl ON dl.id = c.delivery_location_id
+      WHERE (c.next_start = CURRENT_DATE + INTERVAL '7 days'
+         OR c.next_start = CURRENT_DATE + INTERVAL '1 day')
+    `);
+    console.log(`[Cron] Sending ${rows.length} reminder(s)`);
+    for (const r of rows) {
+      if (!r.student_email) continue;
+      sendEmail({
+        to: r.student_email,
+        subject: `Reminder: ${r.title} starts ${r.days_until === 1 ? "tomorrow" : "in 7 days"}`,
+        html: tplCourseReminder({
+          studentName: r.student_name,
+          courseTitle: r.title,
+          courseCode: r.code,
+          vendorName: r.vendor_name,
+          startDate: r.next_start,
+          daysUntil: Number(r.days_until),
+          instructorName: r.instructor_name,
+          locationName: r.location_name,
+          deliveryType: r.delivery,
+        }),
+      }).catch(() => {});
+    }
+  } catch (err) {
+    console.error("[Cron] Reminder job error:", err.message);
+  }
+});
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`API running on port ${PORT}`));
