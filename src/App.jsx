@@ -974,7 +974,24 @@ function EducatorPortalView({ staffAccount, instructors, courses, enrollments, s
   );
 }
 
-const EMPTY_SCHEDULE = { course_id: "", day: "", time: "", instructor: "", room: "", type: "Online" };
+const EMPTY_SCHEDULE = { course_id: "", day: "", time_start: "", time_end: "", instructor: "", room: "", type: "Online" };
+
+function fmt12(t) {
+  if (!t) return "";
+  const [h, m] = t.split(":").map(Number);
+  const ampm = h < 12 ? "AM" : "PM";
+  return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${ampm}`;
+}
+
+function parse24(str) {
+  const match = str.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return "";
+  let h = parseInt(match[1]);
+  const ampm = match[3].toUpperCase();
+  if (ampm === "PM" && h !== 12) h += 12;
+  if (ampm === "AM" && h === 12) h = 0;
+  return `${String(h).padStart(2, "0")}:${match[2]}`;
+}
 
 function AdminView({ courses, vendors, schedule, students, profiles, instructors, deliveryLocations, enrollments, onDeleteProfile, onCourseAdd, onCourseUpdate, onCourseDelete, onLocationAdd, onLocationUpdate, onLocationDelete, onInstructorAdd, onInstructorUpdate, onInstructorDeactivate, onEnrollmentAdd, onEnrollmentRemove, onScheduleAdd, onScheduleUpdate, onScheduleDelete }) {
   const [tab, setTab] = useState("overview");
@@ -2073,19 +2090,24 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
             setScheduleModal({ mode: "new" });
           };
           const openEditSchedule = (s) => {
-            setScheduleForm({ course_id: s.courseId, day: s.day, time: s.time, instructor: s.instructor, room: s.room, type: s.type });
+            const parts = s.time.split(/\s*[–\-]\s*/);
+            setScheduleForm({ course_id: s.courseId, day: s.day, time_start: parse24(parts[0] || ""), time_end: parse24(parts[1] || ""), instructor: s.instructor, room: s.room, type: s.type });
             setScheduleModal({ mode: "edit", id: s.id });
           };
           const saveSchedule = async () => {
-            if (!scheduleForm.course_id || !scheduleForm.day || !scheduleForm.time || !scheduleForm.type) return;
+            if (!scheduleForm.course_id || !scheduleForm.day || !scheduleForm.time_start || !scheduleForm.type) return;
+            const time = scheduleForm.time_end
+              ? `${fmt12(scheduleForm.time_start)} – ${fmt12(scheduleForm.time_end)}`
+              : fmt12(scheduleForm.time_start);
+            const payload = { course_id: scheduleForm.course_id, day: scheduleForm.day, time, instructor: scheduleForm.instructor, room: scheduleForm.room, type: scheduleForm.type };
             setScheduleSaving(true);
             try {
               if (scheduleModal.mode === "new") {
-                const r = await fetch("/api/schedule", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(scheduleForm) });
+                const r = await fetch("/api/schedule", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
                 const saved = await r.json();
                 onScheduleAdd(normalizeSchedule(saved));
               } else {
-                const r = await fetch(`/api/schedule/${scheduleModal.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(scheduleForm) });
+                const r = await fetch(`/api/schedule/${scheduleModal.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
                 const saved = await r.json();
                 onScheduleUpdate(normalizeSchedule(saved));
               }
@@ -2169,18 +2191,22 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
                           {courses.map(c => <option key={c.id} value={c.id}>{c.code} — {c.title}</option>)}
                         </select>
                       </div>
+                      <div>
+                        <label style={labelStyle}>Day *</label>
+                        <select value={scheduleForm.day} onChange={e => setScheduleForm(f => ({ ...f, day: e.target.value }))} style={inputStyle}>
+                          <option value="">Select...</option>
+                          {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
+                            "Mon & Wed", "Tue & Thu", "Mon–Fri", "Weekends"].map(d => <option key={d} value={d}>{d}</option>)}
+                        </select>
+                      </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                         <div>
-                          <label style={labelStyle}>Day *</label>
-                          <select value={scheduleForm.day} onChange={e => setScheduleForm(f => ({ ...f, day: e.target.value }))} style={inputStyle}>
-                            <option value="">Select...</option>
-                            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
-                              "Mon & Wed", "Tue & Thu", "Mon–Fri", "Weekends"].map(d => <option key={d} value={d}>{d}</option>)}
-                          </select>
+                          <label style={labelStyle}>Start Time *</label>
+                          <input type="time" value={scheduleForm.time_start} onChange={e => setScheduleForm(f => ({ ...f, time_start: e.target.value }))} style={inputStyle} />
                         </div>
                         <div>
-                          <label style={labelStyle}>Time *</label>
-                          <input value={scheduleForm.time} onChange={e => setScheduleForm(f => ({ ...f, time: e.target.value }))} style={inputStyle} placeholder="e.g. 9:00 AM – 12:00 PM" />
+                          <label style={labelStyle}>End Time</label>
+                          <input type="time" value={scheduleForm.time_end} onChange={e => setScheduleForm(f => ({ ...f, time_end: e.target.value }))} style={inputStyle} />
                         </div>
                       </div>
                       <div>
@@ -2205,7 +2231,7 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
                     </div>
                     <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 28 }}>
                       <button onClick={() => setScheduleModal(null)} style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
-                      <button onClick={saveSchedule} disabled={scheduleSaving || !scheduleForm.course_id || !scheduleForm.day || !scheduleForm.time} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", fontWeight: 700, cursor: "pointer", opacity: scheduleSaving || !scheduleForm.course_id || !scheduleForm.day || !scheduleForm.time ? 0.6 : 1 }}>
+                      <button onClick={saveSchedule} disabled={scheduleSaving || !scheduleForm.course_id || !scheduleForm.day || !scheduleForm.time_start} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", fontWeight: 700, cursor: "pointer", opacity: scheduleSaving || !scheduleForm.course_id || !scheduleForm.day || !scheduleForm.time_start ? 0.6 : 1 }}>
                         {scheduleSaving ? "Saving..." : scheduleModal.mode === "new" ? "Add Entry" : "Save Changes"}
                       </button>
                     </div>
