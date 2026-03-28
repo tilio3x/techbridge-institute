@@ -2192,12 +2192,8 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
                         </select>
                       </div>
                       <div>
-                        <label style={labelStyle}>Day *</label>
-                        <select value={scheduleForm.day} onChange={e => setScheduleForm(f => ({ ...f, day: e.target.value }))} style={inputStyle}>
-                          <option value="">Select...</option>
-                          {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
-                            "Mon & Wed", "Tue & Thu", "Mon–Fri", "Weekends"].map(d => <option key={d} value={d}>{d}</option>)}
-                        </select>
+                        <label style={labelStyle}>Date *</label>
+                        <input type="date" value={scheduleForm.day} onChange={e => setScheduleForm(f => ({ ...f, day: e.target.value }))} style={inputStyle} />
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                         <div>
