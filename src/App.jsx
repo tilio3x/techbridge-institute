@@ -1019,6 +1019,9 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
   const [scheduleForm, setScheduleForm] = useState(EMPTY_SCHEDULE);
   const [scheduleSaving, setScheduleSaving] = useState(false);
   const [confirmDeleteSchedule, setConfirmDeleteSchedule] = useState(null);
+  const [assignModal, setAssignModal] = useState(null); // null | { instructor }
+  const [assignCourseIds, setAssignCourseIds] = useState(new Set());
+  const [assignSaving, setAssignSaving] = useState(false);
   const courseById = (id) => courses.find(c => c.id === id);
 
   const openNew = () => { setCourseForm(EMPTY_COURSE); setCourseModal({ mode: "new" }); };
@@ -1740,6 +1743,12 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
                         </div>
                         <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
                           <span style={{ background: `rgba(${ins.status === "Active" ? "34,197,94" : ins.status === "On Leave" ? "251,191,36" : "239,68,68"},0.12)`, color: statusColor[ins.status] || "#94a3b8", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>{ins.status}</span>
+                          <button onClick={() => {
+                            setAssignCourseIds(new Set(courses.filter(c => c.instructorId === ins.id).map(c => c.id)));
+                            setAssignModal({ instructor: ins });
+                          }} style={{ background: "rgba(99,102,241,0.1)", color: "#818cf8", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                            Courses ({courses.filter(c => c.instructorId === ins.id).length})
+                          </button>
                           <button onClick={() => openEditInstructor(ins)} style={{ background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Edit</button>
                           {ins.status === "Active" && <button onClick={() => setConfirmDeactivateInstructor(ins)} style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Deactivate</button>}
                         </div>
@@ -1846,6 +1855,93 @@ function AdminView({ courses, vendors, schedule, students, profiles, instructors
                   </div>
                 </div>
               )}
+
+              {/* Assign courses modal */}
+              {assignModal && (() => {
+                const ins = assignModal.instructor;
+                const saveAssign = async () => {
+                  setAssignSaving(true);
+                  try {
+                    const allCourses = courses;
+                    const toUpdate = allCourses.filter(c => {
+                      const wasAssigned = c.instructorId === ins.id;
+                      const nowAssigned = assignCourseIds.has(c.id);
+                      return wasAssigned !== nowAssigned;
+                    });
+                    for (const c of toUpdate) {
+                      const newInstructorId = assignCourseIds.has(c.id) ? ins.id : null;
+                      const res = await fetch(`/api/courses/${c.id}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          vendor_id: c.vendor, code: c.code, title: c.title, level: c.level,
+                          duration: c.duration, price: c.price, seats: c.seats, delivery: c.delivery,
+                          next_start: c.nextStart ? c.nextStart.split("T")[0] : "",
+                          description: c.description, badge: c.badge || "",
+                          instructor_id: newInstructorId,
+                          delivery_location_id: c.locationId || null,
+                        }),
+                      });
+                      const saved = await res.json();
+                      onCourseUpdate(saved);
+                    }
+                    setAssignModal(null);
+                  } finally {
+                    setAssignSaving(false);
+                  }
+                };
+                const toggle = (id) => setAssignCourseIds(prev => {
+                  const next = new Set(prev);
+                  next.has(id) ? next.delete(id) : next.add(id);
+                  return next;
+                });
+                return (
+                  <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 24 }}>
+                    <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 36, width: "100%", maxWidth: 580, maxHeight: "85vh", display: "flex", flexDirection: "column" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                        <div>
+                          <h3 style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 20, margin: 0 }}>Assign Courses</h3>
+                          <p style={{ color: "#64748b", fontSize: 13, margin: "4px 0 0" }}>{ins.first_name} {ins.last_name}</p>
+                        </div>
+                        <button onClick={() => setAssignModal(null)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#94a3b8", borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}>✕</button>
+                      </div>
+
+                      <p style={{ color: "#475569", fontSize: 12, marginBottom: 20 }}>Check the courses to assign to this instructor. Unchecking removes the assignment.</p>
+
+                      <div style={{ overflowY: "auto", flex: 1, display: "grid", gap: 8, marginBottom: 24 }}>
+                        {courses.length === 0 && <div style={{ color: "#475569", fontSize: 13, textAlign: "center", padding: 24 }}>No courses available.</div>}
+                        {courses.map(c => {
+                          const checked = assignCourseIds.has(c.id);
+                          const otherInstructor = !checked && c.instructorId && c.instructorId !== ins.id
+                            ? instructors.find(i => i.id === c.instructorId)
+                            : null;
+                          return (
+                            <label key={c.id} style={{ display: "flex", alignItems: "center", gap: 14, background: checked ? "rgba(99,102,241,0.08)" : "rgba(255,255,255,0.02)", border: `1px solid ${checked ? "rgba(99,102,241,0.3)" : "rgba(255,255,255,0.07)"}`, borderRadius: 10, padding: "12px 16px", cursor: "pointer" }}>
+                              <input type="checkbox" checked={checked} onChange={() => toggle(c.id)} style={{ width: 16, height: 16, accentColor: "#6366f1", flexShrink: 0 }} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ color: "#f1f5f9", fontWeight: 600, fontSize: 13 }}>{c.title}</div>
+                                <div style={{ display: "flex", gap: 10, marginTop: 3, flexWrap: "wrap" }}>
+                                  <span style={{ color: c.vendorColor, fontSize: 11, fontWeight: 700 }}>{c.vendorName}</span>
+                                  <span style={{ color: "#475569", fontFamily: "monospace", fontSize: 11 }}>{c.code}</span>
+                                  {otherInstructor && <span style={{ color: "#f59e0b", fontSize: 11 }}>Currently: {otherInstructor.first_name} {otherInstructor.last_name}</span>}
+                                </div>
+                              </div>
+                              {checked && <span style={{ color: "#818cf8", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>Assigned</span>}
+                            </label>
+                          );
+                        })}
+                      </div>
+
+                      <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+                        <button onClick={() => setAssignModal(null)} style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+                        <button onClick={saveAssign} disabled={assignSaving} style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", fontWeight: 700, cursor: "pointer", opacity: assignSaving ? 0.7 : 1 }}>
+                          {assignSaving ? "Saving..." : "Save Assignments"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Entra account created modal */}
               {instructorCreated && (
