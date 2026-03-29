@@ -664,34 +664,6 @@ app.delete("/api/enrollments", async (req, res) => {
   res.json({ success: true });
 });
 
-// ─── Email diagnostics endpoint ───────────────────────────────────────────────
-app.post("/api/test-email", async (req, res) => {
-  const { to } = req.body;
-  if (!to) return res.status(400).json({ error: "Missing 'to' email address" });
-
-  const configured = !!process.env.ACS_CONNECTION_STRING;
-  const sender = process.env.ACS_SENDER_EMAIL || "(not set)";
-
-  if (!configured) {
-    return res.json({ ok: false, reason: "ACS_CONNECTION_STRING is not set", sender });
-  }
-
-  try {
-    const poller = await acsClient.beginSend({
-      senderAddress: SENDER,
-      recipients: { to: [{ address: to }] },
-      content: {
-        subject: "TechBridge Email Test",
-        html: tplStudentWelcome({ firstName: "Test", lastName: "User" }),
-      },
-    });
-    const result = await poller.pollUntilDone();
-    res.json({ ok: true, sender, messageId: result?.id });
-  } catch (err) {
-    res.json({ ok: false, sender, error: err.message });
-  }
-});
-
 // In production, serve the React build and handle client-side routing
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../dist")));
