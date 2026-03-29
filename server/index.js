@@ -16,16 +16,19 @@ const acsClient = process.env.ACS_CONNECTION_STRING
 const SENDER = process.env.ACS_SENDER_EMAIL || "noreply@techbridge.academy";
 
 async function sendEmail({ to, subject, html }) {
-  if (!acsClient || !to) return;
+  if (!to) { console.warn("[Email] Skipped — no recipient"); return; }
+  if (!acsClient) { console.warn("[Email] Skipped — ACS_CONNECTION_STRING not configured"); return; }
   try {
+    console.log(`[Email] Sending "${subject}" to ${to}`);
     const poller = await acsClient.beginSend({
       senderAddress: SENDER,
       recipients: { to: [{ address: to }] },
       content: { subject, html },
     });
-    await poller.pollUntilDone();
+    const result = await poller.pollUntilDone();
+    console.log(`[Email] Sent OK — messageId: ${result?.id}`);
   } catch (err) {
-    console.error("[Email] Send error:", err.message);
+    console.error("[Email] Send error:", err.message, err.details ?? "");
   }
 }
 
@@ -659,6 +662,34 @@ app.delete("/api/enrollments", async (req, res) => {
     await pool.query("UPDATE courses SET enrolled = GREATEST(enrolled - 1, 0) WHERE id = $1", [course_id]);
   }
   res.json({ success: true });
+});
+
+// ─── Email diagnostics endpoint ───────────────────────────────────────────────
+app.post("/api/test-email", async (req, res) => {
+  const { to } = req.body;
+  if (!to) return res.status(400).json({ error: "Missing 'to' email address" });
+
+  const configured = !!process.env.ACS_CONNECTION_STRING;
+  const sender = process.env.ACS_SENDER_EMAIL || "(not set)";
+
+  if (!configured) {
+    return res.json({ ok: false, reason: "ACS_CONNECTION_STRING is not set", sender });
+  }
+
+  try {
+    const poller = await acsClient.beginSend({
+      senderAddress: SENDER,
+      recipients: { to: [{ address: to }] },
+      content: {
+        subject: "TechBridge Email Test",
+        html: tplStudentWelcome({ firstName: "Test", lastName: "User" }),
+      },
+    });
+    const result = await poller.pollUntilDone();
+    res.json({ ok: true, sender, messageId: result?.id });
+  } catch (err) {
+    res.json({ ok: false, sender, error: err.message });
+  }
 });
 
 // In production, serve the React build and handle client-side routing
