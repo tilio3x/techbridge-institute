@@ -2979,7 +2979,6 @@ export default function App() {
     { id: "home", label: "Home" },
     { id: "courses", label: "Courses" },
     { id: "schedule", label: "Schedule" },
-    { id: "register", label: "Register" },
     { id: "contact", label: "Contact" },
     { id: "dashboard", label: "My Learning" },
     ...(isInstructor ? [{ id: "educator", label: "My Portal" }] : []),
