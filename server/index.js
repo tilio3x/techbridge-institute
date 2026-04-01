@@ -162,6 +162,41 @@ function tplCourseReminder({ studentName, courseTitle, courseCode, vendorName, s
   `);
 }
 
+function tplContactInquiry({ name, email, phone, subject, message }) {
+  return emailWrapper(`
+    <h1 style="color:#1e293b;font-size:24px;font-weight:900;margin:0 0 8px">New Contact Inquiry 📩</h1>
+    <p style="color:#64748b;font-size:15px;margin:0 0 24px">A visitor has submitted an inquiry through the contact form.</p>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:24px;margin-bottom:24px">
+      <div style="color:#334155;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px">Inquiry Details</div>
+      <table cellpadding="0" cellspacing="0">
+        <tr><td style="color:#64748b;font-size:13px;padding:4px 16px 4px 0;white-space:nowrap;vertical-align:top">Name</td><td style="color:#1e293b;font-size:13px;font-weight:600">${name}</td></tr>
+        <tr><td style="color:#64748b;font-size:13px;padding:4px 16px 4px 0;white-space:nowrap;vertical-align:top">Email</td><td style="color:#1e293b;font-size:13px;font-weight:600"><a href="mailto:${email}" style="color:#0ea5e9">${email}</a></td></tr>
+        ${phone ? `<tr><td style="color:#64748b;font-size:13px;padding:4px 16px 4px 0;white-space:nowrap;vertical-align:top">Phone</td><td style="color:#1e293b;font-size:13px;font-weight:600">${phone}</td></tr>` : ""}
+        <tr><td style="color:#64748b;font-size:13px;padding:4px 16px 4px 0;white-space:nowrap;vertical-align:top">Subject</td><td style="color:#1e293b;font-size:13px;font-weight:600">${subject}</td></tr>
+      </table>
+    </div>
+    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;padding:24px;margin-bottom:24px">
+      <div style="color:#0369a1;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Message</div>
+      <p style="color:#0c4a6e;font-size:14px;line-height:1.7;margin:0;white-space:pre-wrap">${message}</p>
+    </div>
+    <p style="color:#475569;font-size:14px;margin:0">Please respond to this inquiry at your earliest convenience.</p>
+  `);
+}
+
+function tplContactConfirmation({ name, subject }) {
+  return emailWrapper(`
+    <h1 style="color:#1e293b;font-size:24px;font-weight:900;margin:0 0 8px">Thank You, ${name}! 📬</h1>
+    <p style="color:#64748b;font-size:15px;margin:0 0 24px">We've received your inquiry and will get back to you soon.</p>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:24px;margin-bottom:24px">
+      <p style="color:#166534;font-size:14px;margin:0 0 8px"><strong>Subject:</strong> ${subject}</p>
+      <p style="color:#15803d;font-size:14px;line-height:1.7;margin:0">
+        Our team typically responds within 1–2 business days. If your matter is urgent, please call us at <strong>+1 (555) 234-5678</strong> during business hours (Mon–Fri 8am–6pm EST).
+      </p>
+    </div>
+    <p style="color:#475569;font-size:14px;margin:0">— The TechBridge Team</p>
+  `);
+}
+
 // ─── Graph API helper ─────────────────────────────────────────────────────────
 
 async function getGraphToken() {
@@ -662,6 +697,41 @@ app.delete("/api/enrollments", async (req, res) => {
     await pool.query("UPDATE courses SET enrolled = GREATEST(enrolled - 1, 0) WHERE id = $1", [course_id]);
   }
   res.json({ success: true });
+});
+
+// Contact inquiry
+app.post("/api/contact", async (req, res) => {
+  const { name, email, phone, subject, message } = req.body;
+  if (!name || !email || !subject || !message) {
+    return res.status(400).json({ error: "Name, email, subject and message are required." });
+  }
+  const { rows } = await pool.query(
+    `INSERT INTO contact_inquiries (name, email, phone, subject, message)
+     VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+    [name, email, phone || null, subject, message]
+  );
+  // Notify admin — fire-and-forget
+  sendEmail({
+    to: "info@techbridge.edu",
+    subject: `New Contact Inquiry: ${subject}`,
+    html: tplContactInquiry({ name, email, phone, subject, message }),
+  }).catch(() => {});
+  // Confirmation to sender — fire-and-forget
+  sendEmail({
+    to: email,
+    subject: "We received your inquiry — TechBridge Institute",
+    html: tplContactConfirmation({ name, subject }),
+  }).catch(() => {});
+  res.json(rows[0]);
+});
+
+// Active physical delivery locations (public, for contact page map)
+app.get("/api/locations/physical", async (_req, res) => {
+  const { rows } = await pool.query(
+    `SELECT id, name, address_line1, address_line2, city, state_province, country_name, postal_code, room_number, building, floor, capacity, timezone, contact_name, contact_email, contact_phone
+     FROM delivery_locations WHERE is_active = TRUE AND type = 'Physical' ORDER BY name`
+  );
+  res.json(rows);
 });
 
 // In production, serve the React build and handle client-side routing
