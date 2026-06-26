@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - main
-      - release/v1
   pull_request:
     branches:
       - main
-      - release/v1
   workflow_dispatch:
 
 env:
@@ -60,12 +58,12 @@ jobs:
           path: deploy/
           retention-days: 1
 
-  # ── 2. Deploy to staging (main branch) ───────────────────────────────────
+  # ── 2. Deploy to staging (feature branch PRs) ───────────────────────────
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
     needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    if: github.event_name == 'pull_request'
 
     environment:
       name: staging
@@ -113,12 +111,12 @@ jobs:
           package: .
           startup-command: 'node server/index.js'
 
-  # ── 3. Deploy to production (release/v1 branch) ──────────────────────────
+  # ── 3. Deploy to production (push to main) ──────────────────────────────
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
     needs: build
-    if: github.ref == 'refs/heads/release/v1' && github.event_name != 'pull_request'
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
 
     environment:
       name: production
