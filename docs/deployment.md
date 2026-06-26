@@ -59,9 +59,9 @@ flowchart LR
 
 1. Checkout repository
 2. Setup Node.js 24.x with npm cache
-3. `npm ci` (install dependencies)
-4. `npm run build` (Vite build with VITE_* env vars)
-5. Package `dist/` + `server/` + `package.json` + `package-lock.json`
+3. `npm ci` (install dependencies — includes Tailwind CSS v4, React Router DOM)
+4. `npm run build` (Vite + Tailwind build with VITE_* env vars)
+5. Package `dist/` + `server/` (routes/, services/, templates/) + `package.json` + `package-lock.json`
 6. Upload build artifact (1-day retention)
 
 ### Deploy Job (Staging or Production)

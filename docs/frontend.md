@@ -1,32 +1,49 @@
 # Frontend Architecture
 
-Single-page React application built with Vite. All components live in `src/App.jsx` (3165 lines). No routing library — navigation managed via `useState`.
+Modular React SPA built with Vite, React Router, and Tailwind CSS v4. Views are split into individual files under `src/views/`, shared components under `src/components/`, and utilities under `src/utils/`.
+
+## File Structure
+
+```
+src/
+  App.jsx                    # Routing shell — navbar, routes, footer (~220 lines)
+  main.jsx                   # BrowserRouter + MsalProvider + CSS import
+  index.css                  # Tailwind CSS base + custom dark theme (@theme)
+  api/client.js              # Centralized fetch wrapper with namespaced methods
+  auth/msalConfig.js         # Dual MSAL configs (student CIAM + staff corporate)
+  components/                # Shared UI (Tailwind CSS classes)
+  utils/                     # Constants, normalizers
+  views/                     # One file per route (10 views)
+```
 
 ## Component Tree
 
 ```mermaid
 graph TD
-    App["App (main)"]
+    Main["main.jsx<br/>BrowserRouter + MsalProvider"]
+    Main --> App["App.jsx<br/>Routing Shell"]
+
     App --> Nav["Navbar"]
-    App --> SSM["SignInSelector Modal"]
-    App --> Main["Main Views"]
+    App --> SSM["SignInSelector<br/>src/components/"]
+    App --> Router["React Router<br/>Routes"]
     App --> Footer
 
-    Main --> Home["HomeView"]
-    Main --> Courses["CoursesView"]
-    Main --> Schedule["ScheduleView"]
-    Main --> Contact["ContactView"]
-    Main --> Register["RegisterView"]
-    Main --> Dashboard["DashboardView"]
-    Main --> Educator["EducatorPortalView"]
-    Main --> Admin["AdminView"]
-    Main --> Profile["ProfileSetupView"]
-    Main --> ProfileEdit["ProfileEditView"]
+    Router --> Home["HomeView<br/>src/views/"]
+    Router --> Courses["CoursesView"]
+    Router --> Schedule["ScheduleView"]
+    Router --> Contact["ContactView"]
+    Router --> Register["RegisterView"]
+    Router --> Dashboard["DashboardView"]
+    Router --> Educator["EducatorPortalView"]
+    Router --> Admin["AdminView"]
+    Router --> Profile["ProfileSetupView"]
+    Router --> ProfileEdit["ProfileEditView"]
 
-    Home --> CourseCard
-    Home --> Badge
+    Home --> CourseCard["CourseCard<br/>src/components/"]
     Courses --> CourseCard
-    Courses --> Chip
+    CourseCard --> Badge["Badge"]
+    CourseCard --> Chip["Chip"]
+    Schedule --> Chip
 
     Admin --> AdminOverview["Overview Tab"]
     Admin --> AdminStudents["Students Tab"]
@@ -42,47 +59,51 @@ graph TD
     Educator --> EduProfile["My Profile Tab"]
 ```
 
+## Routing
+
+React Router DOM provides URL-based navigation. Routes are defined in `App.jsx`:
+
+| Path | View | Auth | Role | Purpose |
+|------|------|------|------|---------|
+| `/` | HomeView | No | — | Hero, vendor showcase, stats, integrations |
+| `/courses` | CoursesView | No | — | Filterable course catalog |
+| `/schedule` | ScheduleView | No | — | Class schedule table |
+| `/contact` | ContactView | No | — | Contact form + Google Maps |
+| `/register` | RegisterView | Yes | Student | 3-step enrollment wizard |
+| `/dashboard` | DashboardView | Yes | Student | Progress, certificates, quick links |
+| `/educator` | EducatorPortalView | Yes | Instructor | Instructor's courses, students, schedule, profile |
+| `/admin` | AdminView | Yes | Admin | Full CRUD admin console |
+| `/profile` | ProfileEditView | Yes | Student | Edit existing profile |
+| `*` | HomeView | No | — | Catch-all fallback |
+
+Protected routes show `AuthWall` if the user isn't authenticated or lacks the required role.
+
 ## Navigation Flow
 
 ```mermaid
 stateDiagram-v2
-    [*] --> home
-    home --> courses: Browse Courses
-    home --> register: Register Today
-    courses --> register: Enroll Now
-    home --> schedule
-    home --> contact
-    home --> dashboard: My Learning
+    [*] --> /
+    / --> /courses: Browse Courses
+    / --> /register: Register Today
+    /courses --> /register: Enroll Now
+    / --> /schedule
+    / --> /contact
+    / --> /dashboard: My Learning
 
-    register --> dashboard: After enrollment
+    /register --> /dashboard: After enrollment
 
     state auth_check <<choice>>
-    dashboard --> auth_check
+    /dashboard --> auth_check
     auth_check --> ProfileSetup: No profile
     auth_check --> DashboardView: Has profile
-    ProfileSetup --> home: Profile saved
+    ProfileSetup --> /: Profile saved
 
-    home --> signin: Sign In
+    / --> signin: Sign In
     signin --> student_auth: Student
     signin --> staff_auth: Staff
-    staff_auth --> admin: Role = Admin
-    staff_auth --> educator: Role = Instructor
+    staff_auth --> /admin: Role = Admin
+    staff_auth --> /educator: Role = Instructor
 ```
-
-## Views
-
-| View | Nav Label | Auth Required | Role | Purpose |
-|------|-----------|---------------|------|---------|
-| HomeView | Home | No | — | Hero, vendor showcase, stats, integrations |
-| CoursesView | Courses | No | — | Filterable course catalog |
-| ScheduleView | Schedule | No | — | Class schedule table |
-| ContactView | Contact | No | — | Contact form + Google Maps |
-| RegisterView | Register | Yes | Student | 3-step enrollment wizard |
-| DashboardView | My Learning | Yes | Student | Progress, certificates, quick links |
-| EducatorPortalView | My Portal | Yes | Instructor | Instructor's courses, students, schedule, profile |
-| AdminView | Admin | Yes | Admin | Full CRUD admin console |
-| ProfileSetupView | — | Yes | Student | First-time profile creation (gate) |
-| ProfileEditView | — | Yes | Student | Edit existing profile |
 
 ## Authentication Flow
 
@@ -115,20 +136,19 @@ sequenceDiagram
     Staff-->>MSAL: ID token with roles claim
     MSAL-->>App: staffAccount + roles
     alt roles includes "Admin"
-        App->>U: Redirect to AdminView
+        App->>U: navigate("/admin")
     else roles includes "Instructor"
-        App->>U: Redirect to EducatorPortalView
+        App->>U: navigate("/educator")
     end
 ```
 
 ## State Management
 
-All state lives in the main `App` component via `useState`:
+All state lives in `App.jsx` via `useState` and is passed as props to views:
 
 | State | Type | Source | Used by |
 |-------|------|--------|---------|
-| view | string | User navigation | All (conditional rendering) |
-| vendors | array | GET /api/vendors | CoursesView, AdminView |
+| vendors | array | GET /api/vendors | HomeView, CoursesView, AdminView, Footer |
 | courses | array | GET /api/courses | Most views |
 | schedule | array | GET /api/schedule | ScheduleView, AdminView, EducatorPortal |
 | students | array | GET /api/students | AdminView |
@@ -140,10 +160,41 @@ All state lives in the main `App` component via `useState`:
 | profile | object | GET /api/profile/:oid | DashboardView, ProfileEditView |
 | loading | boolean | — | Loading screen |
 
+## Shared Components
+
+Located in `src/components/`, styled with Tailwind CSS:
+
+| Component | File | Props | Purpose |
+|-----------|------|-------|---------|
+| AuthWall | AuthWall.jsx | onLogin, message | Auth gate with sign-in button |
+| Badge | Badge.jsx | text | Course badge (Hot/New/Core) with color mapping |
+| Chip | Chip.jsx | text, color | Colored tag with dynamic background |
+| CourseCard | CourseCard.jsx | course, onEnroll, isEnrolled | Course catalog card |
+| SignInSelector | SignInSelector.jsx | onStudentLogin, onStaffLogin, onClose | 3-card sign-in modal |
+
+## API Client
+
+`src/api/client.js` provides a centralized fetch wrapper:
+
+```js
+import { api } from "../api/client";
+
+// Namespaced methods
+api.vendors.list()
+api.courses.create(data)
+api.courses.update(id, data)
+api.courses.remove(id)
+api.profiles.get(oid)
+api.profiles.save(data)
+api.contact.submit(data)
+```
+
 ## Design System
 
 - **Theme:** Dark (`#0a0f1e` background, `#f1f5f9` text)
-- **Primary gradient:** `linear-gradient(135deg, #0ea5e9, #6366f1)` (cyan → indigo)
+- **Primary gradient:** `linear-gradient(135deg, #0ea5e9, #6366f1)` (sky → indigo)
 - **Success:** `#22c55e` | **Warning:** `#ef4444` | **Info:** `#0ea5e9`
 - **Font:** Segoe UI, system-ui, sans-serif
-- **Styling:** Inline JSX styles (no CSS files or framework)
+- **Styling:** Tailwind CSS v4 (shared components) + inline styles (views, incremental migration)
+- **Tailwind config:** Via `@theme` directive in `src/index.css` (no `tailwind.config.js`)
+- **Custom colors:** `dark-bg`, `dark-card`, `dark-surface`, `dark-border`

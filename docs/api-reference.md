@@ -4,6 +4,8 @@ Base URL: `https://techbridge-dcadfwggdsckfebs.spaincentral-01.azurewebsites.net
 
 All endpoints accept and return JSON. No authentication middleware is enforced at the API level — access control is handled in the frontend.
 
+Backend routes are modular — each resource has its own file in `server/routes/`. Services (`server/services/`) handle email and Entra ID integration. Email templates live in `server/templates/`.
+
 ## Endpoint Map
 
 ```mermaid
@@ -35,7 +37,7 @@ graph LR
     end
 ```
 
-## Vendors
+## Vendors — `server/routes/vendors.js`
 
 ### `GET /api/vendors`
 Returns all certification vendors.
@@ -44,7 +46,7 @@ Returns all certification vendors.
 
 ---
 
-## Courses
+## Courses — `server/routes/courses.js`
 
 ### `GET /api/courses`
 Returns all courses with vendor, instructor, and location details joined.
@@ -76,7 +78,7 @@ Delete a course. Cascades to schedule and enrollments.
 
 ---
 
-## Instructors
+## Instructors — `server/routes/instructors.js`
 
 ### `GET /api/instructors`
 Returns all instructors ordered by name.
@@ -96,7 +98,7 @@ Soft delete — sets status to "Inactive".
 
 ---
 
-## Delivery Locations
+## Delivery Locations — `server/routes/locations.js`
 
 ### `GET /api/delivery-locations`
 Returns all active delivery locations.
@@ -117,7 +119,7 @@ Soft delete — sets is_active to FALSE.
 
 ---
 
-## Schedule
+## Schedule — `server/routes/schedule.js`
 
 ### `GET /api/schedule`
 Returns schedule entries with course code and title joined.
@@ -130,7 +132,7 @@ Returns schedule entries with course code and title joined.
 
 ---
 
-## Students & Enrollments
+## Students & Enrollments — `server/routes/students.js` + `server/routes/enrollments.js`
 
 ### `GET /api/students`
 Returns students with enrollment count.
@@ -153,7 +155,7 @@ Unenroll a student. Decrements course enrolled count.
 
 ---
 
-## Student Profiles
+## Student Profiles — `server/routes/profiles.js`
 
 ### `GET /api/profiles`
 Admin — list all student profiles.
@@ -173,7 +175,7 @@ Delete profile and associated Entra user.
 
 ---
 
-## Contact
+## Contact — `server/routes/contact.js`
 
 ### `POST /api/contact`
 Submit a contact inquiry. Stores in DB, sends admin notification and sender confirmation emails.
@@ -184,7 +186,7 @@ Submit a contact inquiry. Stores in DB, sends admin notification and sender conf
 
 ---
 
-## Email Notifications
+## Email Notifications — `server/services/email.js` + `server/templates/index.js`
 
 ```mermaid
 graph TD
