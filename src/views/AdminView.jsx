@@ -68,14 +68,30 @@ export default function AdminView({ courses, vendors, schedule, students, profil
 
   const saveCourse = async () => {
     setCourseSaving(true);
-    const isEdit = courseModal.mode === "edit";
-    const url = isEdit ? `/api/courses/${courseModal.id}` : "/api/courses";
-    const method = isEdit ? "PUT" : "POST";
-    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...courseForm, price: Number(courseForm.price), seats: Number(courseForm.seats) }) });
-    const saved = await res.json();
-    isEdit ? onCourseUpdate(saved) : onCourseAdd(saved);
-    setCourseModal(null);
-    setCourseSaving(false);
+    try {
+      const isEdit = courseModal.mode === "edit";
+      const url = isEdit ? `/api/courses/${courseModal.id}` : "/api/courses";
+      const method = isEdit ? "PUT" : "POST";
+      const body = {
+        ...courseForm,
+        price: Number(courseForm.price),
+        seats: Number(courseForm.seats),
+        instructor_id: courseForm.instructor_id || null,
+        delivery_location_id: courseForm.delivery_location_id || null,
+      };
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Server error ${res.status}`);
+      }
+      const saved = await res.json();
+      isEdit ? onCourseUpdate(saved) : onCourseAdd(saved);
+      setCourseModal(null);
+    } catch (err) {
+      alert(err.message || "Failed to save course");
+    } finally {
+      setCourseSaving(false);
+    }
   };
 
   const deleteCourse = async (course) => {
