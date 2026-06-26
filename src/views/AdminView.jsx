@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Country, City } from "country-state-city";
 import Chip from "../components/Chip";
-import { EMPTY_COURSE, EMPTY_INSTRUCTOR, EMPTY_LOCATION, TIMEZONES, levelColor } from "../utils/constants";
+import { EMPTY_COURSE, EMPTY_INSTRUCTOR, EMPTY_LOCATION, TIMEZONES, DURATION_UNITS, levelColor } from "../utils/constants";
 import { normalizeSchedule } from "../utils/normalizers";
 
 const EMPTY_SCHEDULE = { course_id: "", day: "", time_start: "", time_end: "", instructor: "", room: "", type: "Online" };
@@ -55,10 +55,19 @@ export default function AdminView({ courses, vendors, schedule, students, profil
   const courseById = (id) => courses.find(c => c.id === id);
 
   const openNew = () => { setCourseForm(EMPTY_COURSE); setCourseModal({ mode: "new" }); };
+  const parseDuration = (str) => {
+    if (!str) return { duration_value: "", duration_unit: "Week" };
+    const match = str.match(/^(\d+)\s*(\w+)/);
+    if (!match) return { duration_value: "", duration_unit: "Week" };
+    const unit = DURATION_UNITS.find(u => match[2].toLowerCase().startsWith(u.toLowerCase())) || "Week";
+    return { duration_value: match[1], duration_unit: unit };
+  };
+
   const openEdit = (c) => {
+    const { duration_value, duration_unit } = parseDuration(c.duration);
     setCourseForm({
       vendor_id: c.vendor, code: c.code, title: c.title, level: c.level,
-      duration: c.duration, price: c.price, seats: c.seats, delivery: c.delivery,
+      duration_value, duration_unit, price: c.price, seats: c.seats, delivery: c.delivery,
       next_start: c.nextStart ? c.nextStart.split("T")[0] : "", description: c.description, badge: c.badge || "",
       instructor_id: c.instructorId || "",
       delivery_location_id: c.locationId || "",
@@ -72,8 +81,13 @@ export default function AdminView({ courses, vendors, schedule, students, profil
       const isEdit = courseModal.mode === "edit";
       const url = isEdit ? `/api/courses/${courseModal.id}` : "/api/courses";
       const method = isEdit ? "PUT" : "POST";
+      const dv = Number(courseForm.duration_value);
+      const du = courseForm.duration_unit;
+      const duration = dv ? `${dv} ${du.toLowerCase()}${dv !== 1 ? "s" : ""}` : "";
+      const { duration_value, duration_unit, ...rest } = courseForm;
       const body = {
-        ...courseForm,
+        ...rest,
+        duration,
         price: Number(courseForm.price),
         seats: Number(courseForm.seats),
         instructor_id: courseForm.instructor_id || null,
@@ -496,7 +510,14 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                           {["Online", "Hybrid", "In-Person"].map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
                       </div>
-                      <div><label style={lbl}>Duration</label><input value={courseForm.duration} onChange={set("duration")} style={inp} placeholder="e.g. 8 weeks" /></div>
+                      <div><label style={lbl}>Duration</label>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <input type="number" min="1" value={courseForm.duration_value} onChange={set("duration_value")} style={{ ...inp, flex: 1 }} placeholder="0" />
+                          <select value={courseForm.duration_unit} onChange={set("duration_unit")} style={{ ...inp, flex: 1 }}>
+                            {DURATION_UNITS.map(u => <option key={u} value={u}>{u}{courseForm.duration_value !== "1" ? "s" : ""}</option>)}
+                          </select>
+                        </div>
+                      </div>
                       <div><label style={lbl}>Start Date</label><input type="date" value={courseForm.next_start} onChange={set("next_start")} style={inp} /></div>
                       <div><label style={lbl}>Price (USD)</label><input type="number" value={courseForm.price} onChange={set("price")} style={inp} placeholder="0" /></div>
                       <div><label style={lbl}>Seats</label><input type="number" value={courseForm.seats} onChange={set("seats")} style={inp} placeholder="0" /></div>

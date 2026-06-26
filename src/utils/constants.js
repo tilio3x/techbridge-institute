@@ -31,8 +31,11 @@ export const TIMEZONES = (() => {
     });
 })();
 
+export const DURATION_UNITS = ["Hour", "Day", "Week", "Month", "Year"];
+
 export const EMPTY_COURSE = {
-  vendor_id: "", code: "", title: "", level: "Beginner", duration: "",
+  vendor_id: "", code: "", title: "", level: "Beginner",
+  duration_value: "", duration_unit: "Week",
   price: "", seats: "", delivery: "Hybrid", next_start: "", description: "",
   badge: "", instructor_id: "", delivery_location_id: "",
 };
