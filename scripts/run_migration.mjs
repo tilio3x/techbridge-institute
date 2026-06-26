@@ -16,11 +16,17 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
-const sql = readFileSync(new URL("./add_student_profiles.sql", import.meta.url), "utf8");
+const file = process.argv[2];
+if (!file) {
+  console.error("Usage: node scripts/run_migration.mjs <sql-file>");
+  process.exit(1);
+}
+
+const sql = readFileSync(new URL(file, import.meta.url), "utf8");
 
 try {
   await pool.query(sql);
-  console.log("✓ Migration successful: student_profiles table created.");
+  console.log(`✓ Migration successful: ${file}`);
 } catch (e) {
   if (e.code === "42P07") {
     console.log("✓ Table already exists — nothing to do.");
