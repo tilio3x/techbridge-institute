@@ -356,15 +356,15 @@ export default function AdminView({ courses, vendors, schedule, students, profil
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
       {/* Sidebar */}
-      <div style={{ width: 220, background: "rgba(0,0,0,0.3)", borderRight: "1px solid rgba(255,255,255,0.07)", padding: "24px 0", flexShrink: 0 }}>
-        <div style={{ padding: "0 20px 20px", borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: 12 }}>
+      <div style={{ width: 220, background: "#0f172a", borderRight: "1px solid rgba(255,255,255,0.08)", padding: "24px 0", flexShrink: 0 }}>
+        <div style={{ padding: "0 20px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)", marginBottom: 12 }}>
           <div style={{ color: "#ef4444", fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>Admin Console</div>
         </div>
         {adminTabs.map(t => (
           <button key={t} onClick={() => setTab(t)} style={{
             width: "100%", textAlign: "left", padding: "12px 20px",
-            background: tab === t ? "rgba(14,165,233,0.1)" : "transparent",
-            color: tab === t ? "#0ea5e9" : "#64748b",
+            background: tab === t ? "rgba(14,165,233,0.12)" : "transparent",
+            color: tab === t ? "#38bdf8" : "#94a3b8",
             border: "none", borderLeft: tab === t ? "3px solid #0ea5e9" : "3px solid transparent",
             fontSize: 13, fontWeight: 600, cursor: "pointer", textTransform: "capitalize",
           }}>{t}</button>
