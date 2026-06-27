@@ -54,6 +54,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
   const [assignSaving, setAssignSaving] = useState(false);
   const [courseSort, setCourseSort] = useState({ key: null, dir: "asc" });
   const [courseGroup, setCourseGroup] = useState("none");
+  const [courseSearch, setCourseSearch] = useState("");
   const courseById = (id) => courses.find(c => c.id === id);
 
   const courseSortColumns = [
@@ -70,8 +71,23 @@ export default function AdminView({ courses, vendors, schedule, students, profil
     setCourseSort(prev => prev.key === key ? { key, dir: prev.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" });
   };
 
+  const filteredCourses = (() => {
+    if (!courseSearch.trim()) return courses;
+    const q = courseSearch.toLowerCase();
+    return courses.filter(c =>
+      c.title.toLowerCase().includes(q) ||
+      c.code.toLowerCase().includes(q) ||
+      (c.vendorName || "").toLowerCase().includes(q) ||
+      (c.instructorName || "").toLowerCase().includes(q) ||
+      c.level.toLowerCase().includes(q) ||
+      c.delivery.toLowerCase().includes(q) ||
+      (c.tags || []).some(t => t.toLowerCase().includes(q)) ||
+      (c.description || "").toLowerCase().includes(q)
+    );
+  })();
+
   const sortedCourses = (() => {
-    const list = [...courses];
+    const list = [...filteredCourses];
     if (courseSort.key) {
       const dir = courseSort.dir === "asc" ? 1 : -1;
       list.sort((a, b) => {
@@ -465,6 +481,11 @@ export default function AdminView({ courses, vendors, schedule, students, profil
               <h2 style={{ fontSize: 28, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", margin: 0 }}>Course Management</h2>
               <button onClick={openNew} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ New Course</button>
             </div>
+            <div style={{ position: "relative", marginBottom: 12 }}>
+              <input value={courseSearch} onChange={e => setCourseSearch(e.target.value)} placeholder="Search courses by title, code, vendor, instructor, tag..." style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "10px 14px 10px 36px", color: "#f1f5f9", fontSize: 13, boxSizing: "border-box", outline: "none" }} />
+              <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#64748b", fontSize: 14, pointerEvents: "none" }}>&#x1F50D;</span>
+              {courseSearch && <button onClick={() => setCourseSearch("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer", fontSize: 14 }}>✕</button>}
+            </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
               <span style={{ color: "#64748b", fontSize: 12, fontWeight: 600 }}>Group by:</span>
               {["none", "vendor", "instructor"].map(g => (
@@ -478,6 +499,9 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                   style={{ marginLeft: "auto", padding: "5px 12px", borderRadius: 16, fontSize: 11, fontWeight: 600, cursor: "pointer", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.03)", color: "#94a3b8" }}>
                   Clear sort
                 </button>
+              )}
+              {courseSearch && (
+                <span style={{ color: "#64748b", fontSize: 12, marginLeft: courseSort.key ? 12 : "auto" }}>{filteredCourses.length} of {courses.length} courses</span>
               )}
             </div>
             <div style={{ overflowX: "auto" }}>
