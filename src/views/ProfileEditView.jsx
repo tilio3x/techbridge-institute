@@ -21,8 +21,8 @@ export default function ProfileEditView({ user, profile, onSaved }) {
   const cities = form.country_code ? City.getCitiesOfCountry(form.country_code) : [];
 
   const inputStyle = {
-    background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
-    borderRadius: 10, padding: "12px 16px", color: "#f1f5f9", fontSize: 15,
+    background: "#f1f5f9", border: "1px solid #e2e8f0",
+    borderRadius: 10, padding: "12px 16px", color: "#1e293b", fontSize: 15,
     width: "100%", outline: "none", boxSizing: "border-box",
   };
   const labelStyle = { color: "#94a3b8", fontSize: 13, fontWeight: 600, marginBottom: 6, display: "block" };
@@ -71,10 +71,10 @@ export default function ProfileEditView({ user, profile, onSaved }) {
 
   return (
     <div style={{ padding: "40px 24px", maxWidth: 700, margin: "0 auto" }}>
-      <h2 style={{ fontSize: 32, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", marginBottom: 8 }}>My Profile</h2>
+      <h2 style={{ fontSize: 32, fontWeight: 900, color: "#1e293b", fontFamily: "Georgia, serif", marginBottom: 8 }}>My Profile</h2>
       <p style={{ color: "#64748b", marginBottom: 36 }}>Update your contact details and learning goals.</p>
 
-      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 32 }}>
+      <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 16, padding: 32 }}>
         <h3 style={{ color: "#94a3b8", fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 20 }}>Personal Information</h3>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
           <div>

@@ -72,7 +72,7 @@ export default function EducatorPortalView({ staffAccount, instructors, courses,
   };
 
   const cell = (content, opts = {}) => (
-    <td style={{ padding: "12px 16px", color: "#cbd5e1", fontSize: 13, borderBottom: "1px solid rgba(255,255,255,0.04)", ...opts }}>{content}</td>
+    <td style={{ padding: "12px 16px", color: "#475569", fontSize: 13, borderBottom: "1px solid #f1f5f9", ...opts }}>{content}</td>
   );
 
   return (
@@ -83,7 +83,7 @@ export default function EducatorPortalView({ staffAccount, instructors, courses,
         <div style={{ flex: 1 }}>
           {instructor ? (
             <>
-              <div style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 22 }}>{instructor.first_name} {instructor.last_name}</div>
+              <div style={{ color: "#1e293b", fontWeight: 800, fontSize: 22 }}>{instructor.first_name} {instructor.last_name}</div>
               <div style={{ color: "#94a3b8", fontSize: 14, marginTop: 4 }}>{instructor.title || "Instructor"}</div>
               <div style={{ display: "flex", gap: 16, marginTop: 8, flexWrap: "wrap" }}>
                 <span style={{ color: "#6366f1", fontSize: 12 }}>📚 {myCourses.length} course{myCourses.length !== 1 ? "s" : ""}</span>
@@ -93,7 +93,7 @@ export default function EducatorPortalView({ staffAccount, instructors, courses,
             </>
           ) : (
             <>
-              <div style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 20 }}>{staffAccount?.name ?? "Educator"}</div>
+              <div style={{ color: "#1e293b", fontWeight: 800, fontSize: 20 }}>{staffAccount?.name ?? "Educator"}</div>
               <div style={{ color: "#f59e0b", fontSize: 13, marginTop: 6 }}>
                 Your instructor record has not been linked yet. Contact an administrator to link your account.
               </div>
@@ -111,7 +111,7 @@ export default function EducatorPortalView({ staffAccount, instructors, courses,
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 4, marginBottom: 24, borderBottom: "1px solid rgba(255,255,255,0.07)", paddingBottom: 0 }}>
+      <div style={{ display: "flex", gap: 4, marginBottom: 24, borderBottom: "1px solid #e2e8f0", paddingBottom: 0 }}>
         {portalTabs.map(t => (
           <button key={t} onClick={() => setTab(t)} style={{
             background: "none", border: "none", cursor: "pointer",
@@ -137,14 +137,14 @@ export default function EducatorPortalView({ staffAccount, instructors, courses,
             {myCourses.map(c => {
               const enrolled = myEnrollments.filter(e => e.course_id === c.id).length;
               return (
-                <div key={c.id} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 20, position: "relative", overflow: "hidden" }}>
+                <div key={c.id} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 16, padding: 20, position: "relative", overflow: "hidden" }}>
                   <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: c.vendorColor }} />
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                     <span style={{ color: c.vendorColor, fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>{c.vendorName}</span>
                     <Chip text={c.level} color={levelColor[c.level]} />
                   </div>
                   <div style={{ fontFamily: "monospace", fontSize: 11, color: "#64748b", marginBottom: 2 }}>{c.code}</div>
-                  <div style={{ color: "#f1f5f9", fontWeight: 700, fontSize: 15, marginBottom: 8 }}>{c.title}</div>
+                  <div style={{ color: "#1e293b", fontWeight: 700, fontSize: 15, marginBottom: 8 }}>{c.title}</div>
                   <div style={{ display: "flex", gap: 12, fontSize: 12, color: "#94a3b8" }}>
                     <span>📅 {c.nextStart ? new Date(c.nextStart).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "TBD"}</span>
                     <span>👥 {enrolled} / {c.seats}</span>
@@ -164,10 +164,10 @@ export default function EducatorPortalView({ staffAccount, instructors, courses,
         myEnrollments.length === 0 ? (
           <div style={{ textAlign: "center", padding: 60, color: "#475569" }}>No students enrolled in your courses yet.</div>
         ) : (
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, overflow: "hidden" }}>
+          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 16, overflow: "hidden" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ background: "rgba(255,255,255,0.04)" }}>
+                <tr style={{ background: "#f1f5f9" }}>
                   {["Student", "Email", "Course", "Progress"].map(h => (
                     <th key={h} style={{ padding: "12px 16px", textAlign: "left", color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>{h}</th>
                   ))}
@@ -193,10 +193,10 @@ export default function EducatorPortalView({ staffAccount, instructors, courses,
         mySchedule.length === 0 ? (
           <div style={{ textAlign: "center", padding: 60, color: "#475569" }}>No schedule entries for your courses yet.</div>
         ) : (
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, overflow: "hidden" }}>
+          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 16, overflow: "hidden" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ background: "rgba(255,255,255,0.04)" }}>
+                <tr style={{ background: "#f1f5f9" }}>
                   {["Course", "Day", "Time", "Room", "Type"].map(h => (
                     <th key={h} style={{ padding: "12px 16px", textAlign: "left", color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>{h}</th>
                   ))}
@@ -228,7 +228,7 @@ export default function EducatorPortalView({ staffAccount, instructors, courses,
         ) : (
           <div style={{ maxWidth: 700 }}>
             {(() => {
-              const inp = { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 14px", color: "#f1f5f9", fontSize: 14, width: "100%", outline: "none", boxSizing: "border-box" };
+              const inp = { background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 10, padding: "11px 14px", color: "#1e293b", fontSize: 14, width: "100%", outline: "none", boxSizing: "border-box" };
               const lbl = { color: "#94a3b8", fontSize: 12, fontWeight: 600, marginBottom: 6, display: "block" };
               const set = k => e => setProfileForm(f => ({ ...f, [k]: e.target.value }));
               const toggleDay = day => setProfileForm(f => ({
@@ -246,7 +246,7 @@ export default function EducatorPortalView({ staffAccount, instructors, courses,
                     <div style={{ gridColumn: "span 2" }}><label style={lbl}>Bio</label><textarea value={profileForm.bio} onChange={set("bio")} style={{ ...inp, height: 100, resize: "vertical" }} placeholder="Short public-facing biography" /></div>
                   </div>
 
-                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 20 }}>
+                  <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: 20 }}>
                     <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Expertise</div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                       <div><label style={lbl}>Specializations <span style={{ color: "#475569", fontWeight: 400 }}>(comma-separated)</span></label><input value={profileForm.specializations} onChange={set("specializations")} style={inp} placeholder="e.g. Networking, Cloud, Security" /></div>
@@ -254,11 +254,11 @@ export default function EducatorPortalView({ staffAccount, instructors, courses,
                     </div>
                   </div>
 
-                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 20 }}>
+                  <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: 20 }}>
                     <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Availability</div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
                       {DAYS.map(day => (
-                        <button key={day} type="button" onClick={() => toggleDay(day)} style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "1px solid", borderColor: profileForm.available_days.includes(day) ? "#6366f1" : "rgba(255,255,255,0.1)", background: profileForm.available_days.includes(day) ? "rgba(99,102,241,0.15)" : "rgba(255,255,255,0.03)", color: profileForm.available_days.includes(day) ? "#818cf8" : "#64748b" }}>
+                        <button key={day} type="button" onClick={() => toggleDay(day)} style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "1px solid", borderColor: profileForm.available_days.includes(day) ? "#6366f1" : "#e2e8f0", background: profileForm.available_days.includes(day) ? "rgba(99,102,241,0.15)" : "#f8fafc", color: profileForm.available_days.includes(day) ? "#818cf8" : "#64748b" }}>
                           {day.slice(0, 3)}
                         </button>
                       ))}

@@ -24,9 +24,9 @@ export default function RegisterView({ enrolledCourses, onEnroll, courses }) {
   if (submitted) return (
     <div style={{ padding: "80px 24px", textAlign: "center", maxWidth: 600, margin: "0 auto" }}>
       <div style={{ fontSize: 80, marginBottom: 24 }}>🎉</div>
-      <h2 style={{ fontSize: 36, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", marginBottom: 16 }}>Registration Complete!</h2>
+      <h2 style={{ fontSize: 36, fontWeight: 900, color: "#1e293b", fontFamily: "Georgia, serif", marginBottom: 16 }}>Registration Complete!</h2>
       <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.7, marginBottom: 32 }}>
-        Welcome, <strong style={{ color: "#f1f5f9" }}>{form.firstName}</strong>! Your application has been submitted.
+        Welcome, <strong style={{ color: "#1e293b" }}>{form.firstName}</strong>! Your application has been submitted.
         You'll receive a confirmation email shortly with your <strong style={{ color: "#0ea5e9" }}>Microsoft 365 account credentials</strong> ({form.firstName.toLowerCase()}.{form.lastName.toLowerCase()}@trainee.edu).
       </p>
       <div style={{ background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 16, padding: 24, textAlign: "left" }}>
@@ -41,11 +41,11 @@ export default function RegisterView({ enrolledCourses, onEnroll, courses }) {
   );
 
   const inputStyle = {
-    background: "rgba(255,255,255,0.04)",
-    border: "1px solid rgba(255,255,255,0.1)",
+    background: "#f1f5f9",
+    border: "1px solid #e2e8f0",
     borderRadius: 10,
     padding: "12px 16px",
-    color: "#f1f5f9",
+    color: "#1e293b",
     fontSize: 15,
     width: "100%",
     outline: "none",
@@ -56,7 +56,7 @@ export default function RegisterView({ enrolledCourses, onEnroll, courses }) {
 
   return (
     <div style={{ padding: "40px 24px", maxWidth: 800, margin: "0 auto" }}>
-      <h2 style={{ fontSize: 36, fontWeight: 900, color: "#f1f5f9", marginBottom: 8, fontFamily: "Georgia, serif" }}>Student Registration</h2>
+      <h2 style={{ fontSize: 36, fontWeight: 900, color: "#1e293b", marginBottom: 8, fontFamily: "Georgia, serif" }}>Student Registration</h2>
       <p style={{ color: "#64748b", marginBottom: 36 }}>Complete all steps to enroll. A Microsoft 365 account will be created for you.</p>
 
       {/* Step indicator */}
@@ -66,7 +66,7 @@ export default function RegisterView({ enrolledCourses, onEnroll, courses }) {
             <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
               <div style={{
                 width: 32, height: 32, borderRadius: "50%",
-                background: step > i + 1 ? "#22c55e" : step === i + 1 ? "#0ea5e9" : "rgba(255,255,255,0.1)",
+                background: step > i + 1 ? "#22c55e" : step === i + 1 ? "#0ea5e9" : "#e2e8f0",
                 color: step >= i + 1 ? "#fff" : "#64748b",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontWeight: 700, fontSize: 13, flexShrink: 0,
@@ -75,7 +75,7 @@ export default function RegisterView({ enrolledCourses, onEnroll, courses }) {
               </div>
               <span style={{ fontSize: 13, fontWeight: 600, color: step === i + 1 ? "#f1f5f9" : "#64748b" }}>{s}</span>
             </div>
-            {i < 2 && <div style={{ flex: 1, height: 1, background: step > i + 1 ? "#22c55e" : "rgba(255,255,255,0.1)", margin: "0 12px" }} />}
+            {i < 2 && <div style={{ flex: 1, height: 1, background: step > i + 1 ? "#22c55e" : "#e2e8f0", margin: "0 12px" }} />}
           </div>
         ))}
       </div>
@@ -117,9 +117,9 @@ export default function RegisterView({ enrolledCourses, onEnroll, courses }) {
               const sel = form.selectedCourses.includes(course.id);
               return (
                 <div key={course.id} onClick={() => toggle(course.id)} style={{
-                  border: sel ? "2px solid #0ea5e9" : "1px solid rgba(255,255,255,0.08)",
+                  border: sel ? "2px solid #0ea5e9" : "1px solid #e2e8f0",
                   borderRadius: 12, padding: 16, cursor: "pointer",
-                  background: sel ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.02)",
+                  background: sel ? "rgba(14,165,233,0.08)" : "#f8fafc",
                   display: "flex", alignItems: "flex-start", gap: 12,
                 }}>
                   <div style={{ width: 22, height: 22, borderRadius: 6, border: sel ? "none" : "2px solid #475569", background: sel ? "#0ea5e9" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
@@ -127,7 +127,7 @@ export default function RegisterView({ enrolledCourses, onEnroll, courses }) {
                   </div>
                   <div>
                     <div style={{ fontSize: 11, color: course.vendorColor, fontWeight: 700, marginBottom: 2 }}>{course.vendorName} · {course.code}</div>
-                    <div style={{ color: "#f1f5f9", fontWeight: 600, fontSize: 14 }}>{course.title}</div>
+                    <div style={{ color: "#1e293b", fontWeight: 600, fontSize: 14 }}>{course.title}</div>
                     <div style={{ color: "#64748b", fontSize: 12, marginTop: 4 }}>{course.duration} · {course.delivery} · ${course.price.toLocaleString()}</div>
                   </div>
                 </div>
@@ -135,7 +135,7 @@ export default function RegisterView({ enrolledCourses, onEnroll, courses }) {
             })}
           </div>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <button onClick={() => setStep(1)} style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "14px 24px", fontWeight: 700, cursor: "pointer" }}>← Back</button>
+            <button onClick={() => setStep(1)} style={{ background: "rgba(0,0,0,0.03)", color: "#94a3b8", border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px 24px", fontWeight: 700, cursor: "pointer" }}>← Back</button>
             <button onClick={() => setStep(3)} disabled={form.selectedCourses.length === 0} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 12, padding: "14px 32px", fontWeight: 700, fontSize: 15, cursor: "pointer", opacity: form.selectedCourses.length === 0 ? 0.5 : 1 }}>
               Review ({form.selectedCourses.length} selected) →
             </button>
@@ -146,30 +146,30 @@ export default function RegisterView({ enrolledCourses, onEnroll, courses }) {
       {/* Step 3 */}
       {step === 3 && (
         <div>
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: 28, marginBottom: 24 }}>
-            <h3 style={{ color: "#f1f5f9", fontWeight: 700, marginBottom: 20 }}>Registration Summary</h3>
+          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 16, padding: 28, marginBottom: 24 }}>
+            <h3 style={{ color: "#1e293b", fontWeight: 700, marginBottom: 20 }}>Registration Summary</h3>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
               {[["Full Name", `${form.firstName} ${form.lastName}`], ["Email", form.email], ["Phone", form.phone || "—"], ["Education", form.education || "—"]].map(([k, v]) => (
                 <div key={k}>
                   <div style={{ fontSize: 11, color: "#64748b", fontWeight: 700, textTransform: "uppercase", marginBottom: 4 }}>{k}</div>
-                  <div style={{ color: "#e2e8f0", fontSize: 14 }}>{v}</div>
+                  <div style={{ color: "#334155", fontSize: 14 }}>{v}</div>
                 </div>
               ))}
             </div>
-            <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 20 }}>
+            <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: 20 }}>
               <div style={{ fontSize: 11, color: "#64748b", fontWeight: 700, textTransform: "uppercase", marginBottom: 12 }}>Enrolled Courses</div>
               {form.selectedCourses.map(id => {
                 const c = courseById(id);
                 if (!c) return null;
                 return (
-                  <div key={id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, color: "#e2e8f0", fontSize: 14 }}>
+                  <div key={id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, color: "#334155", fontSize: 14 }}>
                     <span><span style={{ color: c.vendorColor, fontWeight: 700 }}>{c.vendorName}</span> · {c.title}</span>
-                    <span style={{ color: "#f1f5f9", fontWeight: 700 }}>${c.price.toLocaleString()}</span>
+                    <span style={{ color: "#1e293b", fontWeight: 700 }}>${c.price.toLocaleString()}</span>
                   </div>
                 );
               })}
-              <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 12, display: "flex", justifyContent: "space-between", fontWeight: 800, fontSize: 18 }}>
-                <span style={{ color: "#f1f5f9" }}>Total</span>
+              <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: 12, display: "flex", justifyContent: "space-between", fontWeight: 800, fontSize: 18 }}>
+                <span style={{ color: "#1e293b" }}>Total</span>
                 <span style={{ color: "#0ea5e9" }}>${form.selectedCourses.reduce((s, id) => s + (courseById(id)?.price || 0), 0).toLocaleString()}</span>
               </div>
             </div>
@@ -178,7 +178,7 @@ export default function RegisterView({ enrolledCourses, onEnroll, courses }) {
             💡 A <strong style={{ color: "#0ea5e9" }}>Microsoft 365 account</strong> will be automatically provisioned for you as <code style={{ color: "#818cf8" }}>{form.firstName.toLowerCase() || "firstname"}.{form.lastName.toLowerCase() || "lastname"}@trainee.edu</code> — you'll receive setup instructions via email.
           </div>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <button onClick={() => setStep(2)} style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "14px 24px", fontWeight: 700, cursor: "pointer" }}>← Back</button>
+            <button onClick={() => setStep(2)} style={{ background: "rgba(0,0,0,0.03)", color: "#94a3b8", border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px 24px", fontWeight: 700, cursor: "pointer" }}>← Back</button>
             <button onClick={submit} style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)", color: "#fff", border: "none", borderRadius: 12, padding: "14px 36px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
               ✓ Complete Registration
             </button>
