@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { Country, City } from "country-state-city";
 import Chip from "../components/Chip";
 import { EMPTY_COURSE, EMPTY_INSTRUCTOR, EMPTY_LOCATION, TIMEZONES, DURATION_UNITS, COURSE_TAGS, levelColor } from "../utils/constants";
@@ -52,7 +52,50 @@ export default function AdminView({ courses, vendors, schedule, students, profil
   const [assignModal, setAssignModal] = useState(null); // null | { instructor }
   const [assignCourseIds, setAssignCourseIds] = useState(new Set());
   const [assignSaving, setAssignSaving] = useState(false);
+  const [courseSort, setCourseSort] = useState({ key: null, dir: "asc" });
+  const [courseGroup, setCourseGroup] = useState("none");
   const courseById = (id) => courses.find(c => c.id === id);
+
+  const courseSortColumns = [
+    { key: "title", label: "Course" },
+    { key: "vendorName", label: "Vendor" },
+    { key: "instructorName", label: "Instructor" },
+    { key: "level", label: "Level" },
+    { key: "delivery", label: "Delivery" },
+    { key: "enrolled", label: "Enrollment" },
+    { key: "nextStart", label: "Start Date" },
+  ];
+
+  const toggleSort = (key) => {
+    setCourseSort(prev => prev.key === key ? { key, dir: prev.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" });
+  };
+
+  const sortedCourses = (() => {
+    const list = [...courses];
+    if (courseSort.key) {
+      const dir = courseSort.dir === "asc" ? 1 : -1;
+      list.sort((a, b) => {
+        let va = a[courseSort.key], vb = b[courseSort.key];
+        if (courseSort.key === "enrolled") return (va - vb) * dir;
+        if (courseSort.key === "nextStart") return ((new Date(va || 0)) - (new Date(vb || 0))) * dir;
+        va = (va || "").toString().toLowerCase();
+        vb = (vb || "").toString().toLowerCase();
+        return va < vb ? -dir : va > vb ? dir : 0;
+      });
+    }
+    return list;
+  })();
+
+  const groupedCourses = (() => {
+    if (courseGroup === "none") return [{ label: null, items: sortedCourses }];
+    const key = courseGroup === "vendor" ? "vendorName" : "instructorName";
+    const groups = {};
+    for (const c of sortedCourses) {
+      const g = c[key] || "Unassigned";
+      (groups[g] ||= []).push(c);
+    }
+    return Object.keys(groups).sort().map(label => ({ label, items: groups[label] }));
+  })();
 
   const openNew = () => { setCourseForm(EMPTY_COURSE); setCourseModal({ mode: "new" }); };
   const parseDuration = (str) => {
@@ -418,49 +461,74 @@ export default function AdminView({ courses, vendors, schedule, students, profil
 
         {tab === "courses" && (
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <h2 style={{ fontSize: 28, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", margin: 0 }}>Course Management</h2>
               <button onClick={openNew} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ New Course</button>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+              <span style={{ color: "#64748b", fontSize: 12, fontWeight: 600 }}>Group by:</span>
+              {["none", "vendor", "instructor"].map(g => (
+                <button key={g} onClick={() => setCourseGroup(g)}
+                  style={{ padding: "5px 14px", borderRadius: 16, fontSize: 12, fontWeight: 600, cursor: "pointer", border: courseGroup === g ? "1px solid #0ea5e9" : "1px solid rgba(255,255,255,0.1)", background: courseGroup === g ? "rgba(14,165,233,0.12)" : "rgba(255,255,255,0.03)", color: courseGroup === g ? "#38bdf8" : "#94a3b8" }}>
+                  {g === "none" ? "None" : g.charAt(0).toUpperCase() + g.slice(1)}
+                </button>
+              ))}
+              {courseSort.key && (
+                <button onClick={() => setCourseSort({ key: null, dir: "asc" })}
+                  style={{ marginLeft: "auto", padding: "5px 12px", borderRadius: 16, fontSize: 11, fontWeight: 600, cursor: "pointer", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.03)", color: "#94a3b8" }}>
+                  Clear sort
+                </button>
+              )}
             </div>
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-                    {["Course", "Vendor", "Instructor", "Level", "Delivery", "Enrollment", "Start Date", "Actions"].map(h => (
-                      <th key={h} style={{ padding: "10px 14px", textAlign: "left", color: "#64748b", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>{h}</th>
+                    {courseSortColumns.map(col => (
+                      <th key={col.key} onClick={() => toggleSort(col.key)} style={{ padding: "10px 14px", textAlign: "left", color: courseSort.key === col.key ? "#38bdf8" : "#64748b", fontWeight: 700, fontSize: 11, textTransform: "uppercase", cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}>
+                        {col.label} {courseSort.key === col.key ? (courseSort.dir === "asc" ? "▲" : "▼") : ""}
+                      </th>
                     ))}
+                    <th style={{ padding: "10px 14px", textAlign: "left", color: "#64748b", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {courses.map((c) => (
-                    <tr key={c.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                      <td style={{ padding: "14px" }}>
-                        <div style={{ color: "#f1f5f9", fontWeight: 600 }}>{c.title}</div>
-                        <div style={{ color: "#64748b", fontFamily: "monospace", fontSize: 11 }}>{c.code}</div>
-                      </td>
-                      <td style={{ padding: "14px" }}><span style={{ color: c.vendorColor, fontWeight: 700 }}>{c.vendorName}</span></td>
-                      <td style={{ padding: "14px", color: c.instructorName ? "#e2e8f0" : "#475569", fontSize: 12 }}>{c.instructorName || "—"}</td>
-                      <td style={{ padding: "14px" }}><Chip text={c.level} color={levelColor[c.level]} /></td>
-                      <td style={{ padding: "14px" }}><Chip text={c.delivery} color="#0ea5e9" /></td>
-                      <td style={{ padding: "14px" }}>
-                        <div>
-                          <span style={{ color: "#22c55e", fontWeight: 700 }}>{c.enrolled}</span>
-                          <span style={{ color: "#64748b" }}> / {c.seats}</span>
-                        </div>
-                        <div style={{ width: 60, height: 3, background: "rgba(255,255,255,0.1)", borderRadius: 2, marginTop: 4, overflow: "hidden" }}>
-                          <div style={{ height: "100%", width: `${(c.enrolled / c.seats) * 100}%`, background: "#0ea5e9" }} />
-                        </div>
-                      </td>
-                      <td style={{ padding: "14px", color: "#94a3b8", fontFamily: "monospace", fontSize: 12 }}>
-                        {c.nextStart ? new Date(c.nextStart).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
-                      </td>
-                      <td style={{ padding: "14px" }}>
-                        <div style={{ display: "flex", gap: 6 }}>
-                          <button onClick={() => openEdit(c)} style={{ background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Edit</button>
-                          <button onClick={() => setConfirmDeleteCourse(c)} style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Delete</button>
-                        </div>
-                      </td>
-                    </tr>
+                  {groupedCourses.map(group => (
+                    <Fragment key={group.label || "__all"}>
+                      {group.label && (
+                        <tr><td colSpan={8} style={{ padding: "12px 14px 6px", color: "#e2e8f0", fontWeight: 800, fontSize: 13, borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>{group.label} <span style={{ color: "#64748b", fontWeight: 500, fontSize: 11 }}>({group.items.length})</span></td></tr>
+                      )}
+                      {group.items.map((c) => (
+                        <tr key={c.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                          <td style={{ padding: "14px" }}>
+                            <div style={{ color: "#f1f5f9", fontWeight: 600 }}>{c.title}</div>
+                            <div style={{ color: "#64748b", fontFamily: "monospace", fontSize: 11 }}>{c.code}</div>
+                          </td>
+                          <td style={{ padding: "14px" }}><span style={{ color: c.vendorColor, fontWeight: 700 }}>{c.vendorName}</span></td>
+                          <td style={{ padding: "14px", color: c.instructorName ? "#e2e8f0" : "#475569", fontSize: 12 }}>{c.instructorName || "—"}</td>
+                          <td style={{ padding: "14px" }}><Chip text={c.level} color={levelColor[c.level]} /></td>
+                          <td style={{ padding: "14px" }}><Chip text={c.delivery} color="#0ea5e9" /></td>
+                          <td style={{ padding: "14px" }}>
+                            <div>
+                              <span style={{ color: "#22c55e", fontWeight: 700 }}>{c.enrolled}</span>
+                              <span style={{ color: "#64748b" }}> / {c.seats}</span>
+                            </div>
+                            <div style={{ width: 60, height: 3, background: "rgba(255,255,255,0.1)", borderRadius: 2, marginTop: 4, overflow: "hidden" }}>
+                              <div style={{ height: "100%", width: `${(c.enrolled / c.seats) * 100}%`, background: "#0ea5e9" }} />
+                            </div>
+                          </td>
+                          <td style={{ padding: "14px", color: "#94a3b8", fontFamily: "monospace", fontSize: 12 }}>
+                            {c.nextStart ? new Date(c.nextStart).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                          </td>
+                          <td style={{ padding: "14px" }}>
+                            <div style={{ display: "flex", gap: 6 }}>
+                              <button onClick={() => openEdit(c)} style={{ background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Edit</button>
+                              <button onClick={() => setConfirmDeleteCourse(c)} style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Delete</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </Fragment>
                   ))}
                 </tbody>
               </table>
