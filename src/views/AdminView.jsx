@@ -55,6 +55,11 @@ export default function AdminView({ courses, vendors, schedule, students, profil
   const [courseSort, setCourseSort] = useState({ key: null, dir: "asc" });
   const [courseGroup, setCourseGroup] = useState("none");
   const [courseSearch, setCourseSearch] = useState("");
+  const [studentSearch, setStudentSearch] = useState("");
+  const [enrollSearch, setEnrollSearch] = useState("");
+  const [instructorSearch, setInstructorSearch] = useState("");
+  const [locationSearch, setLocationSearch] = useState("");
+  const [scheduleSearch, setScheduleSearch] = useState("");
   const courseById = (id) => courses.find(c => c.id === id);
 
   const courseSortColumns = [
@@ -112,6 +117,70 @@ export default function AdminView({ courses, vendors, schedule, students, profil
     }
     return Object.keys(groups).sort().map(label => ({ label, items: groups[label] }));
   })();
+
+  const filteredStudents = (() => {
+    if (!studentSearch.trim()) return profiles;
+    const q = studentSearch.toLowerCase();
+    return profiles.filter(p =>
+      `${p.first_name} ${p.last_name}`.toLowerCase().includes(q) ||
+      (p.email || "").toLowerCase().includes(q) ||
+      (p.city || "").toLowerCase().includes(q) ||
+      (p.country_name || "").toLowerCase().includes(q) ||
+      (p.education || "").toLowerCase().includes(q)
+    );
+  })();
+
+  const filteredInstructors = (() => {
+    if (!instructorSearch.trim()) return instructors;
+    const q = instructorSearch.toLowerCase();
+    return instructors.filter(ins =>
+      `${ins.first_name} ${ins.last_name}`.toLowerCase().includes(q) ||
+      (ins.email || "").toLowerCase().includes(q) ||
+      (ins.title || "").toLowerCase().includes(q) ||
+      (ins.status || "").toLowerCase().includes(q) ||
+      (ins.employment_type || "").toLowerCase().includes(q) ||
+      (ins.specializations || []).some(s => s.toLowerCase().includes(q)) ||
+      (ins.certifications || []).some(c => c.toLowerCase().includes(q))
+    );
+  })();
+
+  const filteredLocations = (() => {
+    if (!locationSearch.trim()) return deliveryLocations;
+    const q = locationSearch.toLowerCase();
+    return deliveryLocations.filter(loc =>
+      (loc.name || "").toLowerCase().includes(q) ||
+      (loc.type || "").toLowerCase().includes(q) ||
+      (loc.city || "").toLowerCase().includes(q) ||
+      (loc.country_name || "").toLowerCase().includes(q) ||
+      (loc.building || "").toLowerCase().includes(q) ||
+      (loc.platform || "").toLowerCase().includes(q) ||
+      (loc.contact_name || "").toLowerCase().includes(q)
+    );
+  })();
+
+  const filteredSchedule = (() => {
+    if (!scheduleSearch.trim()) return schedule;
+    const q = scheduleSearch.toLowerCase();
+    return schedule.filter(s => {
+      const c = courseById(s.courseId);
+      return (c?.title || "").toLowerCase().includes(q) ||
+        (c?.code || "").toLowerCase().includes(q) ||
+        (c?.vendorName || "").toLowerCase().includes(q) ||
+        (s.day || "").toLowerCase().includes(q) ||
+        (s.instructor || "").toLowerCase().includes(q) ||
+        (s.room || "").toLowerCase().includes(q) ||
+        (s.type || "").toLowerCase().includes(q);
+    });
+  })();
+
+  const SearchBar = ({ value, onChange, placeholder, total, filtered }) => (
+    <div style={{ position: "relative", marginBottom: 16 }}>
+      <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "10px 14px 10px 36px", color: "#f1f5f9", fontSize: 13, boxSizing: "border-box", outline: "none" }} />
+      <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#64748b", fontSize: 14, pointerEvents: "none" }}>&#x1F50D;</span>
+      {value && <button onClick={() => onChange("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer", fontSize: 14 }}>✕</button>}
+      {value && <span style={{ position: "absolute", right: 32, top: "50%", transform: "translateY(-50%)", color: "#64748b", fontSize: 11 }}>{filtered} of {total}</span>}
+    </div>
+  );
 
   const openNew = () => { setCourseForm(EMPTY_COURSE); setCourseModal({ mode: "new" }); };
   const parseDuration = (str) => {
@@ -421,10 +490,10 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                 <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>{profiles.length} account{profiles.length !== 1 ? "s" : ""} registered via Entra External ID</p>
               </div>
             </div>
-            {profiles.length === 0 && (
-              <div style={{ color: "#64748b", fontSize: 14, padding: 24, textAlign: "center" }}>No registered students yet.</div>
-            )}
-            {profiles.map(p => (
+            <SearchBar value={studentSearch} onChange={setStudentSearch} placeholder="Search by name, email, city, country, education..." total={profiles.length} filtered={filteredStudents.length} />
+            {filteredStudents.length === 0 ? (
+              <div style={{ color: "#64748b", fontSize: 14, padding: 24, textAlign: "center" }}>{studentSearch ? "No students match your search." : "No registered students yet."}</div>
+            ) : filteredStudents.map(p => (
               <div key={p.entra_oid} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: 24, marginBottom: 16 }}>
                 <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
                   <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 18, flexShrink: 0 }}>
@@ -481,11 +550,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
               <h2 style={{ fontSize: 28, fontWeight: 900, color: "#f1f5f9", fontFamily: "Georgia, serif", margin: 0 }}>Course Management</h2>
               <button onClick={openNew} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ New Course</button>
             </div>
-            <div style={{ position: "relative", marginBottom: 12 }}>
-              <input value={courseSearch} onChange={e => setCourseSearch(e.target.value)} placeholder="Search courses by title, code, vendor, instructor, tag..." style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "10px 14px 10px 36px", color: "#f1f5f9", fontSize: 13, boxSizing: "border-box", outline: "none" }} />
-              <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#64748b", fontSize: 14, pointerEvents: "none" }}>&#x1F50D;</span>
-              {courseSearch && <button onClick={() => setCourseSearch("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer", fontSize: 14 }}>✕</button>}
-            </div>
+            <SearchBar value={courseSearch} onChange={setCourseSearch} placeholder="Search by title, code, vendor, instructor, tag..." total={courses.length} filtered={filteredCourses.length} />
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
               <span style={{ color: "#64748b", fontSize: 12, fontWeight: 600 }}>Group by:</span>
               {["none", "vendor", "instructor"].map(g => (
@@ -499,9 +564,6 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                   style={{ marginLeft: "auto", padding: "5px 12px", borderRadius: 16, fontSize: 11, fontWeight: 600, cursor: "pointer", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.03)", color: "#94a3b8" }}>
                   Clear sort
                 </button>
-              )}
-              {courseSearch && (
-                <span style={{ color: "#64748b", fontSize: 12, marginLeft: courseSort.key ? 12 : "auto" }}>{filteredCourses.length} of {courses.length} courses</span>
               )}
             </div>
             <div style={{ overflowX: "auto" }}>
@@ -697,9 +759,18 @@ export default function AdminView({ courses, vendors, schedule, students, profil
         )}
 
         {tab === "enrollments" && (() => {
-          const filtered = enrollFilter
+          const courseFiltered = enrollFilter
             ? enrollments.filter(e => String(e.course_id) === enrollFilter)
             : enrollments;
+          const eq = enrollSearch.toLowerCase();
+          const filtered = eq ? courseFiltered.filter(e =>
+            (e.student_name || "").toLowerCase().includes(eq) ||
+            (e.student_email || "").toLowerCase().includes(eq) ||
+            (e.title || "").toLowerCase().includes(eq) ||
+            (e.code || "").toLowerCase().includes(eq) ||
+            (e.vendor_name || "").toLowerCase().includes(eq) ||
+            (e.delivery || "").toLowerCase().includes(eq)
+          ) : courseFiltered;
           const inp = { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "10px 14px", color: "#f1f5f9", fontSize: 13, boxSizing: "border-box" };
           const lbl = { color: "#94a3b8", fontSize: 12, fontWeight: 600, marginBottom: 4, display: "block" };
           return (
@@ -729,6 +800,8 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                   );
                 })}
               </div>
+
+              <SearchBar value={enrollSearch} onChange={setEnrollSearch} placeholder="Search by student, email, course, vendor..." total={courseFiltered.length} filtered={filtered.length} />
 
               {/* Enrollment table */}
               <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, overflow: "hidden" }}>
@@ -903,9 +976,11 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                 <button onClick={openNewInstructor} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ New Instructor</button>
               </div>
 
+              <SearchBar value={instructorSearch} onChange={setInstructorSearch} placeholder="Search by name, email, title, specialization, certification..." total={instructors.length} filtered={filteredInstructors.length} />
+
               <div style={{ display: "grid", gap: 14 }}>
-                {instructors.length === 0 && <div style={{ color: "#64748b", fontSize: 14, padding: 24, textAlign: "center" }}>No instructors on record.</div>}
-                {instructors.map(ins => (
+                {filteredInstructors.length === 0 && <div style={{ color: "#64748b", fontSize: 14, padding: 24, textAlign: "center" }}>{instructorSearch ? "No instructors match your search." : "No instructors on record."}</div>}
+                {filteredInstructors.map(ins => (
                   <div key={ins.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: 20, display: "flex", gap: 16, alignItems: "flex-start" }}>
                     <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 18, flexShrink: 0 }}>
                       {ins.first_name?.[0]}{ins.last_name?.[0]}
@@ -1174,11 +1249,13 @@ export default function AdminView({ courses, vendors, schedule, students, profil
               <button onClick={openNewLocation} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ New Location</button>
             </div>
 
+            <SearchBar value={locationSearch} onChange={setLocationSearch} placeholder="Search by name, type, city, country, building, platform..." total={deliveryLocations.length} filtered={filteredLocations.length} />
+
             <div style={{ display: "grid", gap: 14 }}>
-              {deliveryLocations.length === 0 && (
-                <div style={{ color: "#64748b", fontSize: 14, padding: 24, textAlign: "center" }}>No locations configured yet.</div>
+              {filteredLocations.length === 0 && (
+                <div style={{ color: "#64748b", fontSize: 14, padding: 24, textAlign: "center" }}>{locationSearch ? "No locations match your search." : "No locations configured yet."}</div>
               )}
-              {deliveryLocations.map(loc => (
+              {filteredLocations.map(loc => (
                 <div key={loc.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: 20, display: "flex", gap: 16, alignItems: "flex-start" }}>
                   <div style={{ width: 40, height: 40, borderRadius: 10, background: loc.type === "Online" ? "rgba(99,102,241,0.15)" : loc.type === "Hybrid" ? "rgba(251,191,36,0.15)" : "rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
                     {loc.type === "Online" ? "🌐" : loc.type === "Hybrid" ? "🔀" : "🏢"}
@@ -1406,8 +1483,10 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                 </button>
               </div>
 
-              {schedule.length === 0 ? (
-                <div style={{ textAlign: "center", padding: 60, color: "#475569" }}>No schedule entries yet. Add one to get started.</div>
+              <SearchBar value={scheduleSearch} onChange={setScheduleSearch} placeholder="Search by course, day, instructor, room, format..." total={schedule.length} filtered={filteredSchedule.length} />
+
+              {filteredSchedule.length === 0 ? (
+                <div style={{ textAlign: "center", padding: 60, color: "#475569" }}>{scheduleSearch ? "No schedule entries match your search." : "No schedule entries yet. Add one to get started."}</div>
               ) : (
                 <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, overflow: "hidden" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
@@ -1419,7 +1498,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                       </tr>
                     </thead>
                     <tbody>
-                      {schedule.map((s, i) => {
+                      {filteredSchedule.map((s, i) => {
                         const c = courseById(s.courseId);
                         if (!c) return null;
                         return (
