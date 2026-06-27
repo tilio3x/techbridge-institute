@@ -33,11 +33,16 @@ export const TIMEZONES = (() => {
 
 export const DURATION_UNITS = ["Hour", "Day", "Week", "Month", "Year"];
 
+export const COURSE_TAGS = [
+  "Cloud", "AI", "Infrastructure", "Networking",
+  "Security", "Modern Desktop", "Business",
+];
+
 export const EMPTY_COURSE = {
   vendor_id: "", code: "", title: "", level: "Beginner",
   duration_value: "", duration_unit: "Week",
   price: "", seats: "", delivery: "Hybrid", next_start: "", description: "",
-  badge: "", instructor_id: "", delivery_location_id: "",
+  badge: "", tags: [], instructor_id: "", delivery_location_id: "",
 };
 
 export const EMPTY_INSTRUCTOR = {

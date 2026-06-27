@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Country, City } from "country-state-city";
 import Chip from "../components/Chip";
-import { EMPTY_COURSE, EMPTY_INSTRUCTOR, EMPTY_LOCATION, TIMEZONES, DURATION_UNITS, levelColor } from "../utils/constants";
+import { EMPTY_COURSE, EMPTY_INSTRUCTOR, EMPTY_LOCATION, TIMEZONES, DURATION_UNITS, COURSE_TAGS, levelColor } from "../utils/constants";
 import { normalizeSchedule } from "../utils/normalizers";
 
 const EMPTY_SCHEDULE = { course_id: "", day: "", time_start: "", time_end: "", instructor: "", room: "", type: "Online" };
@@ -69,6 +69,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
       vendor_id: c.vendor, code: c.code, title: c.title, level: c.level,
       duration_value, duration_unit, price: c.price, seats: c.seats, delivery: c.delivery,
       next_start: c.nextStart ? c.nextStart.split("T")[0] : "", description: c.description, badge: c.badge || "",
+      tags: c.tags || [],
       instructor_id: c.instructorId || "",
       delivery_location_id: c.locationId || "",
     });
@@ -522,6 +523,22 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                       <div><label style={lbl}>Price (USD)</label><input type="number" value={courseForm.price} onChange={set("price")} style={inp} placeholder="0" /></div>
                       <div><label style={lbl}>Seats</label><input type="number" value={courseForm.seats} onChange={set("seats")} style={inp} placeholder="0" /></div>
 
+                      {/* Domain Tags */}
+                      <div style={{ gridColumn: "span 2" }}>
+                        <label style={lbl}>Domain Tags</label>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                          {COURSE_TAGS.map(tag => {
+                            const selected = (courseForm.tags || []).includes(tag);
+                            return (
+                              <button key={tag} type="button" onClick={() => setCourseForm(f => ({ ...f, tags: selected ? f.tags.filter(t => t !== tag) : [...(f.tags || []), tag] }))}
+                                style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", border: selected ? "1px solid #0ea5e9" : "1px solid rgba(255,255,255,0.12)", background: selected ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.03)", color: selected ? "#38bdf8" : "#94a3b8", transition: "all 0.15s" }}>
+                                {tag}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
                       {/* Delivery Location */}
                       <div style={{ gridColumn: "span 2", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 16, marginTop: 4 }}>
                         <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Delivery Location</div>
@@ -944,7 +961,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                           vendor_id: c.vendor, code: c.code, title: c.title, level: c.level,
                           duration: c.duration, price: c.price, seats: c.seats, delivery: c.delivery,
                           next_start: c.nextStart ? c.nextStart.split("T")[0] : "",
-                          description: c.description, badge: c.badge || "",
+                          description: c.description, badge: c.badge || "", tags: c.tags || [],
                           instructor_id: newInstructorId,
                           delivery_location_id: c.locationId || null,
                         }),
