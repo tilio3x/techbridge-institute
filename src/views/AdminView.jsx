@@ -175,7 +175,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
 
   const SearchBar = ({ value, onChange, placeholder, total, filtered }) => (
     <div style={{ position: "relative", marginBottom: 16 }}>
-      <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={{ width: "100%", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 10, padding: "10px 14px 10px 36px", color: "#1e293b", fontSize: 13, boxSizing: "border-box", outline: "none" }} />
+      <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={{ width: "100%", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: 10, padding: "12px 14px 12px 36px", color: "#1e293b", fontSize: 14, boxSizing: "border-box", outline: "none", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }} />
       <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#64748b", fontSize: 14, pointerEvents: "none" }}>&#x1F50D;</span>
       {value && <button onClick={() => onChange("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer", fontSize: 14 }}>✕</button>}
       {value && <span style={{ position: "absolute", right: 32, top: "50%", transform: "translateY(-50%)", color: "#64748b", fontSize: 11 }}>{filtered} of {total}</span>}
