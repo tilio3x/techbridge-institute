@@ -13,6 +13,7 @@ export function normalizeCourse(c) {
     nextStart: c.next_start,
     description: c.description,
     badge: c.badge || "",
+    tags: c.tags || [],
     vendorName: c.vendor_name,
     vendorColor: c.vendor_color,
     vendorLogo: c.vendor_logo,
