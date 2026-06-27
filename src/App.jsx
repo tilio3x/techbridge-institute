@@ -139,7 +139,7 @@ export default function App() {
   ];
 
   if (loading) return (
-    <div style={{ minHeight: "100vh", background: "#0a0f1e", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", fontSize: 16 }}>
+    <div style={{ minHeight: "100vh", background: "#f0f4f8", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", fontSize: 16 }}>
       Loading...
     </div>
   );
@@ -147,18 +147,18 @@ export default function App() {
   const showProfileGate = isAuthenticated && profileLoaded && !profile && location.pathname !== "/profile";
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0f1e", color: "#f1f5f9", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#f0f4f8", color: "#1e293b", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         .course-card:hover { transform: translateY(-4px); border-color: rgba(14,165,233,0.3) !important; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
-        select option { background: #1e293b; color: #f1f5f9; }
-        input::placeholder, textarea::placeholder { color: #475569; }
-        input, textarea, select { color: #f1f5f9 !important; }
-        input[type="date"], input[type="time"] { color-scheme: dark; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        select option { background: #ffffff; color: #1e293b; }
+        input::placeholder, textarea::placeholder { color: #94a3b8; }
+        input, textarea, select { color: #1e293b !important; }
+        input[type="date"], input[type="time"] { color-scheme: light; }
       `}</style>
 
       {showSignInSelector && (
@@ -169,8 +169,8 @@ export default function App() {
         />
       )}
 
-      {/* Navbar */}
-      <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(10,15,30,0.95)", borderBottom: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(20px)" }}>
+      {/* Navbar — stays dark as accent */}
+      <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(15,23,42,0.97)", borderBottom: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(20px)" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", height: 64, gap: 32 }}>
           <div onClick={() => navigate("/")} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🖥️</div>
@@ -282,9 +282,9 @@ export default function App() {
         )}
       </main>
 
-      {/* Footer */}
+      {/* Footer — stays dark as accent */}
       {location.pathname !== "/admin" && location.pathname !== "/educator" && (
-        <footer style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "48px 24px", marginTop: 60 }}>
+        <footer style={{ background: "#0f172a", borderTop: "1px solid rgba(255,255,255,0.06)", padding: "48px 24px", marginTop: 60 }}>
           <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 40 }}>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
