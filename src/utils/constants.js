@@ -36,6 +36,7 @@ export const DURATION_UNITS = ["Hour", "Day", "Week", "Month", "Year"];
 export const COURSE_TAGS = [
   "Cloud", "AI", "Infrastructure", "Networking",
   "Security", "Modern Desktop", "Business",
+  "Microsoft 365", "Power Platform", "Dynamics 365", "Microsoft Azure",
 ];
 
 export const EMPTY_COURSE = {
