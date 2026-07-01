@@ -31,7 +31,7 @@ function FilterSection({ title, children, defaultOpen = true }) {
 
 function FilterCheckbox({ label, checked, onChange, count, color }) {
   return (
-    <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "4px 0", fontSize: 14 }}>
+    <div onClick={onChange} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "4px 0", fontSize: 14 }}>
       <div style={{
         width: 18, height: 18, borderRadius: 4, flexShrink: 0,
         border: checked ? "none" : "2px solid #cbd5e1",
@@ -43,7 +43,7 @@ function FilterCheckbox({ label, checked, onChange, count, color }) {
       </div>
       <span style={{ color: "#334155", flex: 1 }}>{label}</span>
       {count !== undefined && <span style={{ color: "#94a3b8", fontSize: 12 }}>{count}</span>}
-    </label>
+    </div>
   );
 }
 
