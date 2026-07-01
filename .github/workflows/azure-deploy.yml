@@ -11,7 +11,9 @@ on:
 
 env:
   NODE_VERSION: '24.x'
-  APP_NAME: 'techbridge'   # ← Change to your Azure App Service name
+  APP_NAME: 'techbridge'
+  RESOURCE_GROUP: 'rg-techbridge'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   # ── 1. Build ──────────────────────────────────────────────────────────────
@@ -35,71 +37,128 @@ jobs:
       - name: Build production bundle
         run: npm run build
         env:
-          # Add any public env vars your app needs at build time here
-          # VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
           NODE_ENV: production
+          VITE_ENTRA_CLIENT_ID: ${{ secrets.VITE_ENTRA_CLIENT_ID }}
+          VITE_ENTRA_TENANT_SUBDOMAIN: ${{ secrets.VITE_ENTRA_TENANT_SUBDOMAIN }}
+          VITE_ENTRA_STAFF_TENANT_ID: ${{ secrets.VITE_ENTRA_STAFF_TENANT_ID }}
+          VITE_ENTRA_STAFF_CLIENT_ID: ${{ secrets.VITE_ENTRA_STAFF_CLIENT_ID }}
 
-      - name: Upload build artifact
+      - name: Prepare deployment package
+        run: |
+          mkdir -p deploy
+          cp -r dist deploy/
+          cp -r server deploy/
+          cp package.json deploy/
+          cp package-lock.json deploy/
+
+      - name: Upload deployment artifact
         uses: actions/upload-artifact@v4
         with:
-          name: react-build
-          path: dist/
+          name: app-build
+          path: deploy/
           retention-days: 1
 
-  # ── 2. Deploy (only on push to main) ──────────────────────────────────────
-  deploy:
-    name: Deploy to Azure App Service
+  # ── 2. Deploy to staging (feature branch PRs) ───────────────────────────
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'pull_request'
+
+    environment:
+      name: staging
+      url: https://${{ env.APP_NAME }}-staging-dcadfwggdsckfebs.spaincentral-01.azurewebsites.net
+
+    steps:
+      - name: Download deployment artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build
+          path: ./
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install production dependencies
+        run: npm install --omit=dev
+
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Configure staging slot environment variables
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az webapp config appsettings set \
+              --name ${{ env.APP_NAME }} \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --slot staging \
+              --settings \
+                DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+                NODE_ENV="production" \
+                ACS_CONNECTION_STRING="${{ secrets.ACS_CONNECTION_STRING }}" \
+                ACS_SENDER_EMAIL="${{ secrets.ACS_SENDER_EMAIL }}"
+
+      - name: Deploy to staging slot
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.APP_NAME }}
+          slot-name: 'staging'
+          package: .
+          startup-command: 'node server/index.js'
+
+  # ── 3. Deploy to production (push to main) ──────────────────────────────
+  deploy-production:
+    name: Deploy to Production
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
 
     environment:
       name: production
-      url: https://${{ env.APP_NAME }}.canadacentral-01.azurewebsites.net
+      url: https://${{ env.APP_NAME }}-dcadfwggdsckfebs.spaincentral-01.azurewebsites.net
 
     steps:
-      - name: Download build artifact
+      - name: Download deployment artifact
         uses: actions/download-artifact@v4
         with:
-          name: react-build
-          path: dist/
+          name: app-build
+          path: ./
 
-      # Azure App Service serves a Node.js app; we add a minimal server.js
-      # so the App Service can serve the static React SPA.
-      - name: Create Express static server
-        run: |
-          cat > server.js << 'EOF'
-          const express = require('express');
-          const path    = require('path');
-          const app     = express();
-          const PORT    = process.env.PORT || 8080;
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
-          // Serve static files from the React build
-          app.use(express.static(path.join(__dirname, 'dist')));
+      - name: Install production dependencies
+        run: npm install --omit=dev
 
-          // Always return index.html for client-side routing
-          app.get('*', (_req, res) => {
-            res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-          });
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-          app.listen(PORT, () => {
-            console.log(`TechBridge Institute running on port ${PORT}`);
-          });
-          EOF
+      - name: Configure production environment variables
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az webapp config appsettings set \
+              --name ${{ env.APP_NAME }} \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --settings \
+                DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+                NODE_ENV="production" \
+                ACS_CONNECTION_STRING="${{ secrets.ACS_CONNECTION_STRING }}" \
+                ACS_SENDER_EMAIL="${{ secrets.ACS_SENDER_EMAIL }}"
 
-          cat > package.json << 'EOF'
-          {
-            "name": "techbridge-institute-server",
-            "version": "1.0.0",
-            "main": "server.js",
-            "scripts": { "start": "node server.js" },
-            "dependencies": { "express": "^4.19.2" }
-          }
-          EOF
-
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
+      - name: Deploy to production slot
+        uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ env.APP_NAME }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          slot-name: 'production'
           package: .
+          startup-command: 'node server/index.js'
