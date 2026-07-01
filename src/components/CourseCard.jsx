@@ -14,38 +14,34 @@ export default function CourseCard({ course, onEnroll, isEnrolled }) {
   return (
     <div className="course-card" style={{
       background: "#ffffff", borderRadius: 12, overflow: "hidden",
-      border: "1px solid #e2e8f0", display: "flex", flexDirection: "column",
+      border: "1px solid #e2e8f0", display: "flex", flexDirection: "row",
       cursor: "pointer",
     }}>
-      {/* Colored header strip */}
-      <div style={{
-        background: `linear-gradient(135deg, ${vendor.color}18, ${vendor.color}08)`,
-        borderBottom: `2px solid ${vendor.color}30`,
-        padding: "16px 20px",
-        display: "flex", justifyContent: "space-between", alignItems: "center",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 20 }}>{vendor.logo}</span>
+      {/* Vendor color bar (left edge) */}
+      <div style={{ width: 4, background: vendor.color, flexShrink: 0 }} />
+
+      {/* Main content */}
+      <div style={{ flex: 1, padding: "20px 24px", display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }}>
+        {/* Top row: vendor + badge */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 18 }}>{vendor.logo}</span>
           <span style={{ fontSize: 12, fontWeight: 700, color: vendor.color, letterSpacing: 0.3 }}>{vendor.name}</span>
-        </div>
-        <Badge text={course.badge} />
-      </div>
-
-      {/* Content */}
-      <div style={{ padding: "20px 20px 16px", flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
-        <div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: "#1e293b", lineHeight: 1.4, marginBottom: 4 }}>
-            {course.title}
-          </div>
-          <div style={{ fontSize: 12, fontFamily: "monospace", color: "#94a3b8" }}>{course.code}</div>
+          <span style={{ fontSize: 12, fontFamily: "monospace", color: "#94a3b8" }}>{course.code}</span>
+          <Badge text={course.badge} />
         </div>
 
-        <p style={{ fontSize: 13, color: "#64748b", lineHeight: 1.6, margin: 0, flex: 1 }}>
-          {course.description.length > 120 ? course.description.slice(0, 120) + "…" : course.description}
+        {/* Title */}
+        <div style={{ fontSize: 16, fontWeight: 700, color: "#1e293b", lineHeight: 1.4 }}>
+          {course.title}
+        </div>
+
+        {/* Description */}
+        <p style={{ fontSize: 13, color: "#64748b", lineHeight: 1.6, margin: 0 }}>
+          {course.description.length > 180 ? course.description.slice(0, 180) + "…" : course.description}
         </p>
 
-        {/* Metadata row */}
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        {/* Metadata pills */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginTop: 4 }}>
           <span style={{
             background: lvl.bg, color: lvl.color, fontSize: 11, fontWeight: 600,
             padding: "3px 10px", borderRadius: 20,
@@ -61,15 +57,19 @@ export default function CourseCard({ course, onEnroll, isEnrolled }) {
         </div>
       </div>
 
-      {/* Footer */}
+      {/* Right side: price + CTA */}
       <div style={{
-        padding: "14px 20px", borderTop: "1px solid #f1f5f9",
-        display: "flex", justifyContent: "space-between", alignItems: "center",
+        borderLeft: "1px solid #f1f5f9", padding: "20px 24px",
+        display: "flex", flexDirection: "column", alignItems: "flex-end",
+        justifyContent: "center", gap: 10, flexShrink: 0, minWidth: 160,
       }}>
-        <div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: "#1e293b" }}>${course.price.toLocaleString()}</div>
-          <div style={{ fontSize: 11, color: "#94a3b8" }}>
-            {new Date(course.nextStart).toLocaleDateString("en-US", { month: "short", day: "numeric" })} · {seatsLeft} seat{seatsLeft !== 1 ? "s" : ""} left
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "#1e293b" }}>${course.price.toLocaleString()}</div>
+          <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
+            Starts {new Date(course.nextStart).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+          </div>
+          <div style={{ fontSize: 11, color: seatsLeft < 5 ? "#ef4444" : "#94a3b8" }}>
+            {seatsLeft} seat{seatsLeft !== 1 ? "s" : ""} left
           </div>
         </div>
         <button
@@ -78,9 +78,9 @@ export default function CourseCard({ course, onEnroll, isEnrolled }) {
             background: isEnrolled ? "#f0fdf4" : "linear-gradient(135deg, #3b82f6, #6366f1)",
             color: isEnrolled ? "#22c55e" : "#ffffff",
             border: isEnrolled ? "1px solid #bbf7d0" : "none",
-            borderRadius: 8, padding: "9px 20px", fontSize: 13,
+            borderRadius: 8, padding: "9px 24px", fontSize: 13,
             fontWeight: 600, cursor: isEnrolled ? "default" : "pointer",
-            transition: "all 0.2s ease",
+            transition: "all 0.2s ease", width: "100%",
           }}
         >
           {isEnrolled ? "✓ Enrolled" : "Enroll"}
