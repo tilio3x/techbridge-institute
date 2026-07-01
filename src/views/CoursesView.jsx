@@ -12,7 +12,7 @@ const SORT_OPTIONS = [
 function FilterSection({ title, children, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div style={{ borderBottom: "1px solid #e2e8f0", paddingBottom: 20, marginBottom: 20 }}>
+    <div style={{ borderBottom: "1px solid #cbd5e1", paddingBottom: 20, marginBottom: 20 }}>
       <button
         onClick={() => setOpen(!open)}
         style={{
@@ -34,7 +34,7 @@ function FilterCheckbox({ label, checked, onChange, count, color }) {
     <div onClick={onChange} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "4px 0", fontSize: 14 }}>
       <div style={{
         width: 18, height: 18, borderRadius: 4, flexShrink: 0,
-        border: checked ? "none" : "2px solid #cbd5e1",
+        border: checked ? "none" : "2px solid #94a3b8",
         background: checked ? (color || "#3b82f6") : "transparent",
         display: "flex", alignItems: "center", justifyContent: "center",
         transition: "all 0.15s ease",
@@ -137,13 +137,13 @@ export default function CoursesView({ enrolledCourses, onEnroll, vendors, course
           placeholder="Search courses, certifications, or topics..."
           style={{
             width: "100%", padding: "14px 16px 14px 48px",
-            background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 12,
+            background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: 12,
             fontSize: 15, color: "#1e293b", outline: "none",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
             transition: "border-color 0.2s, box-shadow 0.2s",
           }}
           onFocus={e => { e.target.style.borderColor = "#3b82f6"; e.target.style.boxShadow = "0 0 0 3px rgba(59,130,246,0.1)"; }}
-          onBlur={e => { e.target.style.borderColor = "#e2e8f0"; e.target.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)"; }}
+          onBlur={e => { e.target.style.borderColor = "#cbd5e1"; e.target.style.boxShadow = "0 1px 4px rgba(0,0,0,0.06)"; }}
         />
         {search && (
           <button
@@ -162,8 +162,9 @@ export default function CoursesView({ enrolledCourses, onEnroll, vendors, course
       <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: 40, alignItems: "start" }}>
         {/* Sidebar filters */}
         <aside style={{
-          background: "#ffffff", borderRadius: 12, border: "1px solid #e2e8f0",
+          background: "#ffffff", borderRadius: 12, border: "1px solid #cbd5e1",
           padding: "24px 20px", position: "sticky", top: 84,
+          boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
             <span style={{ fontSize: 15, fontWeight: 700, color: "#1e293b" }}>Filters</span>
@@ -231,7 +232,7 @@ export default function CoursesView({ enrolledCourses, onEnroll, vendors, course
                 value={sort}
                 onChange={e => setSort(e.target.value)}
                 style={{
-                  background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 8,
+                  background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: 8,
                   padding: "8px 12px", fontSize: 13, fontWeight: 600, color: "#334155",
                   cursor: "pointer", outline: "none",
                 }}
@@ -281,7 +282,7 @@ export default function CoursesView({ enrolledCourses, onEnroll, vendors, course
           ) : (
             <div style={{
               textAlign: "center", padding: "80px 24px",
-              background: "#ffffff", borderRadius: 12, border: "1px solid #e2e8f0",
+              background: "#ffffff", borderRadius: 12, border: "1px solid #cbd5e1",
             }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
               <h3 style={{ fontSize: 18, fontWeight: 700, color: "#1e293b", marginBottom: 8 }}>No courses found</h3>

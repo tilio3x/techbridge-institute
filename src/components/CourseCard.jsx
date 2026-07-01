@@ -14,7 +14,8 @@ export default function CourseCard({ course, onEnroll, isEnrolled }) {
   return (
     <div className="course-card" style={{
       background: "#ffffff", borderRadius: 12, overflow: "hidden",
-      border: "1px solid #e2e8f0", display: "flex", flexDirection: "row",
+      border: "1px solid #cbd5e1", boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+      display: "flex", flexDirection: "row",
       cursor: "pointer",
     }}>
       {/* Vendor color bar (left edge) */}
@@ -59,7 +60,7 @@ export default function CourseCard({ course, onEnroll, isEnrolled }) {
 
       {/* Right side: price + CTA */}
       <div style={{
-        borderLeft: "1px solid #f1f5f9", padding: "20px 24px",
+        borderLeft: "1px solid #e2e8f0", padding: "20px 24px",
         display: "flex", flexDirection: "column", alignItems: "flex-end",
         justifyContent: "center", gap: 10, flexShrink: 0, minWidth: 160,
       }}>
