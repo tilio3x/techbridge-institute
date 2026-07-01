@@ -273,7 +273,7 @@ export default function CoursesView({ enrolledCourses, onEnroll, vendors, course
 
           {/* Course grid */}
           {filtered.length > 0 ? (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 20 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {filtered.map(course => (
                 <CourseCard key={course.id} course={course} onEnroll={onEnroll} isEnrolled={enrolledCourses.includes(course.id)} />
               ))}
