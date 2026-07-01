@@ -9,7 +9,7 @@ export default function SignInSelector({ onStudentLogin, onStaffLogin, onClose }
         </div>
 
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-sky-500/5 border border-sky-500/20 rounded-xl p-6 flex flex-col gap-4">
+          <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-6 flex flex-col gap-4">
             <div className="text-[34px]">🎓</div>
             <div>
               <div className="text-slate-800 font-semibold text-[15px] mb-1.5">Student</div>

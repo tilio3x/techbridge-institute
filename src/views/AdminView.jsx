@@ -363,9 +363,9 @@ export default function AdminView({ courses, vendors, schedule, students, profil
         {adminTabs.map(t => (
           <button key={t} onClick={() => setTab(t)} style={{
             width: "100%", textAlign: "left", padding: "12px 20px",
-            background: tab === t ? "rgba(14,165,233,0.12)" : "transparent",
-            color: tab === t ? "#38bdf8" : "#94a3b8",
-            border: "none", borderLeft: tab === t ? "3px solid #0ea5e9" : "3px solid transparent",
+            background: tab === t ? "rgba(59,130,246,0.12)" : "transparent",
+            color: tab === t ? "#60a5fa" : "#94a3b8",
+            border: "none", borderLeft: tab === t ? "3px solid #3b82f6" : "3px solid transparent",
             fontSize: 13, fontWeight: 600, cursor: "pointer", textTransform: "capitalize",
           }}>{t}</button>
         ))}
@@ -389,11 +389,11 @@ export default function AdminView({ courses, vendors, schedule, students, profil
           const recentProfiles = [...profiles].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
 
           const stats = [
-            { label: "Registered Students", value: profiles.length, change: `${studentsEnrolled} enrolled in at least 1 course`, color: "#0ea5e9" },
+            { label: "Registered Students", value: profiles.length, change: `${studentsEnrolled} enrolled in at least 1 course`, color: "#3b82f6" },
             { label: "Active Courses", value: courses.length, change: soon.length > 0 ? `${soon.length} starting within 30 days` : "No upcoming start dates", color: "#6366f1" },
             { label: "Total Enrollments", value: totalEnrollments, change: `Across ${courses.length} course${courses.length !== 1 ? "s" : ""}`, color: "#22c55e" },
             { label: "Active Instructors", value: activeInstructors, change: `${instructors.length - activeInstructors} inactive / on leave`, color: "#f59e0b" },
-            { label: "Entra Accounts", value: profiles.length, change: "All synced ✓", color: "#0ea5e9" },
+            { label: "Entra Accounts", value: profiles.length, change: "All synced ✓", color: "#3b82f6" },
             { label: "Avg Seats Filled", value: `${avgFill}%`, change: courses.length ? `across ${courses.length} courses` : "No courses yet", color: avgFill >= 75 ? "#22c55e" : avgFill >= 40 ? "#f59e0b" : "#ef4444" },
           ];
 
@@ -430,7 +430,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                             <span style={{ color: "#94a3b8", fontSize: 12 }}>{c.enrolled}/{c.seats}</span>
                           </div>
                           <div style={{ height: 4, background: "#e2e8f0", borderRadius: 2, overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${pct}%`, background: pct >= 75 ? "#22c55e" : pct >= 40 ? "#f59e0b" : "#0ea5e9", borderRadius: 2, transition: "width 0.4s" }} />
+                            <div style={{ height: "100%", width: `${pct}%`, background: pct >= 75 ? "#22c55e" : pct >= 40 ? "#f59e0b" : "#3b82f6", borderRadius: 2, transition: "width 0.4s" }} />
                           </div>
                         </div>
                       );
@@ -503,7 +503,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                       <div>
                         <div style={{ color: "#1e293b", fontWeight: 700, fontSize: 16 }}>{p.first_name} {p.last_name}</div>
-                        <div style={{ color: "#0ea5e9", fontSize: 13, fontFamily: "monospace" }}>{p.email}</div>
+                        <div style={{ color: "#3b82f6", fontSize: 13, fontFamily: "monospace" }}>{p.email}</div>
                         <div style={{ color: "#64748b", fontSize: 12, marginTop: 4 }}>
                           {p.city}, {p.country_name}
                           {p.education && ` · ${p.education}`}
@@ -555,7 +555,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
               <span style={{ color: "#64748b", fontSize: 12, fontWeight: 600 }}>Group by:</span>
               {["none", "vendor", "instructor"].map(g => (
                 <button key={g} onClick={() => setCourseGroup(g)}
-                  style={{ padding: "5px 14px", borderRadius: 16, fontSize: 12, fontWeight: 600, cursor: "pointer", border: courseGroup === g ? "1px solid #0ea5e9" : "1px solid #e2e8f0", background: courseGroup === g ? "rgba(14,165,233,0.12)" : "#f8fafc", color: courseGroup === g ? "#38bdf8" : "#94a3b8" }}>
+                  style={{ padding: "5px 14px", borderRadius: 16, fontSize: 12, fontWeight: 600, cursor: "pointer", border: courseGroup === g ? "1px solid #3b82f6" : "1px solid #e2e8f0", background: courseGroup === g ? "rgba(59,130,246,0.12)" : "#f8fafc", color: courseGroup === g ? "#60a5fa" : "#94a3b8" }}>
                   {g === "none" ? "None" : g.charAt(0).toUpperCase() + g.slice(1)}
                 </button>
               ))}
@@ -571,7 +571,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                 <thead>
                   <tr style={{ borderBottom: "1px solid #e2e8f0" }}>
                     {courseSortColumns.map(col => (
-                      <th key={col.key} onClick={() => toggleSort(col.key)} style={{ padding: "10px 14px", textAlign: "left", color: courseSort.key === col.key ? "#38bdf8" : "#64748b", fontWeight: 700, fontSize: 11, textTransform: "uppercase", cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}>
+                      <th key={col.key} onClick={() => toggleSort(col.key)} style={{ padding: "10px 14px", textAlign: "left", color: courseSort.key === col.key ? "#60a5fa" : "#64748b", fontWeight: 700, fontSize: 11, textTransform: "uppercase", cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}>
                         {col.label} {courseSort.key === col.key ? (courseSort.dir === "asc" ? "▲" : "▼") : ""}
                       </th>
                     ))}
@@ -593,14 +593,14 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                           <td style={{ padding: "14px" }}><span style={{ color: c.vendorColor, fontWeight: 700 }}>{c.vendorName}</span></td>
                           <td style={{ padding: "14px", color: c.instructorName ? "#e2e8f0" : "#475569", fontSize: 12 }}>{c.instructorName || "—"}</td>
                           <td style={{ padding: "14px" }}><Chip text={c.level} color={levelColor[c.level]} /></td>
-                          <td style={{ padding: "14px" }}><Chip text={c.delivery} color="#0ea5e9" /></td>
+                          <td style={{ padding: "14px" }}><Chip text={c.delivery} color="#3b82f6" /></td>
                           <td style={{ padding: "14px" }}>
                             <div>
                               <span style={{ color: "#22c55e", fontWeight: 700 }}>{c.enrolled}</span>
                               <span style={{ color: "#64748b" }}> / {c.seats}</span>
                             </div>
                             <div style={{ width: 60, height: 3, background: "#e2e8f0", borderRadius: 2, marginTop: 4, overflow: "hidden" }}>
-                              <div style={{ height: "100%", width: `${(c.enrolled / c.seats) * 100}%`, background: "#0ea5e9" }} />
+                              <div style={{ height: "100%", width: `${(c.enrolled / c.seats) * 100}%`, background: "#3b82f6" }} />
                             </div>
                           </td>
                           <td style={{ padding: "14px", color: "#94a3b8", fontFamily: "monospace", fontSize: 12 }}>
@@ -608,7 +608,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                           </td>
                           <td style={{ padding: "14px" }}>
                             <div style={{ display: "flex", gap: 6 }}>
-                              <button onClick={() => openEdit(c)} style={{ background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Edit</button>
+                              <button onClick={() => openEdit(c)} style={{ background: "rgba(59,130,246,0.1)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Edit</button>
                               <button onClick={() => setConfirmDeleteCourse(c)} style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Delete</button>
                             </div>
                           </td>
@@ -685,7 +685,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                             const selected = (courseForm.tags || []).includes(tag);
                             return (
                               <button key={tag} type="button" onClick={() => setCourseForm(f => ({ ...f, tags: selected ? f.tags.filter(t => t !== tag) : [...(f.tags || []), tag] }))}
-                                style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", border: selected ? "1px solid #0ea5e9" : "1px solid #cbd5e1", background: selected ? "rgba(14,165,233,0.15)" : "#f8fafc", color: selected ? "#38bdf8" : "#94a3b8", transition: "all 0.15s" }}>
+                                style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", border: selected ? "1px solid #3b82f6" : "1px solid #cbd5e1", background: selected ? "rgba(59,130,246,0.15)" : "#f8fafc", color: selected ? "#60a5fa" : "#94a3b8", transition: "all 0.15s" }}>
                                 {tag}
                               </button>
                             );
@@ -712,7 +712,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                             const loc = deliveryLocations.find(l => String(l.id) === String(courseForm.delivery_location_id));
                             if (!loc) return null;
                             return (
-                              <div style={{ gridColumn: "span 2", background: "rgba(14,165,233,0.04)", border: "1px solid rgba(14,165,233,0.12)", borderRadius: 10, padding: "14px 16px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px 16px" }}>
+                              <div style={{ gridColumn: "span 2", background: "rgba(59,130,246,0.04)", border: "1px solid rgba(59,130,246,0.12)", borderRadius: 10, padding: "14px 16px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px 16px" }}>
                                 {loc.type && <div><span style={{ color: "#475569", fontSize: 11 }}>Type</span><div style={{ color: "#334155", fontSize: 13, fontWeight: 600 }}>{loc.type}</div></div>}
                                 {loc.room_number && <div><span style={{ color: "#475569", fontSize: 11 }}>Room</span><div style={{ color: "#334155", fontSize: 13, fontWeight: 600 }}>{loc.room_number}{loc.floor ? `, ${loc.floor} floor` : ""}</div></div>}
                                 {loc.building && <div><span style={{ color: "#475569", fontSize: 11 }}>Building</span><div style={{ color: "#334155", fontSize: 13, fontWeight: 600 }}>{loc.building}</div></div>}
@@ -785,8 +785,8 @@ export default function AdminView({ courses, vendors, schedule, students, profil
 
               {/* Course filter + per-course enrollment counts */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10, marginBottom: 24 }}>
-                <div onClick={() => setEnrollFilter("")} style={{ background: enrollFilter === "" ? "rgba(14,165,233,0.12)" : "#f8fafc", border: `1px solid ${enrollFilter === "" ? "rgba(14,165,233,0.3)" : "#e2e8f0"}`, borderRadius: 12, padding: "14px 16px", cursor: "pointer" }}>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: "#0ea5e9" }}>{enrollments.length}</div>
+                <div onClick={() => setEnrollFilter("")} style={{ background: enrollFilter === "" ? "rgba(59,130,246,0.12)" : "#f8fafc", border: `1px solid ${enrollFilter === "" ? "rgba(59,130,246,0.3)" : "#e2e8f0"}`, borderRadius: 12, padding: "14px 16px", cursor: "pointer" }}>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "#3b82f6" }}>{enrollments.length}</div>
                   <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 2 }}>All Enrollments</div>
                 </div>
                 {courses.map(c => {
@@ -824,7 +824,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                               <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
                                 {e.student_name?.split(" ").map(n => n[0]).join("").slice(0, 2)}
                               </div>
-                              <span style={{ color: "#0ea5e9", fontWeight: 600, textDecoration: "underline", textDecorationStyle: "dotted", textUnderlineOffset: 3 }}>{e.student_name}</span>
+                              <span style={{ color: "#3b82f6", fontWeight: 600, textDecoration: "underline", textDecorationStyle: "dotted", textUnderlineOffset: 3 }}>{e.student_name}</span>
                             </div>
                           </td>
                           <td style={{ padding: "14px 16px", color: "#64748b", fontSize: 12, fontFamily: "monospace" }}>{e.student_email}</td>
@@ -833,7 +833,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                             <div style={{ color: "#475569", fontFamily: "monospace", fontSize: 11 }}>{e.code}</div>
                           </td>
                           <td style={{ padding: "14px 16px" }}><span style={{ color: e.vendor_color, fontWeight: 700 }}>{e.vendor_name}</span></td>
-                          <td style={{ padding: "14px 16px" }}><Chip text={e.delivery} color="#0ea5e9" /></td>
+                          <td style={{ padding: "14px 16px" }}><Chip text={e.delivery} color="#3b82f6" /></td>
                           <td style={{ padding: "14px 16px" }}>
                             <button onClick={() => setConfirmUnenroll(e)} style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Unenroll</button>
                           </td>
@@ -910,7 +910,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                           </div>
                           <div>
                             <div style={{ color: "#1e293b", fontWeight: 800, fontSize: 18 }}>{student?.name}</div>
-                            <div style={{ color: "#0ea5e9", fontSize: 13, fontFamily: "monospace" }}>{student?.email}</div>
+                            <div style={{ color: "#3b82f6", fontSize: 13, fontFamily: "monospace" }}>{student?.email}</div>
                           </div>
                         </div>
                         <button onClick={() => setStudentDetail(null)} style={{ background: "rgba(0,0,0,0.03)", border: "none", color: "#94a3b8", borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}>✕</button>
@@ -946,7 +946,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                                   <span style={{ color: "#475569", fontFamily: "monospace", fontSize: 11 }}>{e.code}</span>
                                 </div>
                               </div>
-                              <Chip text={e.delivery} color="#0ea5e9" />
+                              <Chip text={e.delivery} color="#3b82f6" />
                             </div>
                           ))}
                         </div>
@@ -989,7 +989,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
                         <div>
                           <div style={{ color: "#1e293b", fontWeight: 700, fontSize: 15 }}>{ins.first_name} {ins.last_name}</div>
-                          <div style={{ color: "#0ea5e9", fontSize: 12, fontFamily: "monospace" }}>{ins.email}</div>
+                          <div style={{ color: "#3b82f6", fontSize: 12, fontFamily: "monospace" }}>{ins.email}</div>
                           {ins.title && <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 2 }}>{ins.title} · {ins.employment_type}</div>}
                         </div>
                         <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
@@ -1000,7 +1000,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                           }} style={{ background: "rgba(99,102,241,0.1)", color: "#818cf8", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
                             Courses ({courses.filter(c => c.instructorId === ins.id).length})
                           </button>
-                          <button onClick={() => openEditInstructor(ins)} style={{ background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Edit</button>
+                          <button onClick={() => openEditInstructor(ins)} style={{ background: "rgba(59,130,246,0.1)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Edit</button>
                           {ins.status === "Active" && <button onClick={() => setConfirmDeactivateInstructor(ins)} style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Deactivate</button>}
                         </div>
                       </div>
@@ -1069,7 +1069,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                       <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Availability</div>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
                         {DAYS.map(day => (
-                          <button key={day} type="button" onClick={() => toggleDay(day)} style={{ padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "1px solid", borderColor: instructorForm.available_days.includes(day) ? "#0ea5e9" : "#e2e8f0", background: instructorForm.available_days.includes(day) ? "rgba(14,165,233,0.15)" : "#f8fafc", color: instructorForm.available_days.includes(day) ? "#0ea5e9" : "#64748b" }}>
+                          <button key={day} type="button" onClick={() => toggleDay(day)} style={{ padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "1px solid", borderColor: instructorForm.available_days.includes(day) ? "#3b82f6" : "#e2e8f0", background: instructorForm.available_days.includes(day) ? "rgba(59,130,246,0.15)" : "#f8fafc", color: instructorForm.available_days.includes(day) ? "#3b82f6" : "#64748b" }}>
                             {day.slice(0, 3)}
                           </button>
                         ))}
@@ -1213,18 +1213,18 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                         <div style={{ color: "#64748b", fontSize: 12, marginTop: 6 }}>The instructor record has been saved. Set up the Entra ID credentials in Azure App Service settings and try again via Edit.</div>
                       </div>
                     ) : (
-                      <div style={{ background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.15)", borderRadius: 10, padding: 16, marginBottom: 20 }}>
+                      <div style={{ background: "rgba(59,130,246,0.05)", border: "1px solid rgba(59,130,246,0.15)", borderRadius: 10, padding: 16, marginBottom: 20 }}>
                         <div style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Entra ID Account Details</div>
                         <div style={{ display: "grid", gap: 10 }}>
                           <div>
                             <div style={{ color: "#475569", fontSize: 11 }}>Username (UPN)</div>
-                            <div style={{ color: "#38bdf8", fontFamily: "monospace", fontSize: 13, fontWeight: 600 }}>{instructorCreated.upn}</div>
+                            <div style={{ color: "#60a5fa", fontFamily: "monospace", fontSize: 13, fontWeight: 600 }}>{instructorCreated.upn}</div>
                           </div>
                           <div>
                             <div style={{ color: "#475569", fontSize: 11 }}>Temporary Password <span style={{ color: "#64748b", fontWeight: 400 }}>(instructor must change on first login)</span></div>
                             <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
                               <code style={{ background: "#e2e8f0", border: "1px solid #e2e8f0", borderRadius: 6, padding: "6px 12px", color: "#1e293b", fontFamily: "monospace", fontSize: 15, fontWeight: 700, flex: 1, textAlign: "center", letterSpacing: 2 }}>{instructorCreated.tempPassword}</code>
-                              <button onClick={() => instructorCreated.tempPassword && navigator.clipboard.writeText(instructorCreated.tempPassword)} disabled={!instructorCreated.tempPassword} style={{ background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: instructorCreated.tempPassword ? "pointer" : "not-allowed", whiteSpace: "nowrap", opacity: instructorCreated.tempPassword ? 1 : 0.4 }}>Copy</button>
+                              <button onClick={() => instructorCreated.tempPassword && navigator.clipboard.writeText(instructorCreated.tempPassword)} disabled={!instructorCreated.tempPassword} style={{ background: "rgba(59,130,246,0.1)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: instructorCreated.tempPassword ? "pointer" : "not-allowed", whiteSpace: "nowrap", opacity: instructorCreated.tempPassword ? 1 : 0.4 }}>Copy</button>
                             </div>
                           </div>
                         </div>
@@ -1257,7 +1257,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
               )}
               {filteredLocations.map(loc => (
                 <div key={loc.id} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, padding: 20, display: "flex", gap: 16, alignItems: "flex-start" }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 10, background: loc.type === "Online" ? "rgba(99,102,241,0.15)" : loc.type === "Hybrid" ? "rgba(251,191,36,0.15)" : "rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: loc.type === "Online" ? "rgba(99,102,241,0.15)" : loc.type === "Hybrid" ? "rgba(251,191,36,0.15)" : "rgba(59,130,246,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
                     {loc.type === "Online" ? "🌐" : loc.type === "Hybrid" ? "🔀" : "🏢"}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -1269,12 +1269,12 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                         </div>
                       </div>
                       <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                        <button onClick={() => openEditLocation(loc)} style={{ background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Edit</button>
+                        <button onClick={() => openEditLocation(loc)} style={{ background: "rgba(59,130,246,0.1)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Edit</button>
                         <button onClick={() => setConfirmDeleteLocation(loc)} style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Deactivate</button>
                       </div>
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", marginTop: 10 }}>
-                      <span style={{ background: loc.type === "Online" ? "rgba(99,102,241,0.12)" : loc.type === "Hybrid" ? "rgba(251,191,36,0.12)" : "rgba(14,165,233,0.12)", color: loc.type === "Online" ? "#818cf8" : loc.type === "Hybrid" ? "#fbbf24" : "#38bdf8", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20 }}>{loc.type}</span>
+                      <span style={{ background: loc.type === "Online" ? "rgba(99,102,241,0.12)" : loc.type === "Hybrid" ? "rgba(251,191,36,0.12)" : "rgba(59,130,246,0.12)", color: loc.type === "Online" ? "#818cf8" : loc.type === "Hybrid" ? "#fbbf24" : "#60a5fa", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20 }}>{loc.type}</span>
                       {loc.capacity && <span style={{ color: "#64748b", fontSize: 12 }}>Capacity: <span style={{ color: "#94a3b8" }}>{loc.capacity}</span></span>}
                       {loc.platform && <span style={{ color: "#64748b", fontSize: 12 }}>Platform: <span style={{ color: "#94a3b8" }}>{loc.platform}</span></span>}
                       {loc.timezone && loc.timezone !== "UTC" && <span style={{ color: "#64748b", fontSize: 12 }}>TZ: <span style={{ color: "#94a3b8", fontFamily: "monospace" }}>{loc.timezone}</span></span>}
@@ -1406,7 +1406,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
             <h2 style={{ fontSize: 28, fontWeight: 800, color: "#1e293b", fontFamily: "Inter, system-ui, sans-serif", marginBottom: 32 }}>Integrations & Provisioning</h2>
             <div style={{ display: "grid", gap: 16 }}>
               {[
-                { name: "Microsoft 365 Tenant", icon: "☁️", status: "Connected", desc: "Auto-provisioning student accounts on registration. Tenant: trainee.edu", color: "#0ea5e9" },
+                { name: "Microsoft 365 Tenant", icon: "☁️", status: "Connected", desc: "Auto-provisioning student accounts on registration. Tenant: trainee.edu", color: "#3b82f6" },
                 { name: "MS Teams", icon: "💬", status: "Connected", desc: "Course channels auto-created. 47 active student members.", color: "#6366f1" },
                 { name: "OneNote Class Notebooks", icon: "📓", status: "Connected", desc: "Shared notebooks synced per course cohort.", color: "#8b5cf6" },
                 { name: "Moodle LMS", icon: "🎓", status: "Connected", desc: "Course content, quizzes, and assignments managed via Moodle.", color: "#f59e0b" },
@@ -1511,7 +1511,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                             <td style={{ padding: "14px 16px", color: "#94a3b8", fontFamily: "monospace" }}>{s.time}</td>
                             <td style={{ padding: "14px 16px", color: "#334155" }}>{s.instructor || "—"}</td>
                             <td style={{ padding: "14px 16px", color: "#94a3b8", fontSize: 12 }}>{s.room || "—"}</td>
-                            <td style={{ padding: "14px 16px" }}><Chip text={s.type} color={s.type === "Online" ? "#0ea5e9" : s.type === "Hybrid" ? "#f59e0b" : "#8b5cf6"} /></td>
+                            <td style={{ padding: "14px 16px" }}><Chip text={s.type} color={s.type === "Online" ? "#3b82f6" : s.type === "Hybrid" ? "#f59e0b" : "#8b5cf6"} /></td>
                             <td style={{ padding: "14px 16px", whiteSpace: "nowrap" }}>
                               <button onClick={() => openEditSchedule(s)} style={{ background: "#e2e8f0", color: "#94a3b8", border: "none", borderRadius: 7, padding: "6px 12px", fontSize: 12, cursor: "pointer", marginRight: 6 }}>Edit</button>
                               <button onClick={() => setConfirmDeleteSchedule(s)} style={{ background: "rgba(239,68,68,0.08)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 7, padding: "6px 12px", fontSize: 12, cursor: "pointer" }}>Delete</button>

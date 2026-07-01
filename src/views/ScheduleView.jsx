@@ -32,7 +32,7 @@ export default function ScheduleView({ schedule, courses }) {
                   <td style={{ padding: "16px", color: "#94a3b8", fontFamily: "monospace", fontSize: 13 }}>{s.time}</td>
                   <td style={{ padding: "16px", color: "#334155" }}>{s.instructor}</td>
                   <td style={{ padding: "16px", color: "#94a3b8", fontSize: 13 }}>{s.room}</td>
-                  <td style={{ padding: "16px" }}><Chip text={s.type} color={s.type === "Online" ? "#0ea5e9" : s.type === "Hybrid" ? "#8b5cf6" : "#f59e0b"} /></td>
+                  <td style={{ padding: "16px" }}><Chip text={s.type} color={s.type === "Online" ? "#3b82f6" : s.type === "Hybrid" ? "#8b5cf6" : "#f59e0b"} /></td>
                   <td style={{ padding: "16px" }}>
                     <div style={{ fontSize: 13 }}>
                       <span style={{ color: "#22c55e", fontWeight: 700 }}>{course.seats - course.enrolled}</span>

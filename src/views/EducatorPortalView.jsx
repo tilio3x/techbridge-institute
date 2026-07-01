@@ -87,7 +87,7 @@ export default function EducatorPortalView({ staffAccount, instructors, courses,
               <div style={{ color: "#94a3b8", fontSize: 14, marginTop: 4 }}>{instructor.title || "Instructor"}</div>
               <div style={{ display: "flex", gap: 16, marginTop: 8, flexWrap: "wrap" }}>
                 <span style={{ color: "#6366f1", fontSize: 12 }}>📚 {myCourses.length} course{myCourses.length !== 1 ? "s" : ""}</span>
-                <span style={{ color: "#0ea5e9", fontSize: 12 }}>👥 {uniqueStudentIds.length} student{uniqueStudentIds.length !== 1 ? "s" : ""}</span>
+                <span style={{ color: "#3b82f6", fontSize: 12 }}>👥 {uniqueStudentIds.length} student{uniqueStudentIds.length !== 1 ? "s" : ""}</span>
                 {instructor.email && <span style={{ color: "#64748b", fontSize: 12 }}>✉️ {instructor.email}</span>}
               </div>
             </>

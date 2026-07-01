@@ -20,11 +20,11 @@ export default function DashboardView({ enrolledCourses, courses, user, profile 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 36, flexWrap: "wrap", gap: 16 }}>
         <div>
           <h2 style={{ fontSize: 32, fontWeight: 800, color: "#1e293b", fontFamily: "Inter, system-ui, sans-serif", marginBottom: 4 }}>Student Dashboard</h2>
-          <p style={{ color: "#64748b" }}>Welcome back, <span style={{ color: "#0ea5e9" }}>{user?.name ?? user?.username ?? "Student"}</span></p>
+          <p style={{ color: "#64748b" }}>Welcome back, <span style={{ color: "#3b82f6" }}>{user?.name ?? user?.username ?? "Student"}</span></p>
         </div>
         <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, padding: "12px 20px", fontSize: 13, color: "#94a3b8" }}>
           <span style={{ color: "#64748b" }}>M365: </span>
-          <span style={{ color: "#0ea5e9", fontFamily: "monospace" }}>m.santos@trainee.edu</span>
+          <span style={{ color: "#3b82f6", fontFamily: "monospace" }}>m.santos@trainee.edu</span>
         </div>
       </div>
 
@@ -66,7 +66,7 @@ export default function DashboardView({ enrolledCourses, courses, user, profile 
                 </div>
               </div>
               <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-                <button onClick={() => setActiveCourse(course)} style={{ flex: 1, background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 8, padding: "9px 0", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                <button onClick={() => setActiveCourse(course)} style={{ flex: 1, background: "rgba(59,130,246,0.1)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 8, padding: "9px 0", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
                   Continue Learning
                 </button>
                 {completed && (
@@ -86,7 +86,7 @@ export default function DashboardView({ enrolledCourses, courses, user, profile 
           <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 20, padding: 36, maxWidth: 600, width: "100%" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
               <div>
-                <div style={{ color: "#0ea5e9", fontSize: 12, fontWeight: 700, marginBottom: 6 }}>{activeCourse.code}</div>
+                <div style={{ color: "#3b82f6", fontSize: 12, fontWeight: 700, marginBottom: 6 }}>{activeCourse.code}</div>
                 <h3 style={{ color: "#1e293b", fontWeight: 800, fontSize: 22, margin: 0 }}>{activeCourse.title}</h3>
               </div>
               <button onClick={() => setActiveCourse(null)} style={{ background: "rgba(0,0,0,0.03)", border: "none", color: "#94a3b8", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 16 }}>✕</button>
@@ -100,7 +100,7 @@ export default function DashboardView({ enrolledCourses, courses, user, profile 
               ))}
             </div>
             <div style={{ display: "flex", gap: 10 }}>
-              {[["💬 Join Teams", "#0ea5e9"], ["📓 OneNote", "#8b5cf6"], ["🎓 Moodle", "#f59e0b"], ["⚡ SkillJa", "#22c55e"]].map(([label, color]) => (
+              {[["💬 Join Teams", "#3b82f6"], ["📓 OneNote", "#8b5cf6"], ["🎓 Moodle", "#f59e0b"], ["⚡ SkillJa", "#22c55e"]].map(([label, color]) => (
                 <button key={label} style={{ flex: 1, background: `${color}15`, color, border: `1px solid ${color}33`, borderRadius: 10, padding: "10px 0", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{label}</button>
               ))}
             </div>
@@ -118,7 +118,7 @@ export default function DashboardView({ enrolledCourses, courses, user, profile 
             <div style={{ color: "#64748b", fontSize: 14, marginBottom: 24 }}>This certifies that</div>
             <div style={{ fontSize: 36, fontWeight: 900, fontFamily: "Inter, system-ui, sans-serif", color: "#1e293b", marginBottom: 8 }}>Maria Santos</div>
             <div style={{ color: "#94a3b8", fontSize: 15, marginBottom: 24 }}>has successfully completed</div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: "#0ea5e9", marginBottom: 8 }}>{showCert.title}</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "#3b82f6", marginBottom: 8 }}>{showCert.title}</div>
             <div style={{ color: "#64748b", fontSize: 14, marginBottom: 32 }}>{showCert.code} · {showCert.duration}</div>
             <div style={{ borderTop: "1px solid rgba(251,191,36,0.2)", paddingTop: 24, display: "flex", justifyContent: "space-around" }}>
               <div style={{ textAlign: "center" }}>
