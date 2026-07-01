@@ -75,7 +75,7 @@ export default function HomeView({ vendors, courses }) {
           {vendors.map((v) => {
             const count = courses.filter(c => c.vendor === v.id).length;
             return (
-              <div key={v.id} onClick={() => navigate("/courses")} style={{ background: "#ffffff", border: `1px solid ${v.color}33`, borderRadius: 12, padding: 28, textAlign: "center", cursor: "pointer", transition: "all 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+              <div key={v.id} onClick={() => navigate(`/courses/${v.id}`)} style={{ background: "#ffffff", border: `1px solid ${v.color}33`, borderRadius: 12, padding: 28, textAlign: "center", cursor: "pointer", transition: "all 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
                 <div style={{ fontSize: 36, marginBottom: 12 }}>{v.logo}</div>
                 <div style={{ fontWeight: 700, color: "#1e293b", marginBottom: 4 }}>{v.name}</div>
                 <div style={{ fontSize: 13, color: "#64748b" }}>{count} course{count !== 1 ? "s" : ""}</div>
