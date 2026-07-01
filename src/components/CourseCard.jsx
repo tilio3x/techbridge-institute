@@ -1,47 +1,89 @@
 import Badge from "./Badge";
-import Chip from "./Chip";
-import { levelColor } from "../utils/constants";
+
+const levelStyle = {
+  Beginner: { bg: "#dcfce7", color: "#15803d" },
+  Intermediate: { bg: "#fef3c7", color: "#b45309" },
+  Advanced: { bg: "#fee2e2", color: "#dc2626" },
+};
 
 export default function CourseCard({ course, onEnroll, isEnrolled }) {
   const vendor = { name: course.vendorName, color: course.vendorColor, logo: course.vendorLogo };
   const seatsLeft = course.seats - course.enrolled;
+  const lvl = levelStyle[course.level] || levelStyle.Beginner;
+
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-5 pt-6 flex flex-col gap-3.5 shadow-sm hover:shadow-lg transition-shadow duration-200 relative overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: vendor.color }} />
-      <div className="flex justify-between items-start">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">{vendor.logo}</span>
-          <span className="text-[11px] font-bold tracking-widest uppercase font-mono" style={{ color: vendor.color }}>{vendor.name}</span>
+    <div className="course-card" style={{
+      background: "#ffffff", borderRadius: 12, overflow: "hidden",
+      border: "1px solid #e2e8f0", display: "flex", flexDirection: "column",
+      cursor: "pointer",
+    }}>
+      {/* Colored header strip */}
+      <div style={{
+        background: `linear-gradient(135deg, ${vendor.color}18, ${vendor.color}08)`,
+        borderBottom: `2px solid ${vendor.color}30`,
+        padding: "16px 20px",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 20 }}>{vendor.logo}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: vendor.color, letterSpacing: 0.3 }}>{vendor.name}</span>
         </div>
         <Badge text={course.badge} />
       </div>
-      <div>
-        <div className="font-mono text-xs text-slate-500 mb-1">{course.code}</div>
-        <div className="text-base font-semibold text-slate-800 leading-tight">{course.title}</div>
-      </div>
-      <p className="text-[13px] text-slate-500 leading-relaxed m-0">{course.description}</p>
-      <div className="flex gap-2 flex-wrap">
-        <Chip text={course.level} color={levelColor[course.level]} />
-        <Chip text={course.delivery} color="#3b82f6" />
-        <Chip text={course.duration} color="#8b5cf6" />
-      </div>
-      <div className="border-t border-slate-200 pt-3 flex justify-between items-center">
+
+      {/* Content */}
+      <div style={{ padding: "20px 20px 16px", flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
         <div>
-          <div className="text-xl font-extrabold text-slate-800">${course.price.toLocaleString()}</div>
-          <div className="text-[11px] text-slate-500">
-            Starts {new Date(course.nextStart).toLocaleDateString("en-US", { month: "short", day: "numeric" })} · {seatsLeft} seats left
+          <div style={{ fontSize: 16, fontWeight: 700, color: "#1e293b", lineHeight: 1.4, marginBottom: 4 }}>
+            {course.title}
+          </div>
+          <div style={{ fontSize: 12, fontFamily: "monospace", color: "#94a3b8" }}>{course.code}</div>
+        </div>
+
+        <p style={{ fontSize: 13, color: "#64748b", lineHeight: 1.6, margin: 0, flex: 1 }}>
+          {course.description.length > 120 ? course.description.slice(0, 120) + "…" : course.description}
+        </p>
+
+        {/* Metadata row */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <span style={{
+            background: lvl.bg, color: lvl.color, fontSize: 11, fontWeight: 600,
+            padding: "3px 10px", borderRadius: 20,
+          }}>{course.level}</span>
+          <span style={{
+            background: "#f1f5f9", color: "#475569", fontSize: 11, fontWeight: 500,
+            padding: "3px 10px", borderRadius: 20,
+          }}>{course.delivery}</span>
+          <span style={{
+            background: "#f1f5f9", color: "#475569", fontSize: 11, fontWeight: 500,
+            padding: "3px 10px", borderRadius: 20,
+          }}>{course.duration}</span>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{
+        padding: "14px 20px", borderTop: "1px solid #f1f5f9",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+      }}>
+        <div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: "#1e293b" }}>${course.price.toLocaleString()}</div>
+          <div style={{ fontSize: 11, color: "#94a3b8" }}>
+            {new Date(course.nextStart).toLocaleDateString("en-US", { month: "short", day: "numeric" })} · {seatsLeft} seat{seatsLeft !== 1 ? "s" : ""} left
           </div>
         </div>
         <button
-          onClick={() => onEnroll(course)}
-          className={`rounded-lg px-5 py-2.5 font-bold text-[13px] cursor-pointer ${
-            isEnrolled
-              ? "bg-green-500/15 text-green-500 border border-green-500"
-              : "bg-gradient-to-br from-blue-500 to-indigo-500 text-white border-none"
-          }`}
-          style={isEnrolled ? { cursor: "default" } : {}}
+          onClick={e => { e.stopPropagation(); onEnroll(course); }}
+          style={{
+            background: isEnrolled ? "#f0fdf4" : "linear-gradient(135deg, #3b82f6, #6366f1)",
+            color: isEnrolled ? "#22c55e" : "#ffffff",
+            border: isEnrolled ? "1px solid #bbf7d0" : "none",
+            borderRadius: 8, padding: "9px 20px", fontSize: 13,
+            fontWeight: 600, cursor: isEnrolled ? "default" : "pointer",
+            transition: "all 0.2s ease",
+          }}
         >
-          {isEnrolled ? "✓ Enrolled" : "Enroll Now"}
+          {isEnrolled ? "✓ Enrolled" : "Enroll"}
         </button>
       </div>
     </div>
