@@ -15,6 +15,7 @@ import EducatorPortalView from "./views/EducatorPortalView";
 import AdminView from "./views/AdminView";
 import ProfileSetupView from "./views/ProfileSetupView";
 import ProfileEditView from "./views/ProfileEditView";
+import VendorCoursesView from "./views/VendorCoursesView";
 
 export default function App() {
   const navigate = useNavigate();
@@ -243,7 +244,8 @@ export default function App() {
         ) : (
           <Routes>
             <Route path="/" element={<HomeView vendors={vendors} courses={courses} />} />
-            <Route path="/courses" element={<CoursesView enrolledCourses={enrolledCourses} onEnroll={handleEnroll} vendors={vendors} courses={courses} />} />
+            <Route path="/courses" element={<CoursesView vendors={vendors} courses={courses} />} />
+            <Route path="/courses/:vendorId" element={<VendorCoursesView enrolledCourses={enrolledCourses} onEnroll={handleEnroll} vendors={vendors} courses={courses} />} />
             <Route path="/schedule" element={<ScheduleView schedule={schedule} courses={courses} />} />
             <Route path="/contact" element={<ContactView deliveryLocations={deliveryLocations} />} />
             <Route path="/register" element={
