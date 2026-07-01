@@ -57,16 +57,14 @@ export default function CoursesView({ vendors, courses }) {
                 onClick={() => navigate(`/courses/${v.id}`)}
                 style={{
                   background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 10,
-                  padding: "24px 16px", textAlign: "center", cursor: "pointer",
+                  padding: "16px", cursor: "pointer",
                   transition: "all 0.2s ease",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-                  minHeight: 56,
+                  display: "flex", alignItems: "center", justifyContent: "center",
                 }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = "#cbd5e1"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)"; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.boxShadow = "none"; }}
               >
-                <span style={{ fontSize: 22 }}>{v.logo}</span>
-                <span style={{ fontSize: 15, fontWeight: 600, color: "#1e293b" }}>{v.name}</span>
+                <span style={{ fontSize: 16, fontWeight: 700, color: v.color, letterSpacing: 0.3 }}>{v.name}</span>
               </div>
             ))}
           </div>
