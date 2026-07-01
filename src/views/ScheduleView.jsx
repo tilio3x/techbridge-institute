@@ -5,7 +5,7 @@ export default function ScheduleView({ schedule, courses }) {
 
   return (
     <div style={{ padding: "40px 24px", maxWidth: 1100, margin: "0 auto" }}>
-      <h2 style={{ fontSize: 36, fontWeight: 900, color: "#1e293b", marginBottom: 8, fontFamily: "Georgia, serif" }}>Class Schedule</h2>
+      <h2 style={{ fontSize: 36, fontWeight: 800, color: "#1e293b", marginBottom: 8, fontFamily: "Inter, system-ui, sans-serif" }}>Class Schedule</h2>
       <p style={{ color: "#64748b", marginBottom: 36 }}>Spring 2026 · All times local</p>
 
       <div style={{ overflowX: "auto" }}>

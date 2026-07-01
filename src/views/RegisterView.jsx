@@ -24,7 +24,7 @@ export default function RegisterView({ enrolledCourses, onEnroll, courses }) {
   if (submitted) return (
     <div style={{ padding: "80px 24px", textAlign: "center", maxWidth: 600, margin: "0 auto" }}>
       <div style={{ fontSize: 80, marginBottom: 24 }}>🎉</div>
-      <h2 style={{ fontSize: 36, fontWeight: 900, color: "#1e293b", fontFamily: "Georgia, serif", marginBottom: 16 }}>Registration Complete!</h2>
+      <h2 style={{ fontSize: 36, fontWeight: 800, color: "#1e293b", fontFamily: "Inter, system-ui, sans-serif", marginBottom: 16 }}>Registration Complete!</h2>
       <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.7, marginBottom: 32 }}>
         Welcome, <strong style={{ color: "#1e293b" }}>{form.firstName}</strong>! Your application has been submitted.
         You'll receive a confirmation email shortly with your <strong style={{ color: "#0ea5e9" }}>Microsoft 365 account credentials</strong> ({form.firstName.toLowerCase()}.{form.lastName.toLowerCase()}@trainee.edu).
@@ -56,7 +56,7 @@ export default function RegisterView({ enrolledCourses, onEnroll, courses }) {
 
   return (
     <div style={{ padding: "40px 24px", maxWidth: 800, margin: "0 auto" }}>
-      <h2 style={{ fontSize: 36, fontWeight: 900, color: "#1e293b", marginBottom: 8, fontFamily: "Georgia, serif" }}>Student Registration</h2>
+      <h2 style={{ fontSize: 36, fontWeight: 800, color: "#1e293b", marginBottom: 8, fontFamily: "Inter, system-ui, sans-serif" }}>Student Registration</h2>
       <p style={{ color: "#64748b", marginBottom: 36 }}>Complete all steps to enroll. A Microsoft 365 account will be created for you.</p>
 
       {/* Step indicator */}
@@ -101,7 +101,7 @@ export default function RegisterView({ enrolledCourses, onEnroll, courses }) {
             <textarea value={form.goals} onChange={e => setForm(f => ({ ...f, goals: e.target.value }))} style={{ ...inputStyle, height: 100, resize: "vertical" }} placeholder="Tell us about your career goals in IT..." />
           </div>
           <div style={{ gridColumn: "span 2", display: "flex", justifyContent: "flex-end" }}>
-            <button onClick={() => setStep(2)} disabled={!form.firstName || !form.email} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 12, padding: "14px 32px", fontWeight: 700, fontSize: 15, cursor: "pointer", opacity: (!form.firstName || !form.email) ? 0.5 : 1 }}>
+            <button onClick={() => setStep(2)} disabled={!form.firstName || !form.email} style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", color: "#fff", border: "none", borderRadius: 12, padding: "14px 32px", fontWeight: 700, fontSize: 15, cursor: "pointer", opacity: (!form.firstName || !form.email) ? 0.5 : 1 }}>
               Next: Select Courses →
             </button>
           </div>
@@ -136,7 +136,7 @@ export default function RegisterView({ enrolledCourses, onEnroll, courses }) {
           </div>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <button onClick={() => setStep(1)} style={{ background: "rgba(0,0,0,0.03)", color: "#94a3b8", border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px 24px", fontWeight: 700, cursor: "pointer" }}>← Back</button>
-            <button onClick={() => setStep(3)} disabled={form.selectedCourses.length === 0} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 12, padding: "14px 32px", fontWeight: 700, fontSize: 15, cursor: "pointer", opacity: form.selectedCourses.length === 0 ? 0.5 : 1 }}>
+            <button onClick={() => setStep(3)} disabled={form.selectedCourses.length === 0} style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", color: "#fff", border: "none", borderRadius: 12, padding: "14px 32px", fontWeight: 700, fontSize: 15, cursor: "pointer", opacity: form.selectedCourses.length === 0 ? 0.5 : 1 }}>
               Review ({form.selectedCourses.length} selected) →
             </button>
           </div>

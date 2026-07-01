@@ -34,7 +34,7 @@ export default function ContactView({ deliveryLocations }) {
     return (
       <div style={{ maxWidth: 600, margin: "0 auto", padding: "80px 24px", textAlign: "center" }}>
         <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(34,197,94,0.15)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", fontSize: 28 }}>✓</div>
-        <h2 style={{ fontSize: 28, fontWeight: 900, color: "#1e293b", marginBottom: 12 }}>Message Sent!</h2>
+        <h2 style={{ fontSize: 28, fontWeight: 800, color: "#1e293b", marginBottom: 12 }}>Message Sent!</h2>
         <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.7 }}>Thank you for reaching out. Our team will get back to you within 1–2 business days.</p>
       </div>
     );
@@ -43,8 +43,8 @@ export default function ContactView({ deliveryLocations }) {
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "60px 24px" }}>
       <div style={{ textAlign: "center", marginBottom: 48 }}>
-        <h1 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 900, color: "#1e293b", marginBottom: 12 }}>
-          Get in <span style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Touch</span>
+        <h1 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 800, color: "#1e293b", marginBottom: 12 }}>
+          Get in <span style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Touch</span>
         </h1>
         <p style={{ color: "#94a3b8", fontSize: 16, maxWidth: 600, margin: "0 auto" }}>Have a question about our programs? Want to partner with us? We'd love to hear from you.</p>
       </div>
@@ -85,7 +85,7 @@ export default function ContactView({ deliveryLocations }) {
               <textarea required rows={5} style={{ ...inputStyle, resize: "vertical" }} value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} placeholder="How can we help you?" />
             </div>
             <button type="submit" disabled={submitting} style={{
-              background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 12,
+              background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", color: "#fff", border: "none", borderRadius: 12,
               padding: "14px 32px", fontSize: 15, fontWeight: 700, cursor: submitting ? "not-allowed" : "pointer",
               opacity: submitting ? 0.6 : 1, alignSelf: "flex-start",
             }}>
