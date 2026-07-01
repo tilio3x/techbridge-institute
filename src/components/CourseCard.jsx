@@ -22,7 +22,7 @@ export default function CourseCard({ course, onEnroll, isEnrolled }) {
       <p className="text-[13px] text-slate-500 leading-relaxed m-0">{course.description}</p>
       <div className="flex gap-2 flex-wrap">
         <Chip text={course.level} color={levelColor[course.level]} />
-        <Chip text={course.delivery} color="#0ea5e9" />
+        <Chip text={course.delivery} color="#3b82f6" />
         <Chip text={course.duration} color="#8b5cf6" />
       </div>
       <div className="border-t border-slate-200 pt-3 flex justify-between items-center">

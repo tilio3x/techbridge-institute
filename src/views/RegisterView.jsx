@@ -27,10 +27,10 @@ export default function RegisterView({ enrolledCourses, onEnroll, courses }) {
       <h2 style={{ fontSize: 36, fontWeight: 800, color: "#1e293b", fontFamily: "Inter, system-ui, sans-serif", marginBottom: 16 }}>Registration Complete!</h2>
       <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.7, marginBottom: 32 }}>
         Welcome, <strong style={{ color: "#1e293b" }}>{form.firstName}</strong>! Your application has been submitted.
-        You'll receive a confirmation email shortly with your <strong style={{ color: "#0ea5e9" }}>Microsoft 365 account credentials</strong> ({form.firstName.toLowerCase()}.{form.lastName.toLowerCase()}@trainee.edu).
+        You'll receive a confirmation email shortly with your <strong style={{ color: "#3b82f6" }}>Microsoft 365 account credentials</strong> ({form.firstName.toLowerCase()}.{form.lastName.toLowerCase()}@trainee.edu).
       </p>
-      <div style={{ background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 16, padding: 24, textAlign: "left" }}>
-        <h3 style={{ color: "#0ea5e9", fontWeight: 700, marginBottom: 16 }}>📋 Next Steps</h3>
+      <div style={{ background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 16, padding: 24, textAlign: "left" }}>
+        <h3 style={{ color: "#3b82f6", fontWeight: 700, marginBottom: 16 }}>📋 Next Steps</h3>
         {["Check email for M365 account setup instructions", "Access Moodle LMS with your student credentials", "Join your course Teams channels", "Review your course schedule and first assignment", "Set up your OneNote class notebook"].map((s, i) => (
           <div key={i} style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10, color: "#94a3b8", fontSize: 14 }}>
             <span style={{ color: "#22c55e", fontWeight: 700, minWidth: 20 }}>{i + 1}.</span> {s}
@@ -66,7 +66,7 @@ export default function RegisterView({ enrolledCourses, onEnroll, courses }) {
             <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
               <div style={{
                 width: 32, height: 32, borderRadius: "50%",
-                background: step > i + 1 ? "#22c55e" : step === i + 1 ? "#0ea5e9" : "#e2e8f0",
+                background: step > i + 1 ? "#22c55e" : step === i + 1 ? "#3b82f6" : "#e2e8f0",
                 color: step >= i + 1 ? "#fff" : "#64748b",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontWeight: 700, fontSize: 13, flexShrink: 0,
@@ -117,12 +117,12 @@ export default function RegisterView({ enrolledCourses, onEnroll, courses }) {
               const sel = form.selectedCourses.includes(course.id);
               return (
                 <div key={course.id} onClick={() => toggle(course.id)} style={{
-                  border: sel ? "2px solid #0ea5e9" : "1px solid #e2e8f0",
+                  border: sel ? "2px solid #3b82f6" : "1px solid #e2e8f0",
                   borderRadius: 12, padding: 16, cursor: "pointer",
-                  background: sel ? "rgba(14,165,233,0.08)" : "#f8fafc",
+                  background: sel ? "rgba(59,130,246,0.08)" : "#f8fafc",
                   display: "flex", alignItems: "flex-start", gap: 12,
                 }}>
-                  <div style={{ width: 22, height: 22, borderRadius: 6, border: sel ? "none" : "2px solid #475569", background: sel ? "#0ea5e9" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
+                  <div style={{ width: 22, height: 22, borderRadius: 6, border: sel ? "none" : "2px solid #475569", background: sel ? "#3b82f6" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
                     {sel && <span style={{ color: "#fff", fontSize: 14, fontWeight: 700 }}>✓</span>}
                   </div>
                   <div>
@@ -170,12 +170,12 @@ export default function RegisterView({ enrolledCourses, onEnroll, courses }) {
               })}
               <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: 12, display: "flex", justifyContent: "space-between", fontWeight: 800, fontSize: 18 }}>
                 <span style={{ color: "#1e293b" }}>Total</span>
-                <span style={{ color: "#0ea5e9" }}>${form.selectedCourses.reduce((s, id) => s + (courseById(id)?.price || 0), 0).toLocaleString()}</span>
+                <span style={{ color: "#3b82f6" }}>${form.selectedCourses.reduce((s, id) => s + (courseById(id)?.price || 0), 0).toLocaleString()}</span>
               </div>
             </div>
           </div>
-          <div style={{ background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 12, padding: 16, marginBottom: 24, fontSize: 14, color: "#94a3b8" }}>
-            💡 A <strong style={{ color: "#0ea5e9" }}>Microsoft 365 account</strong> will be automatically provisioned for you as <code style={{ color: "#818cf8" }}>{form.firstName.toLowerCase() || "firstname"}.{form.lastName.toLowerCase() || "lastname"}@trainee.edu</code> — you'll receive setup instructions via email.
+          <div style={{ background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 12, padding: 16, marginBottom: 24, fontSize: 14, color: "#94a3b8" }}>
+            💡 A <strong style={{ color: "#3b82f6" }}>Microsoft 365 account</strong> will be automatically provisioned for you as <code style={{ color: "#818cf8" }}>{form.firstName.toLowerCase() || "firstname"}.{form.lastName.toLowerCase() || "lastname"}@trainee.edu</code> — you'll receive setup instructions via email.
           </div>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <button onClick={() => setStep(2)} style={{ background: "rgba(0,0,0,0.03)", color: "#94a3b8", border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px 24px", fontWeight: 700, cursor: "pointer" }}>← Back</button>

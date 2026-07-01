@@ -1,6 +1,6 @@
 const colors = { Hot: "bg-red-500", New: "bg-green-500", Core: "bg-violet-500" };
 
-export default function Badge({ text, color = "bg-sky-500" }) {
+export default function Badge({ text, color = "bg-blue-500" }) {
   if (!text) return null;
   const bg = colors[text] || color;
   return (
