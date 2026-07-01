@@ -19,7 +19,7 @@ export default function DashboardView({ enrolledCourses, courses, user, profile 
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 36, flexWrap: "wrap", gap: 16 }}>
         <div>
-          <h2 style={{ fontSize: 32, fontWeight: 900, color: "#1e293b", fontFamily: "Georgia, serif", marginBottom: 4 }}>Student Dashboard</h2>
+          <h2 style={{ fontSize: 32, fontWeight: 800, color: "#1e293b", fontFamily: "Inter, system-ui, sans-serif", marginBottom: 4 }}>Student Dashboard</h2>
           <p style={{ color: "#64748b" }}>Welcome back, <span style={{ color: "#0ea5e9" }}>{user?.name ?? user?.username ?? "Student"}</span></p>
         </div>
         <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, padding: "12px 20px", fontSize: 13, color: "#94a3b8" }}>
@@ -62,7 +62,7 @@ export default function DashboardView({ enrolledCourses, courses, user, profile 
                   <span style={{ fontSize: 13, fontWeight: 700, color: completed ? "#22c55e" : "#1e293b" }}>{progress}%</span>
                 </div>
                 <div style={{ height: 8, background: "#e2e8f0", borderRadius: 4, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${progress}%`, background: completed ? "#22c55e" : "linear-gradient(90deg, #0ea5e9, #6366f1)", borderRadius: 4, transition: "width 0.5s" }} />
+                  <div style={{ height: "100%", width: `${progress}%`, background: completed ? "#22c55e" : "linear-gradient(90deg, #3b82f6, #8b5cf6)", borderRadius: 4, transition: "width 0.5s" }} />
                 </div>
               </div>
               <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
@@ -116,7 +116,7 @@ export default function DashboardView({ enrolledCourses, courses, user, profile 
             <div style={{ fontSize: 48, marginBottom: 16 }}>🎓</div>
             <div style={{ color: "#fbbf24", fontSize: 13, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", marginBottom: 8 }}>Certificate of Completion</div>
             <div style={{ color: "#64748b", fontSize: 14, marginBottom: 24 }}>This certifies that</div>
-            <div style={{ fontSize: 36, fontWeight: 900, fontFamily: "Georgia, serif", color: "#1e293b", marginBottom: 8 }}>Maria Santos</div>
+            <div style={{ fontSize: 36, fontWeight: 900, fontFamily: "Inter, system-ui, sans-serif", color: "#1e293b", marginBottom: 8 }}>Maria Santos</div>
             <div style={{ color: "#94a3b8", fontSize: 15, marginBottom: 24 }}>has successfully completed</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: "#0ea5e9", marginBottom: 8 }}>{showCert.title}</div>
             <div style={{ color: "#64748b", fontSize: 14, marginBottom: 32 }}>{showCert.code} · {showCert.duration}</div>

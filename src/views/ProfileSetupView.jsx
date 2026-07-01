@@ -59,7 +59,7 @@ export default function ProfileSetupView({ user, onSaved }) {
       <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 20, padding: 40, maxWidth: 560, width: "100%" }}>
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>👋</div>
-          <h2 style={{ fontSize: 28, fontWeight: 900, color: "#1e293b", fontFamily: "Georgia, serif", margin: "0 0 8px" }}>Complete Your Profile</h2>
+          <h2 style={{ fontSize: 28, fontWeight: 800, color: "#1e293b", fontFamily: "Inter, system-ui, sans-serif", margin: "0 0 8px" }}>Complete Your Profile</h2>
           <p style={{ color: "#64748b", fontSize: 14 }}>Before you continue, please tell us a little about yourself.</p>
         </div>
 
@@ -98,7 +98,7 @@ export default function ProfileSetupView({ user, onSaved }) {
 
         {error && <p style={{ color: "#f87171", fontSize: 13, marginTop: 16, textAlign: "center" }}>{error}</p>}
 
-        <button onClick={handleSubmit} disabled={saving} style={{ marginTop: 28, width: "100%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 12, padding: "14px 0", fontSize: 15, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}>
+        <button onClick={handleSubmit} disabled={saving} style={{ marginTop: 28, width: "100%", background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", color: "#fff", border: "none", borderRadius: 12, padding: "14px 0", fontSize: 15, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}>
           {saving ? "Saving..." : "Continue →"}
         </button>
       </div>

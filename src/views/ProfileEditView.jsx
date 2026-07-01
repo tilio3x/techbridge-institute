@@ -71,7 +71,7 @@ export default function ProfileEditView({ user, profile, onSaved }) {
 
   return (
     <div style={{ padding: "40px 24px", maxWidth: 700, margin: "0 auto" }}>
-      <h2 style={{ fontSize: 32, fontWeight: 900, color: "#1e293b", fontFamily: "Georgia, serif", marginBottom: 8 }}>My Profile</h2>
+      <h2 style={{ fontSize: 32, fontWeight: 800, color: "#1e293b", fontFamily: "Inter, system-ui, sans-serif", marginBottom: 8 }}>My Profile</h2>
       <p style={{ color: "#64748b", marginBottom: 36 }}>Update your contact details and learning goals.</p>
 
       <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 16, padding: 32 }}>
@@ -132,7 +132,7 @@ export default function ProfileEditView({ user, profile, onSaved }) {
         {saved && <p style={{ color: "#22c55e", fontSize: 13, marginTop: 16 }}>Profile saved successfully.</p>}
 
         <div style={{ marginTop: 28, display: "flex", justifyContent: "flex-end" }}>
-          <button onClick={handleSubmit} disabled={saving} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 12, padding: "13px 32px", fontSize: 14, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}>
+          <button onClick={handleSubmit} disabled={saving} style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", color: "#fff", border: "none", borderRadius: 12, padding: "13px 32px", fontSize: 14, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}>
             {saving ? "Saving..." : "Save Changes"}
           </button>
         </div>

@@ -139,26 +139,34 @@ export default function App() {
   ];
 
   if (loading) return (
-    <div style={{ minHeight: "100vh", background: "#f0f4f8", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", fontSize: 16 }}>
-      Loading...
+    <div style={{ minHeight: "100vh", background: "#f5f7fa", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+      <div style={{ width: 40, height: 40, borderRadius: "50%", border: "3px solid #e2e8f0", borderTopColor: "#3b82f6", animation: "spin 0.8s linear infinite" }} />
+      <span style={{ color: "#64748b", fontSize: 14, fontWeight: 500 }}>Loading...</span>
     </div>
   );
 
   const showProfileGate = isAuthenticated && profileLoaded && !profile && location.pathname !== "/profile";
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f0f4f8", color: "#1e293b", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#f5f7fa", color: "#1e293b", fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        .course-card:hover { transform: translateY(-4px); border-color: rgba(14,165,233,0.3) !important; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .course-card { transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), box-shadow 0.25s cubic-bezier(0.4,0,0.2,1); }
+        .course-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         select option { background: #ffffff; color: #1e293b; }
         input::placeholder, textarea::placeholder { color: #94a3b8; }
         input, textarea, select { color: #1e293b !important; }
         input[type="date"], input[type="time"] { color-scheme: light; }
+        .nav-link { position: relative; transition: all 0.2s ease; }
+        .nav-link:hover { color: #e2e8f0 !important; background: rgba(255,255,255,0.06) !important; }
+        .footer-link { transition: color 0.2s ease; }
+        .footer-link:hover { color: #94a3b8 !important; }
       `}</style>
 
       {showSignInSelector && (
@@ -169,55 +177,58 @@ export default function App() {
         />
       )}
 
-      {/* Navbar — stays dark as accent */}
-      <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(15,23,42,0.97)", borderBottom: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(20px)" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", height: 64, gap: 32 }}>
-          <div onClick={() => navigate("/")} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🖥️</div>
+      {/* Navbar */}
+      <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "#0f172a", borderBottom: "1px solid rgba(255,255,255,0.06)", backdropFilter: "blur(20px)" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 32px", display: "flex", alignItems: "center", height: 68, gap: 40 }}>
+          <div onClick={() => navigate("/")} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 12, textDecoration: "none", flexShrink: 0 }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, boxShadow: "0 4px 12px rgba(59,130,246,0.3)" }}>🖥️</div>
             <div>
-              <div style={{ fontWeight: 900, color: "#f1f5f9", fontSize: 15, lineHeight: 1.1 }}>TechBridge</div>
-              <div style={{ fontWeight: 600, color: "#64748b", fontSize: 10, letterSpacing: 1, textTransform: "uppercase" }}>Institute</div>
+              <div style={{ fontWeight: 800, color: "#f8fafc", fontSize: 16, lineHeight: 1.1, letterSpacing: -0.3 }}>TechBridge</div>
+              <div style={{ fontWeight: 600, color: "#475569", fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase" }}>Institute</div>
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 4, flex: 1, justifyContent: "center" }}>
-            {navLinks.map(link => (
-              <button key={link.path} onClick={() => navigate(link.path)} style={{
-                background: location.pathname === link.path ? "rgba(14,165,233,0.12)" : "transparent",
-                color: location.pathname === link.path ? "#0ea5e9" : "#94a3b8",
-                border: "none", borderRadius: 10,
-                padding: "8px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer",
-                borderBottom: location.pathname === link.path ? "2px solid #0ea5e9" : "2px solid transparent",
-              }}>{link.label}</button>
-            ))}
+          <div style={{ display: "flex", gap: 2, flex: 1, justifyContent: "center" }}>
+            {navLinks.map(link => {
+              const isActive = location.pathname === link.path;
+              return (
+                <button key={link.path} onClick={() => navigate(link.path)} className="nav-link" style={{
+                  background: isActive ? "rgba(59,130,246,0.12)" : "transparent",
+                  color: isActive ? "#60a5fa" : "#94a3b8",
+                  border: "none", borderRadius: 8,
+                  padding: "8px 16px", fontSize: 14, fontWeight: isActive ? 600 : 500, cursor: "pointer",
+                  letterSpacing: -0.1,
+                }}>{link.label}</button>
+              );
+            })}
           </div>
 
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexShrink: 0 }}>
             {enrolledCourses.length > 0 && (
-              <div style={{ background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 20, padding: "4px 12px", fontSize: 12, color: "#0ea5e9", fontWeight: 700 }}>
+              <div style={{ background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 20, padding: "5px 14px", fontSize: 12, color: "#60a5fa", fontWeight: 600 }}>
                 {enrolledCourses.length} enrolled
               </div>
             )}
             {isStaff ? (
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "7px 14px", fontSize: 13, color: "#fca5a5", fontWeight: 600 }}>
+              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <div style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 8, padding: "8px 16px", fontSize: 13, color: "#fca5a5", fontWeight: 500 }}>
                   🛡️ {staffAccount?.name ?? staffAccount?.username ?? "Staff"}
                 </div>
-                <button onClick={handleLogout} style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "9px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                <button onClick={handleLogout} style={{ background: "transparent", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                   Sign Out
                 </button>
               </div>
             ) : isAuthenticated ? (
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <div onClick={() => navigate("/profile")} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "7px 14px", fontSize: 13, color: "#e2e8f0", fontWeight: 600, cursor: "pointer" }}>
+              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <div onClick={() => navigate("/profile")} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 16px", fontSize: 13, color: "#e2e8f0", fontWeight: 500, cursor: "pointer" }}>
                   👤 {profile ? `${profile.first_name} ${profile.last_name}` : (user?.name ?? "Student")}
                 </div>
-                <button onClick={handleLogout} style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "9px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                <button onClick={handleLogout} style={{ background: "transparent", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                   Sign Out
                 </button>
               </div>
             ) : (
-              <button onClick={openSignIn} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "9px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+              <button onClick={openSignIn} style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", color: "#fff", border: "none", borderRadius: 8, padding: "10px 22px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 16px rgba(59,130,246,0.25)" }}>
                 Sign In / Register
               </button>
             )}
@@ -282,39 +293,47 @@ export default function App() {
         )}
       </main>
 
-      {/* Footer — stays dark as accent */}
+      {/* Footer */}
       {location.pathname !== "/admin" && location.pathname !== "/educator" && (
-        <footer style={{ background: "#0f172a", borderTop: "1px solid rgba(255,255,255,0.06)", padding: "48px 24px", marginTop: 60 }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 40 }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center" }}>🖥️</div>
-                <span style={{ fontWeight: 900, color: "#f1f5f9" }}>TechBridge Institute</span>
+        <footer style={{ background: "#0f172a", marginTop: 80 }}>
+          <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(59,130,246,0.3), transparent)" }} />
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "64px 32px 48px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr", gap: 48 }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, boxShadow: "0 4px 12px rgba(59,130,246,0.2)" }}>🖥️</div>
+                  <span style={{ fontWeight: 800, color: "#f8fafc", fontSize: 17, letterSpacing: -0.3 }}>TechBridge Institute</span>
+                </div>
+                <p style={{ color: "#64748b", fontSize: 14, lineHeight: 1.8, maxWidth: 280 }}>Empowering careers in IT through industry-recognized certifications and hybrid learning.</p>
               </div>
-              <p style={{ color: "#64748b", fontSize: 13, lineHeight: 1.7 }}>Empowering careers in IT through industry-recognized certifications and hybrid learning.</p>
-            </div>
-            <div>
-              <div style={{ color: "#e2e8f0", fontWeight: 700, marginBottom: 12, fontSize: 14 }}>Certifications</div>
-              {vendors.map(v => <div key={v.id} style={{ color: "#64748b", fontSize: 13, marginBottom: 6 }}>{v.name}</div>)}
-            </div>
-            <div>
-              <div style={{ color: "#e2e8f0", fontWeight: 700, marginBottom: 12, fontSize: 14 }}>Platform</div>
-              {["Course Catalog", "Class Schedule", "Student Portal", "Certifications", "Admin Console"].map(l => (
-                <div key={l} style={{ color: "#64748b", fontSize: 13, marginBottom: 6, cursor: "pointer" }}>{l}</div>
-              ))}
-            </div>
-            <div>
-              <div style={{ color: "#e2e8f0", fontWeight: 700, marginBottom: 12, fontSize: 14 }}>Contact</div>
-              <div style={{ color: "#64748b", fontSize: 13, lineHeight: 1.8 }}>
-                info@techbridge.edu<br />
-                +1 (555) 234-5678<br />
-                Mon–Fri 8am–6pm EST
+              <div>
+                <div style={{ color: "#94a3b8", fontWeight: 600, marginBottom: 20, fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase" }}>Certifications</div>
+                {vendors.map(v => <div key={v.id} className="footer-link" style={{ color: "#64748b", fontSize: 13, marginBottom: 10, cursor: "pointer" }}>{v.name}</div>)}
+              </div>
+              <div>
+                <div style={{ color: "#94a3b8", fontWeight: 600, marginBottom: 20, fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase" }}>Platform</div>
+                {[
+                  { label: "Course Catalog", path: "/courses" },
+                  { label: "Class Schedule", path: "/schedule" },
+                  { label: "My Learning", path: "/dashboard" },
+                  { label: "Contact Us", path: "/contact" },
+                ].map(l => (
+                  <div key={l.label} className="footer-link" onClick={() => navigate(l.path)} style={{ color: "#64748b", fontSize: 13, marginBottom: 10, cursor: "pointer" }}>{l.label}</div>
+                ))}
+              </div>
+              <div>
+                <div style={{ color: "#94a3b8", fontWeight: 600, marginBottom: 20, fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase" }}>Contact</div>
+                <div style={{ color: "#64748b", fontSize: 13, lineHeight: 2 }}>
+                  info@techbridge.edu<br />
+                  +1 (555) 234-5678<br />
+                  Mon–Fri 8am–6pm EST
+                </div>
               </div>
             </div>
-          </div>
-          <div style={{ maxWidth: 1100, margin: "32px auto 0", paddingTop: 24, borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-            <span style={{ color: "#475569", fontSize: 12 }}>© 2026 TechBridge Institute. All rights reserved.</span>
-            <span style={{ color: "#475569", fontSize: 12 }}>Powered by Microsoft 365 · Moodle · SkillJa · MS Teams</span>
+            <div style={{ marginTop: 48, paddingTop: 24, borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+              <span style={{ color: "#475569", fontSize: 12 }}>© 2026 TechBridge Institute. All rights reserved.</span>
+              <span style={{ color: "#475569", fontSize: 12 }}>Powered by Microsoft 365 · Moodle · SkillJa · MS Teams</span>
+            </div>
           </div>
         </footer>
       )}

@@ -372,7 +372,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, padding: "40px 32px", overflowY: "auto", background: "#f0f4f8" }}>
+      <div style={{ flex: 1, padding: "40px 32px", overflowY: "auto", background: "#f5f7fa" }}>
         {tab === "overview" && (() => {
           const activeInstructors = instructors.filter(i => i.status === "Active").length;
           const totalEnrollments = enrollments.length;
@@ -399,13 +399,13 @@ export default function AdminView({ courses, vendors, schedule, students, profil
 
           return (
             <div>
-              <h2 style={{ fontSize: 28, fontWeight: 900, color: "#1e293b", fontFamily: "Georgia, serif", marginBottom: 32 }}>Platform Overview</h2>
+              <h2 style={{ fontSize: 28, fontWeight: 800, color: "#1e293b", fontFamily: "Inter, system-ui, sans-serif", marginBottom: 32 }}>Platform Overview</h2>
 
               {/* Stat tiles */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, marginBottom: 40 }}>
                 {stats.map(stat => (
                   <div key={stat.label} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, padding: 20 }}>
-                    <div style={{ fontSize: 32, fontWeight: 900, color: stat.color, fontFamily: "Georgia, serif" }}>{stat.value}</div>
+                    <div style={{ fontSize: 32, fontWeight: 900, color: stat.color, fontFamily: "Inter, system-ui, sans-serif" }}>{stat.value}</div>
                     <div style={{ color: "#334155", fontWeight: 700, fontSize: 13, margin: "4px 0" }}>{stat.label}</div>
                     <div style={{ color: "#64748b", fontSize: 12 }}>{stat.change}</div>
                   </div>
@@ -465,7 +465,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                 {recentProfiles.length === 0 && <div style={{ color: "#64748b", fontSize: 13, padding: 20, textAlign: "center" }}>No students registered yet.</div>}
                 {recentProfiles.map((p, i) => (
                   <div key={p.entra_oid} style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 20px", borderBottom: i < recentProfiles.length - 1 ? "1px solid rgba(0,0,0,0.03)" : "none" }}>
-                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
                       {p.first_name[0]}{p.last_name[0]}
                     </div>
                     <div style={{ flex: 1 }}>
@@ -486,7 +486,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
               <div>
-                <h2 style={{ fontSize: 28, fontWeight: 900, color: "#1e293b", fontFamily: "Georgia, serif", margin: "0 0 4px" }}>Registered Students</h2>
+                <h2 style={{ fontSize: 28, fontWeight: 800, color: "#1e293b", fontFamily: "Inter, system-ui, sans-serif", margin: "0 0 4px" }}>Registered Students</h2>
                 <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>{profiles.length} account{profiles.length !== 1 ? "s" : ""} registered via Entra External ID</p>
               </div>
             </div>
@@ -496,7 +496,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
             ) : filteredStudents.map(p => (
               <div key={p.entra_oid} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, padding: 24, marginBottom: 16 }}>
                 <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-                  <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 18, flexShrink: 0 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 18, flexShrink: 0 }}>
                     {p.first_name[0]}{p.last_name[0]}
                   </div>
                   <div style={{ flex: 1 }}>
@@ -547,8 +547,8 @@ export default function AdminView({ courses, vendors, schedule, students, profil
         {tab === "courses" && (
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h2 style={{ fontSize: 28, fontWeight: 900, color: "#1e293b", fontFamily: "Georgia, serif", margin: 0 }}>Course Management</h2>
-              <button onClick={openNew} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ New Course</button>
+              <h2 style={{ fontSize: 28, fontWeight: 800, color: "#1e293b", fontFamily: "Inter, system-ui, sans-serif", margin: 0 }}>Course Management</h2>
+              <button onClick={openNew} style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ New Course</button>
             </div>
             <SearchBar value={courseSearch} onChange={setCourseSearch} placeholder="Search by title, code, vendor, instructor, tag..." total={courses.length} filtered={filteredCourses.length} />
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
@@ -730,7 +730,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                     </div>
                     <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 28 }}>
                       <button onClick={() => setCourseModal(null)} style={{ background: "rgba(0,0,0,0.03)", color: "#94a3b8", border: "1px solid #e2e8f0", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
-                      <button onClick={saveCourse} disabled={courseSaving || !courseForm.vendor_id || !courseForm.title} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", fontWeight: 700, cursor: "pointer", opacity: courseSaving ? 0.7 : 1 }}>
+                      <button onClick={saveCourse} disabled={courseSaving || !courseForm.vendor_id || !courseForm.title} style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", fontWeight: 700, cursor: "pointer", opacity: courseSaving ? 0.7 : 1 }}>
                         {courseSaving ? "Saving..." : courseModal.mode === "new" ? "Create Course" : "Save Changes"}
                       </button>
                     </div>
@@ -777,10 +777,10 @@ export default function AdminView({ courses, vendors, schedule, students, profil
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
                 <div>
-                  <h2 style={{ fontSize: 28, fontWeight: 900, color: "#1e293b", fontFamily: "Georgia, serif", margin: "0 0 4px" }}>Enrollment Management</h2>
+                  <h2 style={{ fontSize: 28, fontWeight: 800, color: "#1e293b", fontFamily: "Inter, system-ui, sans-serif", margin: "0 0 4px" }}>Enrollment Management</h2>
                   <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>{enrollments.length} enrollment{enrollments.length !== 1 ? "s" : ""} across {courses.length} course{courses.length !== 1 ? "s" : ""}</p>
                 </div>
-                <button onClick={() => { setEnrollForm({ student_id: "", course_id: "" }); setEnrollModal(true); }} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ Enroll Student</button>
+                <button onClick={() => { setEnrollForm({ student_id: "", course_id: "" }); setEnrollModal(true); }} style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ Enroll Student</button>
               </div>
 
               {/* Course filter + per-course enrollment counts */}
@@ -821,7 +821,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                         <tr key={i} style={{ borderBottom: "1px solid #f1f5f9" }}>
                           <td style={{ padding: "14px 16px" }}>
                             <div onClick={() => setStudentDetail(e.student_id)} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-                              <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
+                              <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
                                 {e.student_name?.split(" ").map(n => n[0]).join("").slice(0, 2)}
                               </div>
                               <span style={{ color: "#0ea5e9", fontWeight: 600, textDecoration: "underline", textDecorationStyle: "dotted", textUnderlineOffset: 3 }}>{e.student_name}</span>
@@ -870,7 +870,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                     </div>
                     <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 28 }}>
                       <button onClick={() => setEnrollModal(false)} style={{ background: "rgba(0,0,0,0.03)", color: "#94a3b8", border: "1px solid #e2e8f0", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
-                      <button onClick={saveEnrollment} disabled={enrollSaving || !enrollForm.student_id || !enrollForm.course_id} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", fontWeight: 700, cursor: "pointer", opacity: enrollSaving || !enrollForm.student_id || !enrollForm.course_id ? 0.6 : 1 }}>
+                      <button onClick={saveEnrollment} disabled={enrollSaving || !enrollForm.student_id || !enrollForm.course_id} style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", fontWeight: 700, cursor: "pointer", opacity: enrollSaving || !enrollForm.student_id || !enrollForm.course_id ? 0.6 : 1 }}>
                         {enrollSaving ? "Enrolling..." : "Confirm Enrollment"}
                       </button>
                     </div>
@@ -905,7 +905,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                     <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 20, padding: 36, width: "100%", maxWidth: 580, maxHeight: "85vh", overflowY: "auto" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
                         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-                          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 20, flexShrink: 0 }}>
+                          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 20, flexShrink: 0 }}>
                             {student?.name?.split(" ").map(n => n[0]).join("").slice(0, 2)}
                           </div>
                           <div>
@@ -970,10 +970,10 @@ export default function AdminView({ courses, vendors, schedule, students, profil
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
                 <div>
-                  <h2 style={{ fontSize: 28, fontWeight: 900, color: "#1e293b", fontFamily: "Georgia, serif", margin: "0 0 4px" }}>Instructors</h2>
+                  <h2 style={{ fontSize: 28, fontWeight: 800, color: "#1e293b", fontFamily: "Inter, system-ui, sans-serif", margin: "0 0 4px" }}>Instructors</h2>
                   <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>{instructors.length} instructor{instructors.length !== 1 ? "s" : ""} on record</p>
                 </div>
-                <button onClick={openNewInstructor} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ New Instructor</button>
+                <button onClick={openNewInstructor} style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ New Instructor</button>
               </div>
 
               <SearchBar value={instructorSearch} onChange={setInstructorSearch} placeholder="Search by name, email, title, specialization, certification..." total={instructors.length} filtered={filteredInstructors.length} />
@@ -982,7 +982,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                 {filteredInstructors.length === 0 && <div style={{ color: "#64748b", fontSize: 14, padding: 24, textAlign: "center" }}>{instructorSearch ? "No instructors match your search." : "No instructors on record."}</div>}
                 {filteredInstructors.map(ins => (
                   <div key={ins.id} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, padding: 20, display: "flex", gap: 16, alignItems: "flex-start" }}>
-                    <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 18, flexShrink: 0 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 18, flexShrink: 0 }}>
                       {ins.first_name?.[0]}{ins.last_name?.[0]}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -1082,7 +1082,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
 
                     <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
                       <button onClick={() => setInstructorModal(null)} style={{ background: "rgba(0,0,0,0.03)", color: "#94a3b8", border: "1px solid #e2e8f0", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
-                      <button onClick={saveInstructor} disabled={instructorSaving || !instructorForm.first_name || !instructorForm.last_name || !instructorForm.email} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", fontWeight: 700, cursor: "pointer", opacity: instructorSaving ? 0.7 : 1 }}>
+                      <button onClick={saveInstructor} disabled={instructorSaving || !instructorForm.first_name || !instructorForm.last_name || !instructorForm.email} style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", fontWeight: 700, cursor: "pointer", opacity: instructorSaving ? 0.7 : 1 }}>
                         {instructorSaving ? "Saving..." : instructorModal.mode === "new" ? "Add Instructor" : "Save Changes"}
                       </button>
                     </div>
@@ -1231,7 +1231,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                       </div>
                     )}
 
-                    <button onClick={() => setInstructorCreated(null)} style={{ width: "100%", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "12px 0", fontWeight: 700, cursor: "pointer" }}>Done</button>
+                    <button onClick={() => setInstructorCreated(null)} style={{ width: "100%", background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", color: "#fff", border: "none", borderRadius: 10, padding: "12px 0", fontWeight: 700, cursor: "pointer" }}>Done</button>
                   </div>
                 </div>
               )}
@@ -1243,10 +1243,10 @@ export default function AdminView({ courses, vendors, schedule, students, profil
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
               <div>
-                <h2 style={{ fontSize: 28, fontWeight: 900, color: "#1e293b", fontFamily: "Georgia, serif", margin: "0 0 4px" }}>Delivery Locations</h2>
+                <h2 style={{ fontSize: 28, fontWeight: 800, color: "#1e293b", fontFamily: "Inter, system-ui, sans-serif", margin: "0 0 4px" }}>Delivery Locations</h2>
                 <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>{deliveryLocations.length} location{deliveryLocations.length !== 1 ? "s" : ""} configured</p>
               </div>
-              <button onClick={openNewLocation} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ New Location</button>
+              <button onClick={openNewLocation} style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}>+ New Location</button>
             </div>
 
             <SearchBar value={locationSearch} onChange={setLocationSearch} placeholder="Search by name, type, city, country, building, platform..." total={deliveryLocations.length} filtered={filteredLocations.length} />
@@ -1373,7 +1373,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                     </div>
                     <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 28 }}>
                       <button onClick={() => setLocationModal(null)} style={{ background: "rgba(0,0,0,0.03)", color: "#94a3b8", border: "1px solid #e2e8f0", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
-                      <button onClick={saveLocation} disabled={locationSaving || !locationForm.name} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", fontWeight: 700, cursor: "pointer", opacity: locationSaving ? 0.7 : 1 }}>
+                      <button onClick={saveLocation} disabled={locationSaving || !locationForm.name} style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", fontWeight: 700, cursor: "pointer", opacity: locationSaving ? 0.7 : 1 }}>
                         {locationSaving ? "Saving..." : locationModal.mode === "new" ? "Create Location" : "Save Changes"}
                       </button>
                     </div>
@@ -1403,7 +1403,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
 
         {tab === "integrations" && (
           <div>
-            <h2 style={{ fontSize: 28, fontWeight: 900, color: "#1e293b", fontFamily: "Georgia, serif", marginBottom: 32 }}>Integrations & Provisioning</h2>
+            <h2 style={{ fontSize: 28, fontWeight: 800, color: "#1e293b", fontFamily: "Inter, system-ui, sans-serif", marginBottom: 32 }}>Integrations & Provisioning</h2>
             <div style={{ display: "grid", gap: 16 }}>
               {[
                 { name: "Microsoft 365 Tenant", icon: "☁️", status: "Connected", desc: "Auto-provisioning student accounts on registration. Tenant: trainee.edu", color: "#0ea5e9" },
@@ -1477,8 +1477,8 @@ export default function AdminView({ courses, vendors, schedule, students, profil
           return (
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-                <h2 style={{ fontSize: 28, fontWeight: 900, color: "#1e293b", fontFamily: "Georgia, serif", margin: 0 }}>Schedule Management</h2>
-                <button onClick={openNewSchedule} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                <h2 style={{ fontSize: 28, fontWeight: 800, color: "#1e293b", fontFamily: "Inter, system-ui, sans-serif", margin: 0 }}>Schedule Management</h2>
+                <button onClick={openNewSchedule} style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
                   + Add Entry
                 </button>
               </div>
@@ -1578,7 +1578,7 @@ export default function AdminView({ courses, vendors, schedule, students, profil
                     </div>
                     <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 28 }}>
                       <button onClick={() => setScheduleModal(null)} style={{ background: "rgba(0,0,0,0.03)", color: "#94a3b8", border: "1px solid #e2e8f0", borderRadius: 10, padding: "11px 24px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
-                      <button onClick={saveSchedule} disabled={scheduleSaving || !scheduleForm.course_id || !scheduleForm.day || !scheduleForm.time_start} style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", fontWeight: 700, cursor: "pointer", opacity: scheduleSaving || !scheduleForm.course_id || !scheduleForm.day || !scheduleForm.time_start ? 0.6 : 1 }}>
+                      <button onClick={saveSchedule} disabled={scheduleSaving || !scheduleForm.course_id || !scheduleForm.day || !scheduleForm.time_start} style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 28px", fontWeight: 700, cursor: "pointer", opacity: scheduleSaving || !scheduleForm.course_id || !scheduleForm.day || !scheduleForm.time_start ? 0.6 : 1 }}>
                         {scheduleSaving ? "Saving..." : scheduleModal.mode === "new" ? "Add Entry" : "Save Changes"}
                       </button>
                     </div>
