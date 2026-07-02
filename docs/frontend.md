@@ -66,7 +66,9 @@ React Router DOM provides URL-based navigation. Routes are defined in `App.jsx`:
 | Path | View | Auth | Role | Purpose |
 |------|------|------|------|---------|
 | `/` | HomeView | No | — | Hero, vendor showcase, stats, integrations |
-| `/courses` | CoursesView | No | — | Filterable course catalog |
+| `/courses` | CoursesView | No | — | Catalog landing with provider cards |
+| `/courses/:vendorId` | VendorCoursesView | No | — | Paginated vendor course listing with filters |
+| `/courses/:vendorId/:courseId` | CourseDetailView | No | — | Course detail: stats bar, skills, syllabus, details table |
 | `/schedule` | ScheduleView | No | — | Class schedule table |
 | `/contact` | ContactView | No | — | Contact form + Google Maps |
 | `/register` | RegisterView | Yes | Student | 3-step enrollment wizard |

@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import Badge from "./Badge";
 
 const levelStyle = {
@@ -7,12 +8,13 @@ const levelStyle = {
 };
 
 export default function CourseCard({ course, onEnroll, isEnrolled }) {
+  const navigate = useNavigate();
   const vendor = { name: course.vendorName, color: course.vendorColor, logo: course.vendorLogo };
   const seatsLeft = course.seats - course.enrolled;
   const lvl = levelStyle[course.level] || levelStyle.Beginner;
 
   return (
-    <div className="course-card" style={{
+    <div className="course-card" onClick={() => navigate(`/courses/${course.vendor}/${course.id}`)} style={{
       background: "#ffffff", borderRadius: 12, overflow: "hidden",
       border: "1px solid #cbd5e1", boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
       display: "flex", flexDirection: "row",
